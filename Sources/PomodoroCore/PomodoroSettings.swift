@@ -20,6 +20,7 @@ public final class PomodoroSettings {
         case controlMusic
         case resumeMusicOnFocusStart
         case showFloatingBar
+        case launchAtLogin
         case floatingBarX
         case floatingBarY
     }
@@ -43,6 +44,7 @@ public final class PomodoroSettings {
             Key.controlMusic.rawValue: true,
             Key.resumeMusicOnFocusStart.rawValue: true,
             Key.showFloatingBar.rawValue: true,
+            Key.launchAtLogin.rawValue: false,
         ])
     }
 
@@ -108,6 +110,15 @@ public final class PomodoroSettings {
     public var showFloatingBar: Bool {
         get { access(keyPath: \.showFloatingBar); return defaults.bool(forKey: Key.showFloatingBar.rawValue) }
         set { write(.showFloatingBar, newValue, \.showFloatingBar) }
+    }
+
+    /// What the user asked for, which is not the same as what the system reports.
+    /// `SMAppService.mainApp.status` returns `.enabled` for this app even when
+    /// nothing is registered, so trusting it made the switch claim launch-at-login
+    /// was on when it was not.
+    public var launchAtLogin: Bool {
+        get { access(keyPath: \.launchAtLogin); return defaults.bool(forKey: Key.launchAtLogin.rawValue) }
+        set { write(.launchAtLogin, newValue, \.launchAtLogin) }
     }
 
     // MARK: - Floating bar position

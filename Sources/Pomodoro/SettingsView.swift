@@ -10,10 +10,7 @@ struct SettingsView: View {
     @Bindable var settings: PomodoroSettings
     let onChange: () -> Void
 
-    @State private var launchAtLogin = LoginItem.isEnabled
     @State private var section: Section = .timer
-    @Namespace private var pickerNamespace
-    @Namespace private var presetNamespace
 
     private enum Section: String, CaseIterable, Identifiable {
         case timer = "Timer"
@@ -60,22 +57,48 @@ struct SettingsView: View {
 
     // MARK: - Cycle preview
 
-    /// Shows the shape of the cycle the current numbers produce. Four number fields
-    /// don't communicate "50 minutes of work then a walk" — this does.
+    /// Shows the shape of the cycle the current numbers produce. Four number
+    /// fields don't communicate "50 minutes of work then a walk" — this does.
     private var cyclePreview: some View {
         VStack(spacing: 9) {
-            HStack(spacing: 3) {
-                ForEach(0..<settings.pomodorosUntilLongBreak, id: \.self) { index in
-                    segment(.focus, minutes: settings.focusMinutes)
-                    if index < settings.pomodorosUntilLongBreak - 1 {
-                        segment(.shortBreak, minutes: settings.shortBreakMinutes)
+            GeometryReader { geometry in
+                let segments = cycleSegments
+                let gaps = CGFloat(max(segments.count - 1, 0)) * 2
+                let usable = max(geometry.size.width - gaps, 1)
+                let total = CGFloat(segments.reduce(0) { $0 + $1.minutes })
+
+                HStack(spacing: 2) {
+                    ForEach(segments) { segment in
+                        let width = max(usable * CGFloat(segment.minutes) / total, 3)
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Theme.highlight(for: segment.phase),
+                                        Theme.tint(for: segment.phase),
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: width)
+                            .overlay {
+                                // Only label a block wide enough to hold the number
+                                // without it spilling over the edges.
+                                if width >= 24 {
+                                    Text("\(segment.minutes)")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(.white.opacity(0.95))
+                                }
+                            }
                     }
                 }
-                segment(.longBreak, minutes: settings.longBreakMinutes)
             }
             .frame(height: 26)
             .animation(.smooth(duration: 0.35), value: settings.pomodorosUntilLongBreak)
             .animation(.smooth(duration: 0.35), value: settings.focusMinutes)
+            .animation(.smooth(duration: 0.35), value: settings.shortBreakMinutes)
+            .animation(.smooth(duration: 0.35), value: settings.longBreakMinutes)
 
             Text("One full cycle · \(cycleTotalText)")
                 .font(.system(size: 10, weight: .medium))
@@ -87,26 +110,29 @@ struct SettingsView: View {
         .padding(.bottom, 14)
     }
 
-    private func segment(_ phase: Phase, minutes: Int) -> some View {
-        RoundedRectangle(cornerRadius: 5, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [Theme.highlight(for: phase), Theme.tint(for: phase)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            // Widths are proportional to real duration, so a 45/5 split looks like
-            // one, instead of every phase getting an equal-sized block.
-            .frame(maxWidth: .infinity)
-            .layoutPriority(Double(minutes))
-            .overlay {
-                if minutes >= 10 {
-                    Text("\(minutes)")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.95))
-                }
+    private struct CycleSegment: Identifiable {
+        let id: Int
+        let phase: Phase
+        let minutes: Int
+    }
+
+    /// focus, break, focus, break, … focus, long break.
+    ///
+    /// Widths are computed from these minute values rather than left to layout
+    /// priority: priority decides who gets space *first*, not in what proportion,
+    /// so a 25-vs-5 split gave the focus blocks everything and collapsed the breaks
+    /// to nothing.
+    private var cycleSegments: [CycleSegment] {
+        var segments: [CycleSegment] = []
+        let count = settings.pomodorosUntilLongBreak
+        for index in 0..<count {
+            segments.append(CycleSegment(id: segments.count, phase: .focus, minutes: settings.focusMinutes))
+            if index < count - 1 {
+                segments.append(CycleSegment(id: segments.count, phase: .shortBreak, minutes: settings.shortBreakMinutes))
             }
+        }
+        segments.append(CycleSegment(id: segments.count, phase: .longBreak, minutes: settings.longBreakMinutes))
+        return segments
     }
 
     private var cycleTotalText: String {
@@ -122,42 +148,23 @@ struct SettingsView: View {
 
     // MARK: - Picker
 
-    /// One glass surface with a selection that slides between tabs.
+    /// The system segmented control, not a hand-rolled one.
     ///
-    /// Deliberately *not* three independently-tinted glass capsules: changing a
-    /// `glassEffect`'s tint changes the view's identity, so SwiftUI tears down and
-    /// re-inserts every button on each selection — which is what made them all drop
-    /// in from above whenever one was clicked. One shape moved with
-    /// `matchedGeometryEffect` has a stable identity and animates the way a
-    /// segmented control should.
+    /// Two custom versions of this were wrong in the same way: anything that changes
+    /// a `glassEffect`'s configuration per item changes those views' identity, so
+    /// SwiftUI re-inserts them and the whole bar replays its entrance on every
+    /// click. `Picker` already renders in the system's Liquid Glass style, animates
+    /// its selection correctly, and comes with keyboard and VoiceOver support that
+    /// a stack of `Button`s does not.
     private var picker: some View {
-        HStack(spacing: 4) {
+        Picker("", selection: $section) {
             ForEach(Section.allCases) { item in
-                Button {
-                    section = item
-                } label: {
-                    Label(item.rawValue, systemImage: item.symbol)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(section == item ? Color.white : .secondary)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 6)
-                        .background {
-                            if section == item {
-                                Capsule()
-                                    .fill(Theme.tint(for: .focus))
-                                    .matchedGeometryEffect(id: "selection", in: pickerNamespace)
-                            }
-                        }
-                        // Without this the glass and padding are decoration, not
-                        // target: only the glyph and label text take the click.
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                Label(item.rawValue, systemImage: item.symbol).tag(item)
             }
         }
-        .padding(3)
-        .glassPanel(in: Capsule())
-        .animation(.smooth(duration: 0.28), value: section)
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .padding(.horizontal, 20)
         .padding(.bottom, 14)
     }
 
@@ -187,13 +194,13 @@ struct SettingsView: View {
             Toggle("Start next focus automatically", isOn: $settings.autoStartFocus)
             Toggle("Show floating bar", isOn: $settings.showFloatingBar)
 
-            Toggle("Launch at login", isOn: $launchAtLogin)
+            Toggle("Launch at login", isOn: $settings.launchAtLogin)
                 .disabled(!LoginItem.isAvailable)
-                .onChange(of: launchAtLogin) { _, newValue in
+                .onChange(of: settings.launchAtLogin) { _, newValue in
                     // Revert the switch if registration was refused, rather than
                     // showing a state the system doesn't actually have.
                     if !LoginItem.setEnabled(newValue) {
-                        launchAtLogin = LoginItem.isEnabled
+                        settings.launchAtLogin = !newValue
                     }
                 }
             if !LoginItem.isAvailable {
@@ -257,33 +264,29 @@ struct SettingsView: View {
             }
 
             // Presets cover the choice almost every time; the stepper is there for
-            // the rest, rather than being the only way in.
-            HStack(spacing: 5) {
+            // the rest, rather than being the only way in. Plain system buttons —
+            // see `picker` for why these aren't custom glass.
+            HStack(spacing: 6) {
                 ForEach(presets, id: \.self) { preset in
-                    Button {
-                        value.wrappedValue = preset
-                    } label: {
-                        Text("\(preset)")
-                            .font(.system(size: 10, weight: .semibold))
-                            .monospacedDigit()
-                            .frame(width: 32, height: 21)
-                            .foregroundStyle(value.wrappedValue == preset ? Color.white : .secondary)
-                            .background {
-                                if value.wrappedValue == preset {
-                                    Capsule()
-                                        .fill(Theme.tint(for: phase))
-                                        .matchedGeometryEffect(id: title, in: presetNamespace)
-                                }
-                            }
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
+                    presetButton(preset, value: value, phase: phase)
                 }
             }
-            .padding(2)
-            .glassPanel(in: Capsule())
-            .animation(.smooth(duration: 0.28), value: value.wrappedValue)
         }
+    }
+
+    /// `.borderedProminent` when selected: a tinted `.bordered` button reads as
+    /// "slightly different colour", which is not enough to say which preset is live.
+    @ViewBuilder
+    private func presetButton(_ preset: Int, value: Binding<Int>, phase: Phase) -> some View {
+        let isSelected = value.wrappedValue == preset
+        Button("\(preset)") { value.wrappedValue = preset }
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
+            .tint(isSelected ? Theme.tint(for: phase) : Color.secondary.opacity(0.22))
+            .foregroundStyle(isSelected ? Color.white : .secondary)
+            .font(.system(size: 10, weight: .semibold))
+            .monospacedDigit()
     }
 
     private func sourceRow(_ symbol: String, _ name: String, _ detail: String) -> some View {

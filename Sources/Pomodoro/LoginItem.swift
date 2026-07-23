@@ -15,9 +15,26 @@ enum LoginItem {
         Bundle.main.bundleURL.pathExtension == "app"
     }
 
-    static var isEnabled: Bool {
+    /// Whether the system actually has a registration for us.
+    ///
+    /// Not usable as the switch's value: `SMAppService.mainApp.status` reports
+    /// `.enabled` for this app even when `launchctl` knows nothing about it, so the
+    /// stored preference is the source of truth for display and this is only used
+    /// to reconcile that intent with reality at launch.
+    static var isRegistered: Bool {
         guard isAvailable else { return false }
         return SMAppService.mainApp.status == .enabled
+    }
+
+    /// Re-apply the user's stored intent, in case a rebuild or a move dropped the
+    /// registration.
+    static func reconcile(desired: Bool) {
+        guard isAvailable else { return }
+        if desired && !isRegistered {
+            setEnabled(true)
+        } else if !desired && isRegistered {
+            setEnabled(false)
+        }
     }
 
     @discardableResult

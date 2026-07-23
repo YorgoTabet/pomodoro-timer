@@ -39,13 +39,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if !settings.controlMusic { music.forgetPaused() }
         }
 
-        menuBar.onOpenSettings = { [weak self] in self?.showPomodoroSettings() }
+        menuBar.onOpenSettings = { [weak self] in self?.showSettings() }
         menuBar.onOpenStats = { [weak self] in self?.showStats() }
         menuBar.onToggleFloatingBar = { [weak self] in
             guard let self else { return }
             settings.showFloatingBar.toggle()
         }
 
+        LoginItem.reconcile(desired: settings.launchAtLogin)
         notifier.requestAuthorization()
         syncFloatingBarVisibility()
         startCommandPolling()
@@ -129,7 +130,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Windows
 
-    private func showPomodoroSettings() {
+    private func showSettings() {
         if settingsWindow == nil {
             settingsWindow = makeWindow(
                 title: "Pomodoro Settings",
