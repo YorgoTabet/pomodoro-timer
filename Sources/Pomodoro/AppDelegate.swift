@@ -54,6 +54,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         notifier.requestAuthorization()
         syncFloatingBarVisibility()
         startCommandPolling()
+        startDemoIfRequested()
+    }
+
+    /// `POMODORO_DEMO=focusStart|breakStart|longBreak` plays a character cue shortly
+    /// after launch. Verifying an animation otherwise means waiting out a real
+    /// session; this makes the loop seconds instead of minutes.
+    private func startDemoIfRequested() {
+        guard let name = ProcessInfo.processInfo.environment["POMODORO_DEMO"],
+              let cue = CharacterCue(rawValue: name) else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.5))
+            self.performCharacter(cue)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

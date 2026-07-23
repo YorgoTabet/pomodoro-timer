@@ -150,6 +150,7 @@ struct FloatingBarView: View {
             CharacterStage(
                 character: stage.character,
                 cue: stage.cue,
+                generation: stage.generation,
                 edge: stage.edge,
                 pillFrame: FloatingBar.pillFrame
             )
@@ -372,7 +373,13 @@ final class FloatingBarHostingView<Content: View>: NSHostingView<Content> {
 @MainActor
 final class CharacterStageModel {
     var character: PomodoroCharacter = .none
-    var cue: CharacterCue?
+    /// The performance to play. Non-optional and always mounted: `KeyframeAnimator`
+    /// only animates when its trigger *changes*, so one created fresh at the moment
+    /// of the cue mounts with the trigger already final and never runs — it just
+    /// renders its initial value, which is the fully hidden pose.
+    var cue: CharacterCue = .breakStart
+    /// Bumped per performance; this is what the animator watches.
+    var generation: Int = 0
     var edge: StageEdge = .top
     var pillScale: Double = 1
 
@@ -390,9 +397,9 @@ final class CharacterStageModel {
         clearTask?.cancel()
         self.character = character
         self.edge = edge
-        // Reassigning triggers the KeyframeAnimator even when the same cue repeats.
-        self.cue = nil
         self.cue = cue
+        // A fresh generation replays even when the same cue repeats.
+        self.generation += 1
 
         withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
             pillScale = Self.reactionScale
@@ -405,7 +412,6 @@ final class CharacterStageModel {
             // The pill relaxing is the full stop at the end of the sentence, so it
             // starts only once the character has finished dropping.
             withAnimation(.smooth(duration: 0.45)) { self.pillScale = 1 }
-            self.cue = nil
         }
     }
 }

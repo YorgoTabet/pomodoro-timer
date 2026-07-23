@@ -43,20 +43,26 @@ public struct CharacterStage: View {
     public static let margin: Double = 168
 
     let character: PomodoroCharacter
-    let cue: CharacterCue?
+    let cue: CharacterCue
+    /// Changes once per performance; the animator plays when it does.
+    let generation: Int
     let edge: StageEdge
     /// The pill's frame inside the panel's coordinate space.
     let pillFrame: CGRect
 
-    public init(character: PomodoroCharacter, cue: CharacterCue?, edge: StageEdge, pillFrame: CGRect) {
+    public init(character: PomodoroCharacter, cue: CharacterCue, generation: Int, edge: StageEdge, pillFrame: CGRect) {
         self.character = character
         self.cue = cue
+        self.generation = generation
         self.edge = edge
         self.pillFrame = pillFrame
     }
 
     public var body: some View {
-        if let cue, character != .none {
+        // Mounted whenever a character is chosen, not only during a performance:
+        // the animator has to exist *before* the trigger changes. At rest its
+        // initial pose is fully hidden behind the pill, so nothing is drawn.
+        if character != .none, character.isImplemented, generation > 0 {
             performance(cue)
                 // Purely decorative: the stage must never intercept a click meant
                 // for whatever is behind the transparent panel.
@@ -101,9 +107,10 @@ public struct CharacterStage: View {
 
     private func samuraiAnimator<K: Keyframes<SamuraiPose>>(
         _ cue: CharacterCue,
+        generation _: Int = 0,
         @KeyframesBuilder<SamuraiPose> _ track: @escaping () -> K
     ) -> some View {
-        KeyframeAnimator(initialValue: SamuraiPose(), trigger: cue) { pose in
+        KeyframeAnimator(initialValue: SamuraiPose(), trigger: generation) { pose in
             SamuraiView(pose: pose)
                 // `emergence` is authored as "how far behind the pill", so it moves
                 // against the inward normal.
