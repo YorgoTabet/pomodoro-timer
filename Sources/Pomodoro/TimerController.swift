@@ -217,7 +217,7 @@ public final class TimerController {
         guard signature != lastMirroredSignature else { return }
         lastMirroredSignature = signature
 
-        shared.write(TimerSnapshot(
+        let snapshot = TimerSnapshot(
             phase: phase,
             isRunning: isRunning,
             deadline: deadline,
@@ -227,25 +227,55 @@ public final class TimerController {
             cyclePosition: completedFocusSessions % max(settings.pomodorosUntilLongBreak, 1),
             cycleLength: settings.pomodorosUntilLongBreak,
             updatedAt: Date()
-        ))
-        WidgetCenter.shared.reloadAllTimelines()
+        )
+
+        // Off the main thread, deliberately. An App Group container lives behind
+        // containermanagerd, and when that wedges — which it did — a synchronous
+        // write blocks forever. That froze the app during launch, before the UI was
+        // ever built, which presented as "nothing renders" rather than as a hang.
+        // The widget is a convenience; it must never be able to take the app down.
+        let store = shared
+        Task.detached(priority: .utility) {
+            store.write(snapshot)
+            await MainActor.run { WidgetCenter.shared.reloadAllTimelines() }
+        }
     }
 
     /// Apply a command the widget dropped in the shared container. Returns `false`
     /// if it was one we have already handled.
+    /// Reads the shared container off the main thread for the same reason the
+    /// write does, then applies the command back on the main actor.
+    public func pollForWidgetCommand() {
+        let store = shared
+        Task.detached(priority: .utility) {
+            guard let pending = store.readCommand() else { return }
+            store.clearCommand()
+            await MainActor.run { self.apply(pending) }
+        }
+    }
+
+    private func apply(_ pending: PendingCommand) {
+        guard pending.id != lastCommandID else { return }
+        lastCommandID = pending.id
+        applyCommand(pending.command)
+    }
+
     @discardableResult
     public func applyPendingCommand() -> Bool {
         guard let pending = shared.readCommand(), pending.id != lastCommandID else { return false }
         lastCommandID = pending.id
         shared.clearCommand()
+        applyCommand(pending.command)
+        return true
+    }
 
-        switch pending.command {
+    private func applyCommand(_ command: PomodoroCommand) {
+        switch command {
         case .toggle: toggle()
         case .start: start()
         case .pause: pause()
         case .skip: skip()
         case .reset: reset()
         }
-        return true
     }
 }

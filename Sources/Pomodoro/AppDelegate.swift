@@ -27,10 +27,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        pomodoroDiag("didFinishLaunching start")
         controller = TimerController(settings: settings, stats: stats)
+        pomodoroDiag("controller built")
         notifier = Notifier(settings: settings)
+        pomodoroDiag("notifier built")
         menuBar = MenuBarController(controller: controller, settings: settings, stats: stats)
 
+        pomodoroDiag("menuBar built")
         controller.onUpdate = { [weak self] in self?.refreshViews() }
         controller.onPhaseElapsed = { [weak self] finished, next in
             self?.handlePhaseChange(finished: finished, next: next)
@@ -40,7 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             controller.settingsChanged()
             floatingBar?.stage.character = settings.character
-            syncFloatingBarVisibility()
+            pomodoroDiag("auth requested")
+        syncFloatingBarVisibility()
             if !settings.controlMusic { music.forgetPaused() }
         }
 
@@ -51,11 +56,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settings.showFloatingBar.toggle()
         }
 
+        pomodoroDiag("callbacks wired")
         LoginItem.reconcile(desired: settings.launchAtLogin)
+        pomodoroDiag("loginItem reconciled")
         notifier.requestAuthorization()
         syncFloatingBarVisibility()
+        pomodoroDiag("bar synced")
         startCommandPolling()
         startDemoIfRequested()
+        pomodoroDiag("didFinishLaunching end; character=\(settings.character.rawValue) showBar=\(settings.showFloatingBar) barExists=\(floatingBar != nil)")
     }
 
     /// `POMODORO_DEMO=focusStart|breakStart|longBreak` plays a character cue shortly
@@ -140,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// latency-critical control.
     private func startCommandPolling() {
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.controller.applyPendingCommand() }
+            Task { @MainActor in self?.controller.pollForWidgetCommand() }
         }
         RunLoop.main.add(timer, forMode: .common)
         commandPoller = timer

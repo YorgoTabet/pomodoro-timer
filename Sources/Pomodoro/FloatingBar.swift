@@ -1,4 +1,5 @@
 import AppKit
+import os
 import PomodoroCore
 import PomodoroUI
 import SwiftUI
