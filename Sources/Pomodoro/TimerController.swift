@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PomodoroCore
+import WidgetKit
 
 /// Drives the pomodoro cycle in real time.
 ///
@@ -19,10 +20,21 @@ public final class TimerController {
     public private(set) var remainingSeconds: Int
     public private(set) var completedFocusSessions = 0
 
+    /// The length this phase actually started with.
+    ///
+    /// Deliberately *not* re-read from settings: editing "focus = 45" halfway
+    /// through a 25-minute session must not make the ring jump backwards, or claim
+    /// the session is 55% done when the countdown says two seconds. The new
+    /// duration applies from the next phase.
+    public private(set) var phaseTotalSeconds: Int
+
     // MARK: - Collaborators
 
     @ObservationIgnored private let settings: PomodoroSettings
     @ObservationIgnored private let stats: StatsStore
+    @ObservationIgnored private let shared = SharedStore()
+    @ObservationIgnored private var lastCommandID: UUID?
+    @ObservationIgnored private var lastMirroredSignature: String?
     @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private var deadline: Date?
 
@@ -36,14 +48,15 @@ public final class TimerController {
     public init(settings: PomodoroSettings, stats: StatsStore) {
         self.settings = settings
         self.stats = stats
-        self.remainingSeconds = PomodoroEngine.duration(of: .focus, settings: settings)
+        let focusDuration = PomodoroEngine.duration(of: .focus, settings: settings)
+        self.remainingSeconds = focusDuration
+        self.phaseTotalSeconds = focusDuration
+        mirrorToWidget()
     }
 
     // MARK: - Derived
 
-    public var totalSeconds: Int {
-        PomodoroEngine.duration(of: phase, settings: settings)
-    }
+    public var totalSeconds: Int { phaseTotalSeconds }
 
     /// 0…1, how much of the current phase has elapsed.
     public var progress: Double {
@@ -65,7 +78,10 @@ public final class TimerController {
 
     public func start() {
         guard !isRunning else { return }
-        if remainingSeconds <= 0 { remainingSeconds = totalSeconds }
+        if remainingSeconds <= 0 {
+            phaseTotalSeconds = PomodoroEngine.duration(of: phase, settings: settings)
+            remainingSeconds = phaseTotalSeconds
+        }
         deadline = Date().addingTimeInterval(TimeInterval(remainingSeconds))
         isRunning = true
         scheduleTicker()
@@ -99,15 +115,18 @@ public final class TimerController {
         deadline = nil
         phase = .focus
         completedFocusSessions = 0
-        remainingSeconds = totalSeconds
+        phaseTotalSeconds = PomodoroEngine.duration(of: .focus, settings: settings)
+        remainingSeconds = phaseTotalSeconds
         publish()
     }
 
-    /// Re-read durations after the user edits settings. A running phase keeps its
-    /// existing deadline; a stopped one snaps to the new duration.
+    /// Re-read durations after the user edits settings. A phase that is already
+    /// running keeps the length it started with; a stopped one adopts the new value
+    /// straight away, since nothing is mid-flight to disturb.
     public func settingsChanged() {
         if !isRunning {
-            remainingSeconds = totalSeconds
+            phaseTotalSeconds = PomodoroEngine.duration(of: phase, settings: settings)
+            remainingSeconds = phaseTotalSeconds
         }
         publish()
     }
@@ -174,11 +193,59 @@ public final class TimerController {
         isRunning = false
         deadline = nil
         phase = next
-        remainingSeconds = totalSeconds
+        phaseTotalSeconds = PomodoroEngine.duration(of: next, settings: settings)
+        remainingSeconds = phaseTotalSeconds
         publish()
     }
 
     private func publish() {
         onUpdate?()
+        mirrorToWidget()
+    }
+
+    // MARK: - Widget bridge
+
+    /// Mirror state into the shared container so the widget can draw it, then ask
+    /// WidgetKit to reload. The widget renders its own live countdown from
+    /// `deadline`, so this only needs to run on real state changes — not on every
+    /// tick of the clock.
+    private func mirrorToWidget() {
+        // The per-second countdown is not part of the signature: while running, the
+        // widget derives it from `deadline`, so re-writing the file every second
+        // would burn WidgetKit's reload budget for no visible change.
+        let signature = "\(phase.rawValue)|\(isRunning)|\(deadline?.timeIntervalSince1970 ?? -1)|\(totalSeconds)|\(isRunning ? 0 : remainingSeconds)|\(completedFocusSessions)"
+        guard signature != lastMirroredSignature else { return }
+        lastMirroredSignature = signature
+
+        shared.write(TimerSnapshot(
+            phase: phase,
+            isRunning: isRunning,
+            deadline: deadline,
+            remainingSeconds: remainingSeconds,
+            totalSeconds: totalSeconds,
+            completedToday: stats.stats().pomodoros,
+            cyclePosition: completedFocusSessions % max(settings.pomodorosUntilLongBreak, 1),
+            cycleLength: settings.pomodorosUntilLongBreak,
+            updatedAt: Date()
+        ))
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Apply a command the widget dropped in the shared container. Returns `false`
+    /// if it was one we have already handled.
+    @discardableResult
+    public func applyPendingCommand() -> Bool {
+        guard let pending = shared.readCommand(), pending.id != lastCommandID else { return false }
+        lastCommandID = pending.id
+        shared.clearCommand()
+
+        switch pending.command {
+        case .toggle: toggle()
+        case .start: start()
+        case .pause: pause()
+        case .skip: skip()
+        case .reset: reset()
+        }
+        return true
     }
 }

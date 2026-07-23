@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var music: MusicController = ChainedMusicController()
 
     private var floatingBar: FloatingBar?
+    private var commandPoller: Timer?
     private var settingsWindow: NSWindow?
     private var statsWindow: NSWindow?
 
@@ -47,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         notifier.requestAuthorization()
         syncFloatingBarVisibility()
+        startCommandPolling()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -58,21 +60,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Phase changes
 
     private func handlePhaseChange(finished: Phase, next: Phase) {
-        notifier.announce(finished: finished, next: next)
-
-        guard settings.controlMusic else { return }
-        if finished == .focus {
-            music.pauseIfPlaying()
-        } else if next == .focus, settings.resumeMusicOnFocusStart {
-            music.resumeIfWePaused()
+        // Music first, chime second. The media-key fallback decides whether to act
+        // by asking CoreAudio if anything is playing — and our own chime would
+        // answer "yes", making it skip the pause it was supposed to perform.
+        if settings.controlMusic {
+            if finished == .focus {
+                music.pauseIfPlaying()
+            } else if next == .focus, settings.resumeMusicOnFocusStart {
+                music.resumeIfWePaused()
+            }
         }
+
+        notifier.announce(finished: finished, next: next)
     }
 
     // MARK: - Views
 
     private func refreshViews() {
+        // The floating bar is SwiftUI observing the controller directly, so only the
+        // AppKit status item needs pushing.
         menuBar.refresh()
-        floatingBar?.refresh()
+    }
+
+    /// Pick up buttons pressed in the widget.
+    ///
+    /// The widget extension is sandboxed and can't call into this process, so it
+    /// leaves a command file in the shared container. Polling once a second is the
+    /// simplest reliable pickup — checking a file's mtime costs far less than the
+    /// entitlements and failure modes of real IPC, and a widget button is not a
+    /// latency-critical control.
+    private func startCommandPolling() {
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.controller.applyPendingCommand() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        commandPoller = timer
     }
 
     private func syncFloatingBarVisibility() {
@@ -82,7 +104,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 observeFloatingBarMoves()
             }
             floatingBar?.orderFrontRegardless()
-            floatingBar?.refresh()
         } else {
             floatingBar?.persistPosition(to: settings)
             floatingBar?.orderOut(nil)

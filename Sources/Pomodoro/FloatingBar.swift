@@ -1,5 +1,7 @@
 import AppKit
 import PomodoroCore
+import PomodoroUI
+import SwiftUI
 
 /// The always-on-top countdown pill.
 ///
@@ -7,16 +9,23 @@ import PomodoroCore
 /// without stealing focus from whatever you are working in, and combined with
 /// `.floating` level plus `[.canJoinAllSpaces, .fullScreenAuxiliary]` it stays
 /// visible across Spaces and over fullscreen apps — which a normal window cannot do.
+///
+/// The contents are SwiftUI so the pill and the widget share one design layer and
+/// pick up Liquid Glass from the same code path.
 @MainActor
 final class FloatingBar: NSPanel {
 
-    private let content: FloatingBarView
+    /// Sized to hold the hover-revealed controls without reflowing.
+    ///
+    /// This has to fit the *widest* state: 12 + glyph 18 + 10 + readout 72 + gap +
+    /// three 26–28pt controls with 5pt gaps + 8. Undersize it and the content
+    /// silently overflows the frame, leaving the glass covering only part of the
+    /// pill while the buttons sit on bare window.
+    static let size = NSSize(width: 236, height: 46)
 
     init(controller: TimerController, settings: PomodoroSettings) {
-        content = FloatingBarView(controller: controller)
-
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: FloatingBarView.width, height: FloatingBarView.height),
+            contentRect: NSRect(origin: .zero, size: Self.size),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -27,24 +36,24 @@ final class FloatingBar: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         backgroundColor = .clear
         isOpaque = false
-        hasShadow = true
+        // Liquid Glass draws its own shadow and edge treatment; a second AppKit
+        // shadow underneath it reads as a double border.
+        hasShadow = false
         isMovableByWindowBackground = true
         hidesOnDeactivate = false
-        // Keep it out of Mission Control's window list and the app switcher.
         isExcludedFromWindowsMenu = true
 
-        contentView = content
+        let host = NSHostingView(rootView: FloatingBarView(controller: controller))
+        host.frame = NSRect(origin: .zero, size: Self.size)
+        contentView = host
+
         restorePosition(settings: settings)
     }
 
-    /// Borderless panels are not key by default, which would break nothing here but
-    /// does stop the hover cursor updating; allowing key without activating the app
-    /// gives the buttons proper tracking.
+    /// Borderless panels aren't key by default, which would stop the buttons
+    /// showing hover state. `.nonactivatingPanel` means this still doesn't pull
+    /// focus away from the app you're working in.
     override var canBecomeKey: Bool { true }
-
-    func refresh() {
-        content.refresh()
-    }
 
     // MARK: - Position
 
@@ -71,113 +80,181 @@ final class FloatingBar: NSPanel {
     }
 }
 
-// MARK: - Content
+// MARK: - Contents
 
-@MainActor
-final class FloatingBarView: NSView {
+/// Observes `TimerController` directly, so the panel redraws itself and the app
+/// delegate doesn't have to push updates into it.
+///
+/// At rest the pill is deliberately quiet — a glyph, a time, a progress rail. The
+/// secondary controls only materialise on hover, because a bar that lives on top of
+/// everything you do all day earns its place by being ignorable.
+struct FloatingBarView: View {
 
-    static let width: CGFloat = 172
-    static let height: CGFloat = 44
+    @Bindable var controller: TimerController
 
-    private let controller: TimerController
-    private let phaseLabel = NSTextField(labelWithString: "")
-    private let timeLabel = NSTextField(labelWithString: "")
-    private let playButton = NSButton()
-    private let skipButton = NSButton()
-    private let progressLayer = CAShapeLayer()
+    @State private var hovering = false
+    @State private var pulse = false
+    @Namespace private var glass
 
-    init(controller: TimerController) {
-        self.controller = controller
-        super.init(frame: NSRect(x: 0, y: 0, width: Self.width, height: Self.height))
-        wantsLayer = true
-        setup()
-        refresh()
+    private var tint: Color { Theme.tint(for: controller.phase) }
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 15, style: .continuous)
     }
 
-    required init?(coder: NSCoder) { fatalError("not used") }
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            HStack(spacing: 10) {
+                phaseGlyph
+                readout
+                Spacer(minLength: 4)
+                controls
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 10)
 
-    private func setup() {
-        let background = NSVisualEffectView(frame: bounds)
-        background.autoresizingMask = [.width, .height]
-        background.material = .hudWindow
-        background.blendingMode = .behindWindow
-        background.state = .active
-        background.wantsLayer = true
-        background.layer?.cornerRadius = 12
-        background.layer?.masksToBounds = true
-        addSubview(background)
-
-        // A thin progress line along the bottom edge — visible at a glance without
-        // adding another number to read.
-        progressLayer.fillColor = NSColor.controlAccentColor.cgColor
-        progressLayer.frame = CGRect(x: 0, y: 0, width: 0, height: 3)
-        background.layer?.addSublayer(progressLayer)
-
-        phaseLabel.font = .systemFont(ofSize: 9, weight: .semibold)
-        phaseLabel.textColor = .secondaryLabelColor
-        phaseLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(phaseLabel)
-
-        timeLabel.font = .monospacedDigitSystemFont(ofSize: 18, weight: .medium)
-        timeLabel.textColor = .labelColor
-        timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(timeLabel)
-
-        configure(playButton, symbol: "play.fill", action: #selector(togglePressed))
-        configure(skipButton, symbol: "forward.end.fill", action: #selector(skipPressed))
-
-        NSLayoutConstraint.activate([
-            phaseLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 14),
-            phaseLabel.topAnchor.constraint(equalTo: topAnchor, constant: 6),
-
-            timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 13),
-            timeLabel.topAnchor.constraint(equalTo: phaseLabel.bottomAnchor, constant: -1),
-
-            skipButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            skipButton.centerYAnchor.constraint(equalTo: centerYAnchor),
-            skipButton.widthAnchor.constraint(equalToConstant: 26),
-            skipButton.heightAnchor.constraint(equalToConstant: 26),
-
-            playButton.trailingAnchor.constraint(equalTo: skipButton.leadingAnchor, constant: -4),
-            playButton.centerYAnchor.constraint(equalTo: centerYAnchor),
-            playButton.widthAnchor.constraint(equalToConstant: 26),
-            playButton.heightAnchor.constraint(equalToConstant: 26),
-        ])
+            // The rail runs the full width of the pill along its bottom edge rather
+            // than sitting in a 72pt stub under the clock. At 0% a short rail is
+            // indistinguishable from a stray dot; a full-width one always reads as
+            // a track that happens to be nearly empty.
+            TimerRail(phase: controller.phase, progress: controller.progress)
+                .padding(.horizontal, 1)
+        }
+        .frame(width: FloatingBar.size.width, height: FloatingBar.size.height)
+        // Order matters: the wash is clipped to the pill shape *before* the glass
+        // goes over it. Backgrounding an unclipped gradient is what left a dark
+        // rectangle hanging off the right-hand side.
+        .background {
+            Theme.backdrop(for: controller.phase)
+                .opacity(controller.isRunning ? 0.85 : 0.45)
+                .clipShape(shape)
+                .animation(.smooth(duration: 0.5), value: controller.phase)
+                .animation(.smooth(duration: 0.3), value: controller.isRunning)
+        }
+        .glassPanel(in: shape)
+        .opacity(hovering ? 1 : 0.92)
+        .scaleEffect(hovering ? 1.0 : 0.99, anchor: .center)
+        .onHover { hovering = $0 }
+        .animation(.smooth(duration: 0.22), value: hovering)
     }
 
-    private func configure(_ button: NSButton, symbol: String, action: Selector) {
-        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-        button.bezelStyle = .accessoryBarAction
-        button.isBordered = false
-        button.target = self
-        button.action = action
-        button.contentTintColor = .labelColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(button)
+    // MARK: - Pieces
+
+    private var phaseGlyph: some View {
+        Image(systemName: Theme.symbol(for: controller.phase))
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(tint)
+            .frame(width: 18)
+            .contentTransition(.symbolEffect(.replace))
+            // A slow breath while running — scale only. The earlier version also
+            // pulsed a coloured shadow, which at this size read as a smudge behind
+            // the glyph rather than a glow.
+            .opacity(controller.isRunning ? (pulse ? 1.0 : 0.6) : 0.75)
+            .animation(.smooth(duration: 0.4), value: controller.phase)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: true)) {
+                    pulse = true
+                }
+            }
     }
 
-    @objc private func togglePressed() { controller.toggle() }
-    @objc private func skipPressed() { controller.skip() }
+    private var readout: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(controller.displayTime)
+                .font(.system(size: 18, weight: .medium, design: .rounded))
+                .monospacedDigit()
+                // Digits roll rather than cut, which is what keeps a monospaced
+                // countdown from looking like a flickering LED.
+                .contentTransition(.numericText(countsDown: true))
+                .animation(.smooth(duration: 0.28), value: controller.remainingSeconds)
+                .foregroundStyle(controller.isRunning ? .primary : .secondary)
+                .fixedSize()
 
-    func refresh() {
-        phaseLabel.stringValue = "\(controller.phase.symbol)  \(controller.phase.title.uppercased())"
-        timeLabel.stringValue = controller.displayTime
-        playButton.image = NSImage(
-            systemSymbolName: controller.isRunning ? "pause.fill" : "play.fill",
-            accessibilityDescription: controller.isRunning ? "Pause" : "Start"
-        )
+            Text(controller.isRunning ? controller.phase.title : "Paused")
+                .font(.system(size: 8, weight: .bold))
+                .tracking(0.6)
+                .foregroundStyle(controller.isRunning ? tint : .secondary)
+                .contentTransition(.opacity)
+        }
+        .frame(width: 74, alignment: .leading)
+        .padding(.bottom, 3)
+    }
 
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        progressLayer.frame = CGRect(
-            x: 0, y: 0,
-            width: bounds.width * CGFloat(controller.progress),
-            height: 3
-        )
-        progressLayer.fillColor = (controller.phase == .focus
-            ? NSColor.controlAccentColor
-            : NSColor.systemGreen).cgColor
-        progressLayer.path = CGPath(rect: progressLayer.bounds, transform: nil)
-        CATransaction.commit()
+    /// The secondary actions slide out from underneath the play/pause button and
+    /// tuck back under it on exit — `zIndex` keeps them behind it the whole way, so
+    /// they read as emerging from the primary control rather than shrinking into a
+    /// dot beside it.
+    private var controls: some View {
+        HStack(spacing: 5) {
+            if hovering {
+                control("arrow.counterclockwise", label: "Reset", id: "reset") { controller.reset() }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(0)
+                control("forward.end.fill", label: "Skip", id: "skip") { controller.skip() }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(1)
+            }
+
+            control(
+                controller.isRunning ? "pause.fill" : "play.fill",
+                label: controller.isRunning ? "Pause" : "Start",
+                id: "toggle",
+                tint: tint,
+                size: 28
+            ) { controller.toggle() }
+            .zIndex(2)
+        }
+        .glassGroup(spacing: 5)
+        .animation(.smooth(duration: 0.28), value: hovering)
+    }
+
+    /// Secondary actions get a glass circle; the primary one gets a solid tinted
+    /// disc. Glass on glass is nearly invisible — the play button was reading as a
+    /// bare triangle floating on the pill, with nothing to say it was a target.
+    private func control(
+        _ symbol: String,
+        label: String,
+        id: String,
+        tint: Color? = nil,
+        size: CGFloat = 26,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: size * 0.38, weight: .bold))
+                .foregroundStyle(tint == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.white))
+                .contentTransition(.symbolEffect(.replace))
+                .modifier(ControlSurface(tint: tint, size: size))
+        }
+        .buttonStyle(AdaptiveGlassButtonStyle())
+        .glassMorphID(id, in: glass)
+        .accessibilityLabel(label)
+    }
+}
+
+/// The circular surface behind a pill control.
+private struct ControlSurface: ViewModifier {
+    let tint: Color?
+    let size: CGFloat
+
+    func body(content: Content) -> some View {
+        if let tint {
+            content
+                .frame(width: size, height: size)
+                .background {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [tint.opacity(0.95), tint],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(color: tint.opacity(0.45), radius: 4, y: 1)
+                }
+                .contentShape(Circle())
+        } else {
+            content.glassControl(size: size)
+        }
     }
 }

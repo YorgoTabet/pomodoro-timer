@@ -15,6 +15,9 @@ Core promises:
    focus resumes.
 3. A floating always-on-top bar showing the countdown, plus a menu bar countdown.
 
+4. A desktop / Notification Center widget and a Control Center control that drive
+   the same timer.
+
 ## Non-goals (v1)
 
 - iCloud / cross-device sync
@@ -167,3 +170,63 @@ Consequences of running purely locally with no Apple Developer account:
 - Browser audio is toggle-only; play state is unknowable.
 - A session that elapses while the Mac is asleep notifies late (on wake).
 - Menu bar text competes for space on notched displays.
+
+
+## Addendum — widget and design pass (2026-07-23)
+
+### Widget extension
+
+`PomodoroWidget` is a second SwiftPM executable hand-assembled into
+`Pomodoro.app/Contents/PlugIns/PomodoroWidget.appex` by `Scripts/build.sh`, since
+SwiftPM has no concept of an app extension.
+
+macOS force-sandboxes every app extension, so the extension cannot reach the app's
+Application Support directory. Both processes therefore share an App Group container
+(`group.com.yorgotabet.pomodoro`). This was verified to work under ad-hoc signing —
+sandboxed and not — before any of it was written; without that, the whole feature
+would have required a paid Apple Developer account.
+
+Communication is two single-writer files in that container:
+
+- `snapshot.json` — app writes, widget reads. Includes the absolute `deadline`, so
+  the widget renders its own live per-second countdown via `Text(timerInterval:)`
+  without the extension being woken.
+- `command.json` — widget writes (from an `AppIntent` behind each button), app reads
+  by polling once a second. Polling beats real IPC here: a widget button is not
+  latency-critical, and cross-process notifications from a sandboxed extension need
+  entitlements this app would otherwise not require.
+
+The timeline emits one entry per minute while running — enough for the ring to
+advance visibly, ~25 entries per pomodoro instead of 1,500. Anything derived from
+elapsed time takes the entry's date as a parameter (`progress(at:)`), because a
+timeline entry is rendered minutes before the moment it represents.
+
+### Liquid Glass
+
+`PomodoroUI` is a third target holding the SwiftUI shared by app and widget, so the
+floating bar and the widget cannot drift apart. `glassPanel` applies
+`glassEffect` on macOS 26 and falls back to `.regularMaterial` — the correct native
+material for earlier systems, not a hand-rolled imitation.
+
+Three findings that shaped the design, each from looking at the rendered result:
+
+- **Tinted glass on a small control renders near-opaque.** A 28pt tinted circle reads
+  as a coloured blob, not a button. Colour lives in the glyph; the primary control
+  uses a solid tinted disc instead, because glass-on-glass gives a button no edge.
+- **Changing a `glassEffect`'s tint changes view identity.** SwiftUI tears down and
+  re-inserts the view, so a segmented picker built from per-item tinted glass
+  re-animated every button on each selection. One glass surface with a
+  `matchedGeometryEffect` selection fixes it.
+- **A glass background is not a hit target.** Without an explicit `contentShape`,
+  only the glyph or label text takes the click.
+
+### Known limitations (additions)
+
+- The widget must be added by hand once (Notification Center → Edit Widgets). A
+  locally-built, non-notarized app registers with WidgetKit fine — verified via
+  `pluginkit` — but nothing places the widget for you.
+- Widget button presses land within about a second, not instantly, because the app
+  polls for them. The widget updates its own display optimistically to hide most of
+  that.
+- The Control Center control requires macOS 26; the bundle simply doesn't vend it
+  on earlier systems.

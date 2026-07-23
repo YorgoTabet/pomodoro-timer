@@ -1,4 +1,5 @@
 import AppKit
+import CoreAudio
 import Foundation
 import os
 
@@ -121,6 +122,10 @@ public final class MediaKeyController: MusicController {
 
     @discardableResult
     public func pauseIfPlaying() -> Bool {
+        // The media key is a toggle, not a pause. Sending it when nothing is playing
+        // would *start* whatever player last had focus — the exact opposite of what
+        // the user asked for. So gate it on the audio device actually running.
+        guard Self.isAudioPlaying() else { return false }
         Self.postPlayPause()
         didPause = true
         return true
@@ -134,6 +139,33 @@ public final class MediaKeyController: MusicController {
 
     public func forgetPaused() {
         didPause = false
+    }
+
+    /// Whether the default output device is currently being driven by anything.
+    ///
+    /// This is the closest macOS gets to "is audio playing" without per-app
+    /// scripting — it can't say *what* is playing, but it reliably distinguishes
+    /// silence from sound, which is all the toggle needs to be safe.
+    private static func isAudioPlaying() -> Bool {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var deviceID = AudioDeviceID(0)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        guard AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &deviceID
+        ) == noErr else { return false }
+
+        address.mSelector = kAudioDevicePropertyDeviceIsRunningSomewhere
+        var running: UInt32 = 0
+        size = UInt32(MemoryLayout<UInt32>.size)
+        guard AudioObjectGetPropertyData(
+            deviceID, &address, 0, nil, &size, &running
+        ) == noErr else { return false }
+
+        return running != 0
     }
 
     private static func postPlayPause() {

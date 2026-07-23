@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The app is deliberately NOT sandboxed: AppleScript control of Music and
+	     Spotify and posting system media keys are both blocked by the sandbox. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.yorgotabet.pomodoro</string>
+	</array>
+</dict>
+</plist>
