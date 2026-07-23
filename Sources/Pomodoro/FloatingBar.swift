@@ -151,13 +151,17 @@ struct FloatingBarView: View {
                 character: stage.character,
                 cue: stage.cue,
                 generation: stage.generation,
+                foreground: stage.foreground,
                 edge: stage.edge,
                 pillFrame: FloatingBar.pillFrame
             )
+            // Normally behind the pill; in front for the cue that steps forward.
+            .zIndex(stage.foreground ? 2 : 0)
 
             pill
                 .scaleEffect(stage.pillScale, anchor: .center)
                 .position(x: FloatingBar.pillFrame.midX, y: FloatingBar.pillFrame.midY)
+                .zIndex(1)
         }
         .frame(width: FloatingBar.panelSize.width, height: FloatingBar.panelSize.height)
     }
@@ -380,6 +384,8 @@ final class CharacterStageModel {
     var cue: CharacterCue = .breakStart
     /// Bumped per performance; this is what the animator watches.
     var generation: Int = 0
+    /// True while a performance that steps in front of the pill is running.
+    var foreground: Bool = false
     var edge: StageEdge = .top
     var pillScale: Double = 1
 
@@ -398,6 +404,7 @@ final class CharacterStageModel {
         self.character = character
         self.edge = edge
         self.cue = cue
+        self.foreground = SamuraiPerformance.comesForward(for: cue)
         // A fresh generation replays even when the same cue repeats.
         self.generation += 1
 

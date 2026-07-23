@@ -11,7 +11,9 @@ public struct CharacterStage: View {
 
     /// Target on-screen height. The art carries far more detail than the old
     /// 44pt chibi could, and needs room for it.
-    public static let displayHeight: Double = 150
+    /// Sized against the 46pt pill, not against the artwork's own detail. At 150pt
+    /// he dwarfed the widget; at 96 he reads as standing on it.
+    public static let displayHeight: Double = 96
 
     /// Scale from the 200×260 design space to `displayHeight`.
     public static var scale: Double { displayHeight / SamuraiArt.canvas.height }
@@ -40,20 +42,24 @@ public struct CharacterStage: View {
 
     /// Transparent room on every side of the pill: enough for the character plus
     /// the pill's own 15% growth.
-    public static let margin: Double = 168
+    public static let margin: Double = 110
 
     let character: PomodoroCharacter
     let cue: CharacterCue
     /// Changes once per performance; the animator plays when it does.
     let generation: Int
+    /// Drawn in front of the pill instead of behind it, and unmasked.
+    let foreground: Bool
     let edge: StageEdge
     /// The pill's frame inside the panel's coordinate space.
     let pillFrame: CGRect
 
-    public init(character: PomodoroCharacter, cue: CharacterCue, generation: Int, edge: StageEdge, pillFrame: CGRect) {
+    public init(character: PomodoroCharacter, cue: CharacterCue, generation: Int,
+                foreground: Bool, edge: StageEdge, pillFrame: CGRect) {
         self.character = character
         self.cue = cue
         self.generation = generation
+        self.foreground = foreground
         self.edge = edge
         self.pillFrame = pillFrame
     }
@@ -62,7 +68,8 @@ public struct CharacterStage: View {
         // Mounted whenever a character is chosen, not only during a performance:
         // the animator has to exist *before* the trigger changes. At rest its
         // initial pose is fully hidden behind the pill, so nothing is drawn.
-        if character != .none, character.isImplemented, generation > 0 {
+        if character != .none, character.isImplemented,
+           generation > 0 || ProcessInfo.processInfo.environment["POMODORO_HOLD"] != nil {
             performance(cue)
                 // Purely decorative: the stage must never intercept a click meant
                 // for whatever is behind the transparent panel.
@@ -91,8 +98,19 @@ public struct CharacterStage: View {
             SamuraiView(pose: restingPose)
                 .scaleEffect(CharacterStage.scale, anchor: .topLeading)
                 .frame(width: CharacterStage.displaySize.width, height: CharacterStage.displaySize.height, alignment: .topLeading)
-                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: CharacterStage.displaySize))
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: CharacterStage.displaySize, masked: !foreground))
                 .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+        } else if let held = ProcessInfo.processInfo.environment["POMODORO_HOLD"] {
+            // Development aid: hold a pose instead of animating, so placement and
+            // scale can be judged from a single screenshot rather than by trying
+            // to catch a 2.5-second performance mid-flight.
+            SamuraiView(pose: heldPose(named: held))
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
         } else {
             // Each performance is its own opaque `Keyframes` type, so the switch
             // happens here in a ViewBuilder — which can unify branches — rather than
@@ -112,13 +130,21 @@ public struct CharacterStage: View {
     ) -> some View {
         KeyframeAnimator(initialValue: SamuraiPose(), trigger: generation) { pose in
             SamuraiView(pose: pose)
-                // `emergence` is authored as "how far behind the pill", so it moves
-                // against the inward normal.
+                // `scaleEffect` does not change reported layout size, so the frame
+                // needs .topLeading or the still-200x260 content gets centred and
+                // shifted out of the mask.
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                // `emergence` is authored as "how far behind the pill" on a 0…200
+                // scale, mapped onto the distance this edge actually needs.
                 .offset(
-                    x: -pose.emergence * edge.inwardNormal.x,
-                    y: -pose.emergence * edge.inwardNormal.y
+                    x: -hidden(pose.emergence) * edge.inwardNormal.x,
+                    y: -hidden(pose.emergence) * edge.inwardNormal.y
                 )
-                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: SamuraiView.canvas))
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
         } keyframes: { _ in
             track()
         }
@@ -128,6 +154,28 @@ public struct CharacterStage: View {
     /// needs, so "hidden" means hidden on every side.
     private func hidden(_ emergence: Double) -> Double {
         emergence / 200 * CharacterStage.hideDistance(for: edge)
+    }
+
+    /// Key poses from the three timelines, for the hold aid above.
+    private func heldPose(named name: String) -> SamuraiPose {
+        var p = SamuraiPose()
+        p.emergence = 0
+        switch name {
+        case "focusStart":
+            p.rootScale = 1.06; p.swordArmUpper = 24; p.swordFore = 52
+            p.katana = -18; p.torso = -6; p.head = 4; p.pupilDrop = -0.9
+        case "breakStart":
+            p.emergence = 38; p.rootLean = 7; p.head = 11; p.kabuto = 5
+            p.swordArmUpper = 22; p.swordFore = 10; p.katana = -16
+            p.torsoScaleY = 0.96; p.sodeL = 8; p.sodeR = -8
+            p.fierceOpacity = 0; p.easeOpacity = 1; p.pupilDrop = 1.4
+        case "longBreak":
+            p.emergence = -8; p.swordArmUpper = -55; p.swordFore = -14; p.katana = 16
+            p.offArmUpper = -68; p.offArmFore = -46; p.head = -11
+            p.fierceOpacity = 0; p.triumphOpacity = 1
+        default: break
+        }
+        return p
     }
 
     private var restingPose: SamuraiPose {
@@ -150,13 +198,16 @@ struct StagePlacement: ViewModifier {
     let edge: StageEdge
     let pillFrame: CGRect
     let box: CGSize
+    /// Clipped to the region beyond the pill's edge. Off when the character has
+    /// stepped in front of the pill, where the whole body should be visible.
+    let masked: Bool
 
     func body(content: Content) -> some View {
         content
             .frame(width: box.width, height: box.height)
             .position(x: origin.x, y: origin.y)
             .mask(alignment: .topLeading) {
-                maskShape
+                if masked { maskShape } else { Rectangle() }
             }
     }
 

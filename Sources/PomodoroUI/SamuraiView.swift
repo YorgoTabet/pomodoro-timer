@@ -13,6 +13,8 @@ public struct SamuraiPose: Equatable, Sendable {
     public var emergence: Double = 200
     public var rootLean: Double = 0
     public var rootScaleY: Double = 1
+    /// Uniform scale — reads as stepping toward the viewer.
+    public var rootScale: Double = 1
 
     public var torso: Double = 0
     public var torsoScaleY: Double = 1
@@ -112,6 +114,7 @@ public struct SamuraiView: View {
         }
         .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
         .scaleEffect(y: pose.rootScaleY, anchor: .bottom)
+        .scaleEffect(pose.rootScale, anchor: .bottom)
         .rotationEffect(.degrees(pose.rootLean), anchor: SamuraiArt.Part.root.anchor)
     }
 

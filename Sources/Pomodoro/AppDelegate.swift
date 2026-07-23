@@ -39,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settings.onChange = { [weak self] in
             guard let self else { return }
             controller.settingsChanged()
+            floatingBar?.stage.character = settings.character
             syncFloatingBarVisibility()
             if !settings.controlMusic { music.forgetPaused() }
         }
@@ -64,7 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let name = ProcessInfo.processInfo.environment["POMODORO_DEMO"],
               let cue = CharacterCue(rawValue: name) else { return }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(for: .seconds(5))
             self.performCharacter(cue)
         }
     }
@@ -149,6 +150,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if settings.showFloatingBar {
             if floatingBar == nil {
                 floatingBar = FloatingBar(controller: controller, settings: settings)
+                // The stage must know the chosen character before any cue fires —
+                // relying on `perform` to set it left it `.none` at rest.
+                floatingBar?.stage.character = settings.character
                 observeFloatingBarMoves()
             }
             floatingBar?.orderFrontRegardless()
