@@ -91,35 +91,3 @@ public struct TimerDial<TimeLabel: View>: View {
         }
     }
 }
-
-/// The flat progress line used where a ring would be too tall — the floating pill.
-public struct TimerRail: View {
-    let phase: Phase
-    let progress: Double
-
-    public init(phase: Phase, progress: Double) {
-        self.phase = phase
-        self.progress = progress
-    }
-
-    public var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule().fill(.primary.opacity(0.14))
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Theme.tint(for: phase), Theme.highlight(for: phase)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: max(geometry.size.width * min(max(progress, 0), 1), 2))
-                    .shadow(color: Theme.tint(for: phase).opacity(0.6), radius: 2.5)
-            }
-        }
-        .frame(height: 3)
-        .animation(.smooth(duration: 0.6), value: progress)
-        .animation(.smooth(duration: 0.4), value: phase)
-    }
-}

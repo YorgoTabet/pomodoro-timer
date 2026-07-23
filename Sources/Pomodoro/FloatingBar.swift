@@ -103,23 +103,14 @@ struct FloatingBarView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            HStack(spacing: 10) {
-                phaseGlyph
-                readout
-                Spacer(minLength: 4)
-                controls
-            }
-            .padding(.leading, 12)
-            .padding(.trailing, 10)
-
-            // The rail runs the full width of the pill along its bottom edge rather
-            // than sitting in a 72pt stub under the clock. At 0% a short rail is
-            // indistinguishable from a stray dot; a full-width one always reads as
-            // a track that happens to be nearly empty.
-            TimerRail(phase: controller.phase, progress: controller.progress)
-                .padding(.horizontal, 1)
+        HStack(spacing: 10) {
+            phaseRing
+            readout
+            Spacer(minLength: 4)
+            controls
         }
+        .padding(.leading, 11)
+        .padding(.trailing, 10)
         .frame(width: FloatingBar.size.width, height: FloatingBar.size.height)
         // Order matters: the wash is clipped to the pill shape *before* the glass
         // goes over it. Backgrounding an unclipped gradient is what left a dark
@@ -140,22 +131,51 @@ struct FloatingBarView: View {
 
     // MARK: - Pieces
 
-    private var phaseGlyph: some View {
-        Image(systemName: Theme.symbol(for: controller.phase))
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(tint)
-            .frame(width: 18)
-            .contentTransition(.symbolEffect(.replace))
-            // A slow breath while running — scale only. The earlier version also
-            // pulsed a coloured shadow, which at this size read as a smudge behind
-            // the glyph rather than a glow.
-            .opacity(controller.isRunning ? (pulse ? 1.0 : 0.6) : 0.75)
-            .animation(.smooth(duration: 0.4), value: controller.phase)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: true)) {
-                    pulse = true
-                }
+    /// Progress wraps the phase glyph instead of running along the pill's bottom
+    /// edge.
+    ///
+    /// A straight rail inside a 15pt-radius pill fights the rounded corners: it gets
+    /// clipped at both ends, and at low progress the few pixels of fill land in the
+    /// corner and read as a stray dot rather than a bar. A ring has no such conflict,
+    /// is legible from 0% to 100%, and matches the dial the widget and the menu
+    /// header already use.
+    private var phaseRing: some View {
+        ZStack {
+            Circle()
+                .stroke(.primary.opacity(0.14), lineWidth: 2.5)
+
+            // Nothing is drawn below half a percent: a round line cap on a
+            // zero-length arc still paints a dot at 12 o'clock, which reads as a
+            // speck of dirt on the glass rather than "no progress yet".
+            Circle()
+                .trim(from: 0, to: controller.progress)
+                .stroke(
+                    LinearGradient(
+                        colors: [Theme.highlight(for: controller.phase), tint],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+                .opacity(controller.progress > 0.005 ? 1 : 0)
+                .animation(.smooth(duration: 0.6), value: controller.progress)
+
+            Image(systemName: Theme.symbol(for: controller.phase))
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(tint)
+                .contentTransition(.symbolEffect(.replace))
+                // A slow breath while running — opacity only. An earlier version
+                // pulsed a coloured shadow, which at this size read as a smudge.
+                .opacity(controller.isRunning ? (pulse ? 1.0 : 0.55) : 0.75)
+        }
+        .frame(width: 28, height: 28)
+        .animation(.smooth(duration: 0.4), value: controller.phase)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: true)) {
+                pulse = true
             }
+        }
     }
 
     private var readout: some View {
