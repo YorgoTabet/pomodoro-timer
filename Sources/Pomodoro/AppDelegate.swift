@@ -1,11 +1,15 @@
 import AppKit
+import os
 import PomodoroCore
+import PomodoroUI
 import SwiftUI
 
 /// Wires everything together and owns the windows.
 ///
 /// This is the only place that knows about all the pieces; each component below it
 /// depends only on the timer and settings, never on each other.
+private let musicLog = Logger(subsystem: "com.yorgotabet.pomodoro", category: "music")
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -64,6 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Music first, chime second. The media-key fallback decides whether to act
         // by asking CoreAudio if anything is playing — and our own chime would
         // answer "yes", making it skip the pause it was supposed to perform.
+        musicLog.notice("phase change \(finished.rawValue, privacy: .public) -> \(next.rawValue, privacy: .public), controlMusic=\(self.settings.controlMusic, privacy: .public)")
         if settings.controlMusic {
             if finished == .focus {
                 music.pauseIfPlaying()
@@ -73,6 +78,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         notifier.announce(finished: finished, next: next)
+        performCharacter(CharacterCue.cue(finished: finished, next: next))
+    }
+
+    /// Send the character on stage, if one is chosen and there is a pill for it to
+    /// hide behind.
+    func performCharacter(_ cue: CharacterCue) {
+        guard settings.character != .none, let bar = floatingBar else { return }
+
+        let edge = StageEdge.resolve(
+            preferred: SamuraiPerformance.preferredEdge(for: cue),
+            pill: bar.pillScreenFrameFlipped,
+            screen: flippedScreenFrame(),
+            needed: CharacterStage.margin
+        )
+        bar.stage.perform(cue, character: settings.character, edge: edge)
+    }
+
+    /// The main screen's visible area in top-left coordinates, matching the space
+    /// `StageEdge` reasons in.
+    private func flippedScreenFrame() -> CGRect {
+        guard let screen = NSScreen.main else { return .zero }
+        let full = screen.frame
+        let visible = screen.visibleFrame
+        return CGRect(
+            x: visible.minX,
+            y: full.height - visible.maxY,
+            width: visible.width,
+            height: visible.height
+        )
     }
 
     // MARK: - Views
@@ -134,9 +168,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             settingsWindow = makeWindow(
                 title: "Pomodoro Settings",
-                content: SettingsView(settings: settings) { [weak self] in
-                    self?.settings.onChange?()
-                }
+                content: SettingsView(
+                    settings: settings,
+                    onChange: { [weak self] in self?.settings.onChange?() },
+                    onPreview: { [weak self] cue in self?.performCharacter(cue) }
+                )
             )
         }
         present(settingsWindow)

@@ -24,6 +24,7 @@ public final class PomodoroSettings {
         case resumeMusicOnFocusStart
         case showFloatingBar
         case launchAtLogin
+        case character
         case floatingBarX
         case floatingBarY
     }
@@ -53,6 +54,7 @@ public final class PomodoroSettings {
             Key.resumeMusicOnFocusStart.rawValue: true,
             Key.showFloatingBar.rawValue: true,
             Key.launchAtLogin.rawValue: false,
+            Key.character.rawValue: PomodoroCharacter.none.rawValue,
         ])
     }
 
@@ -148,6 +150,24 @@ public final class PomodoroSettings {
     public var launchAtLogin: Bool {
         get { access(keyPath: \.launchAtLogin); return defaults.bool(forKey: Key.launchAtLogin.rawValue) }
         set { write(.launchAtLogin, newValue, \.launchAtLogin) }
+    }
+
+    /// Who pops out from behind the pill on a phase change. `.none` means the whole
+    /// feature is off and no stage is ever built.
+    public var character: PomodoroCharacter {
+        get {
+            access(keyPath: \.character)
+            let raw = defaults.string(forKey: Key.character.rawValue) ?? PomodoroCharacter.none.rawValue
+            return PomodoroCharacter(rawValue: raw) ?? .none
+        }
+        set {
+            // Not `write(_:_:_:)`: that infers its value type from the key path, and
+            // what goes into `UserDefaults` here is the raw string, not the enum.
+            withMutation(keyPath: \.character) {
+                defaults.set(newValue.rawValue, forKey: Key.character.rawValue)
+            }
+            onChange?()
+        }
     }
 
     // MARK: - Floating bar position

@@ -23,9 +23,26 @@ final class FloatingBar: NSPanel {
     /// pill while the buttons sit on bare window.
     static let size = NSSize(width: 236, height: 46)
 
+    /// Transparent room on every side, for the character to emerge into and for the
+    /// pill's 15% reaction to grow into without being clipped by its own window.
+    static let margin: CGFloat = CharacterStage.margin
+
+    static var panelSize: NSSize {
+        NSSize(width: size.width + margin * 2, height: size.height + margin * 2)
+    }
+
+    /// The pill's rect inside the panel, in SwiftUI's top-left coordinate space.
+    static var pillFrame: CGRect {
+        CGRect(x: margin, y: margin, width: size.width, height: size.height)
+    }
+
+    /// Drives the character; owned here so the panel can hand it the same instance
+    /// the SwiftUI tree observes.
+    let stage = CharacterStageModel()
+
     init(controller: TimerController, settings: PomodoroSettings) {
         super.init(
-            contentRect: NSRect(origin: .zero, size: Self.size),
+            contentRect: NSRect(origin: .zero, size: Self.panelSize),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -43,8 +60,8 @@ final class FloatingBar: NSPanel {
         hidesOnDeactivate = false
         isExcludedFromWindowsMenu = true
 
-        let host = NSHostingView(rootView: FloatingBarView(controller: controller))
-        host.frame = NSRect(origin: .zero, size: Self.size)
+        let host = FloatingBarHostingView(rootView: FloatingBarView(controller: controller, stage: stage))
+        host.frame = NSRect(origin: .zero, size: Self.panelSize)
         contentView = host
 
         restorePosition(settings: settings)
@@ -57,17 +74,41 @@ final class FloatingBar: NSPanel {
 
     // MARK: - Position
 
+    /// The stored origin is the *pill's*, not the panel's.
+    ///
+    /// They used to be the same thing. Now that the panel carries a transparent
+    /// margin they differ, and storing the pill's position means an existing dragged
+    /// position keeps meaning what it always meant — nothing jumps when this ships.
     private func restorePosition(settings: PomodoroSettings) {
         if let origin = settings.floatingBarOrigin,
            screenContains(NSPoint(x: origin.x, y: origin.y)) {
-            setFrameOrigin(NSPoint(x: origin.x, y: origin.y))
+            setPillOrigin(NSPoint(x: origin.x, y: origin.y))
         } else if let visible = NSScreen.main?.visibleFrame {
             // Default: top-right, tucked just under the menu bar.
-            setFrameOrigin(NSPoint(
-                x: visible.maxX - frame.width - 24,
-                y: visible.maxY - frame.height - 12
+            setPillOrigin(NSPoint(
+                x: visible.maxX - Self.size.width - 24,
+                y: visible.maxY - Self.size.height - 12
             ))
         }
+    }
+
+    private func setPillOrigin(_ point: NSPoint) {
+        setFrameOrigin(NSPoint(x: point.x - Self.margin, y: point.y - Self.margin))
+    }
+
+    var pillOrigin: NSPoint {
+        NSPoint(x: frame.origin.x + Self.margin, y: frame.origin.y + Self.margin)
+    }
+
+    /// The pill's rect on screen, in top-left coordinates, for edge resolution.
+    var pillScreenFrameFlipped: CGRect {
+        let screenHeight = NSScreen.main?.frame.height ?? 0
+        return CGRect(
+            x: pillOrigin.x,
+            y: screenHeight - pillOrigin.y - Self.size.height,
+            width: Self.size.width,
+            height: Self.size.height
+        )
     }
 
     /// Guard against restoring onto a display that is no longer connected.
@@ -76,7 +117,7 @@ final class FloatingBar: NSPanel {
     }
 
     func persistPosition(to settings: PomodoroSettings) {
-        settings.floatingBarOrigin = (x: Double(frame.origin.x), y: Double(frame.origin.y))
+        settings.floatingBarOrigin = (x: Double(pillOrigin.x), y: Double(pillOrigin.y))
     }
 }
 
@@ -91,6 +132,7 @@ final class FloatingBar: NSPanel {
 struct FloatingBarView: View {
 
     @Bindable var controller: TimerController
+    @Bindable var stage: CharacterStageModel
 
     @State private var hovering = false
     @State private var pulse = false
@@ -103,6 +145,23 @@ struct FloatingBarView: View {
     }
 
     var body: some View {
+        ZStack(alignment: .topLeading) {
+            // Drawn first so the pill occludes it — the character rises from behind.
+            CharacterStage(
+                character: stage.character,
+                cue: stage.cue,
+                edge: stage.edge,
+                pillFrame: FloatingBar.pillFrame
+            )
+
+            pill
+                .scaleEffect(stage.pillScale, anchor: .center)
+                .position(x: FloatingBar.pillFrame.midX, y: FloatingBar.pillFrame.midY)
+        }
+        .frame(width: FloatingBar.panelSize.width, height: FloatingBar.panelSize.height)
+    }
+
+    private var pill: some View {
         HStack(spacing: 10) {
             phaseRing
             readout
@@ -275,6 +334,78 @@ private struct ControlSurface: ViewModifier {
                 .contentShape(Circle())
         } else {
             content.glassControl(size: size)
+        }
+    }
+}
+
+
+// MARK: - Hit testing
+
+/// Refuses clicks that land in the transparent margin.
+///
+/// A borderless window still swallows every click inside its frame, so without this
+/// the character's stage — four times the pill's area — would eat clicks meant for
+/// whatever is behind it. Returning `nil` lets the event fall through to the app
+/// underneath. It also confines window dragging to the pill, since background drags
+/// begin with a hit test.
+final class FloatingBarHostingView<Content: View>: NSHostingView<Content> {
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let local = convert(point, from: superview)
+        // The pill is centred in the panel with equal margins, so its rect is the
+        // same whether the view is flipped or not.
+        let pill = NSRect(
+            x: FloatingBar.margin,
+            y: FloatingBar.margin,
+            width: FloatingBar.size.width,
+            height: FloatingBar.size.height
+        )
+        guard pill.contains(local) else { return nil }
+        return super.hitTest(point)
+    }
+}
+
+// MARK: - Character stage state
+
+/// What the character is doing right now.
+@Observable
+@MainActor
+final class CharacterStageModel {
+    var character: PomodoroCharacter = .none
+    var cue: CharacterCue?
+    var edge: StageEdge = .top
+    var pillScale: Double = 1
+
+    /// How far the pill swells while a character performs.
+    ///
+    /// Deliberately one constant: it is the most likely thing to want retuning after
+    /// seeing it on a real screen.
+    static let reactionScale: Double = 1.15
+
+    @ObservationIgnored private var clearTask: Task<Void, Never>?
+
+    func perform(_ cue: CharacterCue, character: PomodoroCharacter, edge: StageEdge) {
+        guard character != .none, character.isImplemented else { return }
+
+        clearTask?.cancel()
+        self.character = character
+        self.edge = edge
+        // Reassigning triggers the KeyframeAnimator even when the same cue repeats.
+        self.cue = nil
+        self.cue = cue
+
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
+            pillScale = Self.reactionScale
+        }
+
+        let duration = SamuraiPerformance.duration(for: cue)
+        clearTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(duration))
+            guard !Task.isCancelled else { return }
+            // The pill relaxing is the full stop at the end of the sentence, so it
+            // starts only once the character has finished dropping.
+            withAnimation(.smooth(duration: 0.45)) { self.pillScale = 1 }
+            self.cue = nil
         }
     }
 }

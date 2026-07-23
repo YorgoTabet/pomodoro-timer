@@ -9,6 +9,7 @@ struct SettingsView: View {
 
     @Bindable var settings: PomodoroSettings
     let onChange: () -> Void
+    let onPreview: (CharacterCue) -> Void
 
     @State private var section: Section = .timer
 
@@ -16,6 +17,7 @@ struct SettingsView: View {
         case timer = "Timer"
         case music = "Music"
         case alerts = "Alerts"
+        case character = "Character"
 
         var id: String { rawValue }
 
@@ -24,6 +26,7 @@ struct SettingsView: View {
             case .timer: "timer"
             case .music: "music.note"
             case .alerts: "bell.badge"
+            case .character: "figure.fencing"
             }
         }
     }
@@ -39,6 +42,7 @@ struct SettingsView: View {
                 case .timer: timerSection
                 case .music: musicSection
                 case .alerts: alertsSection
+                case .character: characterSection
                 }
             }
             .padding(20)
@@ -322,6 +326,62 @@ struct SettingsView: View {
             .accessibilityLabel("Preview \(title)")
         }
         .disabled(!settings.chimeEnabled)
+    }
+
+    // MARK: - Character
+
+    private var characterSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Picker("Character", selection: $settings.character) {
+                ForEach(PomodoroCharacter.allCases) { option in
+                    if option.isImplemented {
+                        Text(option.displayName).tag(option)
+                    } else {
+                        Text("\(option.displayName) — coming soon").tag(option)
+                    }
+                }
+            }
+            .pickerStyle(.menu)
+
+            Text("A character pops out from behind the floating bar when a phase changes, does a short move, and disappears. It's decoration — the notification and chime still do the real work.")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if settings.character != .none, !settings.character.isImplemented {
+                Label("Not drawn yet — only the Samurai is available so far.",
+                      systemImage: "exclamationmark.triangle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.orange)
+            }
+
+            if !settings.showFloatingBar {
+                Label("The floating bar is hidden, so there's nothing for the character to appear from. Turn it on in the Timer tab.",
+                      systemImage: "info.circle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Divider().opacity(0.4)
+
+            Text("Preview")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            // You cannot tune an animation you see once every 25 minutes.
+            HStack(spacing: 8) {
+                ForEach(CharacterCue.allCases, id: \.self) { cue in
+                    Button(cue.displayName) { onPreview(cue) }
+                        .buttonStyle(.bordered)
+                        .buttonBorderShape(.capsule)
+                        .controlSize(.small)
+                        .font(.system(size: 10, weight: .medium))
+                }
+            }
+            .disabled(settings.character == .none || !settings.character.isImplemented || !settings.showFloatingBar)
+        }
+        .font(.system(size: 12))
     }
 
     // MARK: - Pieces

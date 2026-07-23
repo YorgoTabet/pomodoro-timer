@@ -1,5 +1,5 @@
 import AppKit
-import CoreAudio
+import ApplicationServices
 import Foundation
 import os
 
@@ -50,7 +50,7 @@ public final class ScriptedMusicController: MusicController {
             if run("tell application \"\(target.appName)\" to pause", target: target) != nil {
                 paused.insert(target.bundleID)
                 didPause = true
-                log.info("Paused \(target.appName, privacy: .public)")
+                log.notice("Paused \(target.appName, privacy: .public)")
             }
         }
         return didPause
@@ -61,7 +61,7 @@ public final class ScriptedMusicController: MusicController {
             // Don't relaunch a player the user has since quit.
             if isRunning(target) {
                 _ = run("tell application \"\(target.appName)\" to play", target: target)
-                log.info("Resumed \(target.appName, privacy: .public)")
+                log.notice("Resumed \(target.appName, privacy: .public)")
             }
             paused.remove(target.bundleID)
         }
@@ -74,7 +74,13 @@ public final class ScriptedMusicController: MusicController {
     /// Whether *this* controller found something playing — used by the chain to
     /// decide whether the media-key fallback is needed.
     public func anythingPlaying() -> Bool {
-        targets.contains { isRunning($0) && playerState($0) == "playing" }
+        for target in targets {
+            let running = isRunning(target)
+            let state = running ? (playerState(target) ?? "<no answer>") : "<not running>"
+            log.notice("\(target.appName, privacy: .public): running=\(running, privacy: .public) state=\(state, privacy: .public)")
+            if running, state == "playing" { return true }
+        }
+        return false
     }
 
     // MARK: -
@@ -117,15 +123,17 @@ public final class MediaKeyController: MusicController {
     private static let playPause: Int32 = 16   // NX_KEYTYPE_PLAY
 
     private var didPause = false
+    private var didPrompt = false
 
     public init() {}
 
     @discardableResult
     public func pauseIfPlaying() -> Bool {
-        // The media key is a toggle, not a pause. Sending it when nothing is playing
-        // would *start* whatever player last had focus — the exact opposite of what
-        // the user asked for. So gate it on the audio device actually running.
-        guard Self.isAudioPlaying() else { return false }
+        // Posting a system-defined event needs Accessibility permission. Without it
+        // the event is dropped silently — no error, no exception, nothing — so this
+        // is logged rather than assumed.
+        guard requestAccessibilityIfNeeded() else { return false }
+
         Self.postPlayPause()
         didPause = true
         return true
@@ -141,31 +149,24 @@ public final class MediaKeyController: MusicController {
         didPause = false
     }
 
-    /// Whether the default output device is currently being driven by anything.
+    /// Ask for Accessibility the first time we actually need it.
     ///
-    /// This is the closest macOS gets to "is audio playing" without per-app
-    /// scripting — it can't say *what* is playing, but it reliably distinguishes
-    /// silence from sound, which is all the toggle needs to be safe.
-    private static func isAudioPlaying() -> Bool {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var deviceID = AudioDeviceID(0)
-        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        guard AudioObjectGetPropertyData(
-            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &deviceID
-        ) == noErr else { return false }
+    /// Prompting at launch would be rude and unexplained; prompting here means the
+    /// dialog appears at the exact moment the user's music failed to pause, which is
+    /// when the request makes sense. Asked once per launch — a denied prompt must
+    /// not turn into a dialog every 25 minutes.
+    private func requestAccessibilityIfNeeded() -> Bool {
+        if AXIsProcessTrusted() { return true }
 
-        address.mSelector = kAudioDevicePropertyDeviceIsRunningSomewhere
-        var running: UInt32 = 0
-        size = UInt32(MemoryLayout<UInt32>.size)
-        guard AudioObjectGetPropertyData(
-            deviceID, &address, 0, nil, &size, &running
-        ) == noErr else { return false }
+        guard !didPrompt else {
+            log.error("Media key dropped: Pomodoro is not trusted for Accessibility.")
+            return false
+        }
+        didPrompt = true
 
-        return running != 0
+        log.error("Media key dropped: requesting Accessibility permission.")
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        return AXIsProcessTrustedWithOptions(options)
     }
 
     private static func postPlayPause() {
@@ -207,7 +208,9 @@ public final class ChainedMusicController: MusicController {
 
     @discardableResult
     public func pauseIfPlaying() -> Bool {
-        if scripted.anythingPlaying() {
+        let scriptable = scripted.anythingPlaying()
+        log.notice("pause requested: scriptedPlayerPlaying=\(scriptable, privacy: .public)")
+        if scriptable {
             return scripted.pauseIfPlaying()
         }
         return mediaKey.pauseIfPlaying()

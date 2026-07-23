@@ -42,16 +42,39 @@ else
     echo "    (icon generation failed — continuing without one)"
 fi
 
-# Ad-hoc signatures. Enough for macOS to grant these bundles a stable identity for
-# the App Group container, Automation prompts, notifications, and the login item on
-# THIS Mac. Not notarized, so another Mac would need right-click -> Open once.
+# Signing identity.
 #
+# This MUST be stable across rebuilds. macOS records a TCC permission (Accessibility,
+# Notifications, Automation) against the app's *designated requirement*. An ad-hoc
+# signature's requirement is based on the code hash, which changes on every single
+# build — so every rebuild silently invalidated every permission the user had
+# granted, and the media key, notifications and AppleScript all stopped working with
+# no error anywhere.
+#
+# A real certificate produces a requirement based on identifier + certificate leaf,
+# which does not change when the code does. Override with CODESIGN_IDENTITY if you
+# want a different one; falls back to ad-hoc, which builds and runs fine but makes
+# permissions evaporate on each rebuild.
+if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
+    IDENTITY="$CODESIGN_IDENTITY"
+else
+    IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
+        | grep -oE '"[^"]+"' | head -1 | tr -d '"')"
+fi
+
+if [[ -z "$IDENTITY" ]]; then
+    IDENTITY="-"
+    echo "==> Signing (ad-hoc — no certificate found)"
+    echo "    WARNING: permissions will be revoked on every rebuild."
+else
+    echo "==> Signing as: $IDENTITY"
+fi
+
 # Order matters: nested code must be signed before the container that holds it, or
 # the outer signature seals a hash that no longer matches.
-echo "==> Signing (ad-hoc)"
-codesign --force --sign - --entitlements Resources/PomodoroWidget.entitlements \
+codesign --force --sign "$IDENTITY" --entitlements Resources/PomodoroWidget.entitlements \
     --options runtime "$APPEX"
-codesign --force --sign - --entitlements Resources/Pomodoro.entitlements \
+codesign --force --sign "$IDENTITY" --entitlements Resources/Pomodoro.entitlements \
     --options runtime "$BUNDLE"
 codesign --verify --deep --strict "$BUNDLE" && echo "    signature verified"
 
