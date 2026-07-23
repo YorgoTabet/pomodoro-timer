@@ -28,5 +28,12 @@ let package = Package(
             name: "PomodoroCoreTests",
             dependencies: ["PomodoroCore"]
         ),
+
+        // Guards the path parser and the 60-path transcription, where a dropped
+        // command would be a subtly wrong drawing rather than a crash.
+        .testTarget(
+            name: "PomodoroUITests",
+            dependencies: ["PomodoroUI"]
+        ),
     ]
 )
