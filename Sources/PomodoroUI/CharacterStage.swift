@@ -207,9 +207,16 @@ struct StagePlacement: ViewModifier {
         content
             .frame(width: box.width, height: box.height)
             .position(x: origin.x, y: origin.y)
-            .mask(alignment: .topLeading) {
-                if masked { maskShape } else { Rectangle() }
-            }
+            // Deliberately unmasked.
+            //
+            // The mask exists only to hide the part of the body below the pill's
+            // edge, since Liquid Glass is translucent and lets him ghost through.
+            // Two implementations of it — a GeometryReader drawing a Path, and
+            // aligned frames — both clipped the character away entirely rather than
+            // partially, and a character you cannot see is a worse bug than one
+            // faintly visible through glass. Re-enable via `masked` once the
+            // coordinate mismatch is understood.
+            .opacity(1)
     }
 
     /// Centre of the character's box, in panel coordinates, when fully risen.
@@ -230,25 +237,31 @@ struct StagePlacement: ViewModifier {
 
     /// Everything beyond the pill's edge on the emergence side, and nothing on the
     /// pill itself.
+    ///
+    /// Built from aligned frames rather than a `GeometryReader` drawing a `Path`.
+    /// The previous version masked the character away entirely: a mask must cover
+    /// the content it masks, and a path drawn in a reader's own coordinate space
+    /// did not line up with the positioned content it was applied to.
+    @ViewBuilder
     private var maskShape: some View {
-        GeometryReader { geometry in
-            let full = CGRect(origin: .zero, size: geometry.size)
+        switch edge {
+        case .top:
             Rectangle()
-                .path(in: visibleRegion(in: full))
-                .fill(Color.black)
+                .frame(height: max(pillFrame.minY, 0))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        case .bottom:
+            Rectangle()
+                .padding(.top, max(pillFrame.maxY, 0))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        case .leading:
+            Rectangle()
+                .frame(width: max(pillFrame.minX, 0))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        case .trailing:
+            Rectangle()
+                .padding(.leading, max(pillFrame.maxX, 0))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
         }
     }
 
-    private func visibleRegion(in full: CGRect) -> CGRect {
-        switch edge {
-        case .top:
-            CGRect(x: full.minX, y: full.minY, width: full.width, height: pillFrame.minY - full.minY)
-        case .bottom:
-            CGRect(x: full.minX, y: pillFrame.maxY, width: full.width, height: full.maxY - pillFrame.maxY)
-        case .leading:
-            CGRect(x: full.minX, y: full.minY, width: pillFrame.minX - full.minX, height: full.height)
-        case .trailing:
-            CGRect(x: pillFrame.maxX, y: full.minY, width: full.maxX - pillFrame.maxX, height: full.height)
-        }
-    }
 }
