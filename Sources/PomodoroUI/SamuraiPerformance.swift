@@ -49,9 +49,12 @@ public enum SamuraiPerformance {
         KeyframeTrack(\.swordArmUpper) {
             LinearKeyframe(0, duration: 0.50)
             CubicKeyframe(10, duration: 0.12)           // windup: the sword dips
-            SpringKeyframe(-80, duration: 0.20, spring: .init(response: 0.32, dampingRatio: 0.55))
-            SpringKeyframe(-72, duration: 0.13, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(-72, duration: 0.80)
+            // -48/-40, not the spec's -80/-72: the finished art rests with the
+            // blade already angled up-right, so the spec's angles swung it across
+            // his face. Found by rendering a sweep and looking.
+            SpringKeyframe(-48, duration: 0.20, spring: .init(response: 0.32, dampingRatio: 0.55))
+            SpringKeyframe(-40, duration: 0.13, spring: .init(response: 0.32, dampingRatio: 0.55))
+            LinearKeyframe(-40, duration: 0.80)
             CubicKeyframe(-20, duration: 0.27)          // lower to ready
             LinearKeyframe(-20, duration: 0.38)
         }
@@ -290,15 +293,16 @@ public enum SamuraiPerformance {
         }
         KeyframeTrack(\.swordArmUpper) {
             LinearKeyframe(0, duration: 0.30)
-            SpringKeyframe(-106, duration: 0.25, spring: .init(response: 0.30, dampingRatio: 0.50))
-            SpringKeyframe(-96, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.50))
-            LinearKeyframe(-96, duration: 1.90)
+            // Same correction as focusStart, held higher for the victory pose.
+            SpringKeyframe(-62, duration: 0.25, spring: .init(response: 0.30, dampingRatio: 0.50))
+            SpringKeyframe(-55, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.50))
+            LinearKeyframe(-55, duration: 1.90)
             CubicKeyframe(-10, duration: 0.35)
             LinearKeyframe(-10, duration: 0.45)
         }
         KeyframeTrack(\.swordFore) {
             LinearKeyframe(0, duration: 0.30)
-            SpringKeyframe(-20, duration: 0.40, spring: .init(response: 0.30, dampingRatio: 0.50))
+            SpringKeyframe(-14, duration: 0.40, spring: .init(response: 0.30, dampingRatio: 0.50))
             LinearKeyframe(-20, duration: 1.90)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.45)
