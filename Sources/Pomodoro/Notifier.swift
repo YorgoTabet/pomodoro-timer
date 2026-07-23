@@ -62,10 +62,10 @@ public final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     }
 
     private func playChime(for finished: Phase) {
-        // Two distinct system sounds so focus-end and break-end are tellable apart
-        // without looking at the screen.
-        let name = finished == .focus ? "Glass" : "Blow"
-        NSSound(named: name)?.play()
+        // Two distinct sounds so focus-end and break-end are tellable apart without
+        // looking at the screen.
+        let name = finished == .focus ? settings.focusChime : settings.breakChime
+        ChimePlayer.shared.play(name, volume: settings.chimeVolume)
     }
 
     // Show the banner even while Pomodoro is the frontmost app.

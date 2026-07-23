@@ -239,10 +239,89 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 14) {
             Toggle("Show a notification", isOn: $settings.notificationsEnabled)
             Toggle("Play a chime", isOn: $settings.chimeEnabled)
-            caption("Focus and break endings use different chimes, so you can tell them apart without looking.")
+
+            Divider().opacity(0.4)
+
+            chimeRow("When focus ends", selection: $settings.focusChime, phase: .focus)
+            chimeRow("When a break ends", selection: $settings.breakChime, phase: .shortBreak)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Chime volume")
+                    Spacer()
+                    Text("\(Int(settings.chimeVolume * 100))%")
+                        .font(.system(size: 11, weight: .medium))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack(spacing: 8) {
+                    Image(systemName: "speaker.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                    // Runs to 200%: past 100% the chime is amplified beyond the
+                    // sample's own level, which plain NSSound cannot do.
+                    Slider(value: $settings.chimeVolume, in: 0...2, step: 0.05)
+                    Image(systemName: "speaker.wave.3.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(volumeCaption)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+            .disabled(!settings.chimeEnabled)
+
+            caption("Still bounded by your Mac's output volume — if 200% is not enough, the system volume is the thing to raise.")
         }
         .toggleStyle(.switch)
         .font(.system(size: 12))
+    }
+
+    private var volumeCaption: String {
+        switch settings.chimeVolume {
+        case ..<0.01: "Muted"
+        case ..<1.0: "Quieter than the sound's own level"
+        case 1.0: "The sound's own level"
+        default: "Amplified +\(String(format: "%.0f", 20 * log10(settings.chimeVolume))) dB"
+        }
+    }
+
+    /// Sound choice plus an immediate preview — tuning a chime you can only hear
+    /// once every 25 minutes is not tuning.
+    private func chimeRow(_ title: String, selection: Binding<String>, phase: Phase) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Theme.tint(for: phase))
+                .frame(width: 7, height: 7)
+
+            Text(title)
+                .font(.system(size: 12))
+
+            Spacer()
+
+            Picker("", selection: selection) {
+                ForEach(ChimePlayer.availableSounds, id: \.self) { name in
+                    Text(name).tag(name)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 120)
+
+            Button {
+                ChimePlayer.shared.preview(selection.wrappedValue, volume: settings.chimeVolume)
+            } label: {
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.tint(for: phase))
+            }
+            .buttonStyle(.plain)
+            .help("Preview")
+            .accessibilityLabel("Preview \(title)")
+        }
+        .disabled(!settings.chimeEnabled)
     }
 
     // MARK: - Pieces

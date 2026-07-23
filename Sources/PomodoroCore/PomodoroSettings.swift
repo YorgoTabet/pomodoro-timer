@@ -17,6 +17,9 @@ public final class PomodoroSettings {
         case autoStartFocus
         case notificationsEnabled
         case chimeEnabled
+        case chimeVolume
+        case focusChime
+        case breakChime
         case controlMusic
         case resumeMusicOnFocusStart
         case showFloatingBar
@@ -41,6 +44,11 @@ public final class PomodoroSettings {
             Key.autoStartFocus.rawValue: false,
             Key.notificationsEnabled.rawValue: true,
             Key.chimeEnabled.rawValue: true,
+            Key.chimeVolume.rawValue: 1.0,
+            // "Hero" and "Blow" are the two loudest system sounds, and distinct
+            // enough from each other to tell apart without looking.
+            Key.focusChime.rawValue: "Hero",
+            Key.breakChime.rawValue: "Blow",
             Key.controlMusic.rawValue: true,
             Key.resumeMusicOnFocusStart.rawValue: true,
             Key.showFloatingBar.rawValue: true,
@@ -95,6 +103,27 @@ public final class PomodoroSettings {
     public var chimeEnabled: Bool {
         get { access(keyPath: \.chimeEnabled); return defaults.bool(forKey: Key.chimeEnabled.rawValue) }
         set { write(.chimeEnabled, newValue, \.chimeEnabled) }
+    }
+
+    /// 0…2, where 1.0 is the sample's own recorded level. Above 1.0 the chime is
+    /// genuinely amplified — see `ChimePlayer`, which is why this isn't capped at 1.
+    public var chimeVolume: Double {
+        get {
+            access(keyPath: \.chimeVolume)
+            guard defaults.object(forKey: Key.chimeVolume.rawValue) != nil else { return 1.0 }
+            return min(max(defaults.double(forKey: Key.chimeVolume.rawValue), 0), 2)
+        }
+        set { write(.chimeVolume, min(max(newValue, 0), 2), \.chimeVolume) }
+    }
+
+    public var focusChime: String {
+        get { access(keyPath: \.focusChime); return defaults.string(forKey: Key.focusChime.rawValue) ?? "Hero" }
+        set { write(.focusChime, newValue, \.focusChime) }
+    }
+
+    public var breakChime: String {
+        get { access(keyPath: \.breakChime); return defaults.string(forKey: Key.breakChime.rawValue) ?? "Blow" }
+        set { write(.breakChime, newValue, \.breakChime) }
     }
 
     public var controlMusic: Bool {
