@@ -2,7 +2,8 @@
 
 **Date:** 2026-07-23
 **Status:** Approved
-**Art direction:** see `2026-07-23-character-art-direction.md`
+**Art direction:** `2026-07-23-samurai-art-direction-v2.md` (Samurai);
+`2026-07-23-character-art-direction.md` (the other four, still at v1 quality)
 
 ## Purpose
 
@@ -37,8 +38,9 @@ real work; if the user is looking away, nothing is lost.
 
 ### The window
 
-The floating pill's existing `NSPanel` gains a **64pt transparent margin on all four
-sides**: 236×46 becomes 364×174. The margin serves two purposes at once — it is the
+The floating pill's existing `NSPanel` gains a **168pt transparent margin on all four
+sides**: 236×46 becomes 572×382. (This started at 64pt and grew when the Samurai was
+redrawn at 150pt tall — the margin has to hold the character plus the pill's growth.) The margin serves two purposes at once — it is the
 stage the character emerges into from any edge, and it is the room the pill needs to
 grow 15% without being clipped by its own window.
 
@@ -105,15 +107,18 @@ one field per named part in the art direction:
 
 ```swift
 struct SamuraiPose {
-    var rootOffset: CGFloat = 48      // along the emergence normal
-    var rootRotation: Angle = .zero
-    var rootScale: CGFloat = 1
-    var swordArm: Angle = .degrees(-15)
-    var crest: Angle = .zero
-    var bladeOpacity: Double = 1
-    var eyeScaleY: CGFloat = 1
+    var emergence: Double = 200   // design units behind the occluding edge
+    var rootLean, rootScaleY: Double
+    var torso, head, kabuto, maedate: Double
+    var sodeL, sodeR, swordArmUpper, swordFore, katana: Double
+    var kusazuriL, kusazuriFL, kusazuriFR, kusazuriR: Double
+    // …one field per rig joint, plus the expression cross-fade opacities
 }
 ```
+
+`emergence` is authored on a 0…200 scale; `CharacterStage` maps it onto the real
+distance each edge needs, since hiding past the left edge is a different distance
+than past the top.
 
 The art direction's keyframe tables map one row to one `KeyframeTrack` entry, so the
 spec is transcribed rather than reinterpreted.
