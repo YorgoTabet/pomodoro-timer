@@ -9,7 +9,38 @@ import SwiftUI
 /// like — that lives in the character views.
 public struct CharacterStage: View {
 
-    public static let margin: Double = 64
+    /// Target on-screen height. The art carries far more detail than the old
+    /// 44pt chibi could, and needs room for it.
+    public static let displayHeight: Double = 150
+
+    /// Scale from the 200×260 design space to `displayHeight`.
+    public static var scale: Double { displayHeight / SamuraiArt.canvas.height }
+
+    public static var displaySize: CGSize {
+        CGSize(width: SamuraiArt.canvas.width * scale, height: displayHeight)
+    }
+
+    /// Where the character's feet are, measured from the top of its box.
+    ///
+    /// The art is authored with the occluding edge at design y=196, not at the
+    /// bottom of the 260-unit canvas — the last 64 units are body that is meant to
+    /// be hidden. Aligning this line to the pill's edge is what makes him stand on
+    /// it rather than float above it.
+    public static var groundInset: Double { 196 * scale }
+
+    /// How far the character must travel to be completely out of sight past a given
+    /// edge. Authored `emergence` is a 0…200 scale, so it is mapped onto this.
+    static func hideDistance(for edge: StageEdge) -> Double {
+        switch edge {
+        case .top: groundInset
+        case .bottom: displaySize.height
+        case .leading, .trailing: displaySize.width
+        }
+    }
+
+    /// Transparent room on every side of the pill: enough for the character plus
+    /// the pill's own 15% growth.
+    public static let margin: Double = 168
 
     let character: PomodoroCharacter
     let cue: CharacterCue?
@@ -52,16 +83,18 @@ public struct CharacterStage: View {
             // Reduce Motion: no leaping, spinning, or bouncing. The character simply
             // appears at its risen pose, holds, and fades.
             SamuraiView(pose: restingPose)
-                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: SamuraiView.boxSize))
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width, height: CharacterStage.displaySize.height, alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: CharacterStage.displaySize))
                 .transition(.opacity.animation(.easeInOut(duration: 0.4)))
         } else {
             // Each performance is its own opaque `Keyframes` type, so the switch
             // happens here in a ViewBuilder — which can unify branches — rather than
             // inside a `@KeyframesBuilder`, which cannot.
             switch cue {
-            case .focusStart: samuraiAnimator(cue) { SamuraiPerformance.iaiDraw }
-            case .breakStart: samuraiAnimator(cue) { SamuraiPerformance.sheatheAndExhale }
-            case .longBreak: samuraiAnimator(cue) { SamuraiPerformance.bladeToTheSky }
+            case .focusStart: samuraiAnimator(cue) { SamuraiPerformance.snapToGuard }
+            case .breakStart: samuraiAnimator(cue) { SamuraiPerformance.exhale }
+            case .longBreak: samuraiAnimator(cue) { SamuraiPerformance.triumph }
             }
         }
     }
@@ -78,10 +111,16 @@ public struct CharacterStage: View {
                     x: -pose.emergence * edge.inwardNormal.x,
                     y: -pose.emergence * edge.inwardNormal.y
                 )
-                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: SamuraiView.boxSize))
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: SamuraiView.canvas))
         } keyframes: { _ in
             track()
         }
+    }
+
+    /// Maps the authored 0…200 emergence scale onto the real distance this edge
+    /// needs, so "hidden" means hidden on every side.
+    private func hidden(_ emergence: Double) -> Double {
+        emergence / 200 * CharacterStage.hideDistance(for: edge)
     }
 
     private var restingPose: SamuraiPose {
@@ -118,13 +157,15 @@ struct StagePlacement: ViewModifier {
     private var origin: CGPoint {
         switch edge {
         case .top:
-            CGPoint(x: pillFrame.midX, y: pillFrame.minY - box.height / 2)
+            // Feet on the pill's top edge; the unused lower body falls past it and
+            // is masked away.
+            CGPoint(x: pillFrame.midX, y: pillFrame.minY - CharacterStage.groundInset + box.height / 2)
         case .bottom:
             CGPoint(x: pillFrame.midX, y: pillFrame.maxY + box.height / 2)
         case .leading:
-            CGPoint(x: pillFrame.minX - box.width / 2, y: pillFrame.midY)
+            CGPoint(x: pillFrame.minX - box.width / 2, y: pillFrame.maxY - CharacterStage.groundInset + box.height / 2)
         case .trailing:
-            CGPoint(x: pillFrame.maxX + box.width / 2, y: pillFrame.midY)
+            CGPoint(x: pillFrame.maxX + box.width / 2, y: pillFrame.maxY - CharacterStage.groundInset + box.height / 2)
         }
     }
 

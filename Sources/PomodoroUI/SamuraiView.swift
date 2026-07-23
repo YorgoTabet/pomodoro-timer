@@ -1,33 +1,102 @@
-import PomodoroCore
+import CoreGraphics
 import SwiftUI
 
-/// The animatable state of the samurai.
+/// The animatable state of the samurai rig.
 ///
-/// One field per named part in the art direction. Keyframe timelines interpolate
-/// this struct, so a timeline row maps to a `KeyframeTrack` on one of these
-/// properties and nothing has to be reinterpreted.
-public struct SamuraiPose: Equatable {
-    /// Displacement along the emergence edge's inward normal, in points.
-    /// 48 = fully hidden behind the pill, 0 = fully risen.
-    public var emergence: Double = 48
-    public var rootRotation: Double = 0      // degrees
-    public var rootScale: Double = 1
-    public var swordArm: Double = -15        // degrees, rest pose
-    public var crest: Double = 0             // degrees
-    public var bladeOpacity: Double = 1
-    public var eyeScaleY: Double = 1
+/// One rotation per joint plus the handful of offsets, scales and opacities the
+/// timelines actually use. Keyframe timelines interpolate this whole struct, so a
+/// row in the art direction maps to a `KeyframeTrack` on one property.
+public struct SamuraiPose: Equatable, Sendable {
+
+    /// How far the character is displaced back behind the pill, in design units.
+    /// 200 = fully hidden, 0 = fully risen, negative = overshoot above the edge.
+    public var emergence: Double = 200
+    public var rootLean: Double = 0
+    public var rootScaleY: Double = 1
+
+    public var torso: Double = 0
+    public var torsoScaleY: Double = 1
+    public var head: Double = 0
+    public var headScale: Double = 1
+    public var kabuto: Double = 0
+    public var kabutoLift: Double = 0
+    public var maedate: Double = 0
+
+    public var sodeL: Double = 0
+    public var sodeR: Double = 0
+    public var offArmUpper: Double = 0
+    public var offArmFore: Double = 0
+    public var swordArmUpper: Double = 0
+    public var swordFore: Double = 0
+    public var katana: Double = 0
+
+    public var chestCord: Double = 0
+    public var sashTailL: Double = 0
+    public var sashTailR: Double = 0
+    public var kusazuriL: Double = 0
+    public var kusazuriFL: Double = 0
+    public var kusazuriFR: Double = 0
+    public var kusazuriR: Double = 0
+    public var scabbard: Double = 0
+    public var legL: Double = 0
+    public var legR: Double = 0
+
+    /// Expression cross-fades. The menpo hides the mouth, so the brows and eyes do
+    /// all the acting.
+    public var fierceOpacity: Double = 1
+    public var easeOpacity: Double = 0
+    public var triumphOpacity: Double = 0
+    public var pupilDrop: Double = 0
 
     public init() {}
+
+    /// Rotation in degrees for a rig part.
+    func rotation(of part: SamuraiArt.Part) -> Double {
+        switch part {
+        case .root: rootLean
+        case .torso: torso
+        case .head: head
+        case .kabuto: kabuto
+        case .maedate: maedate
+        case .sodeL: sodeL
+        case .sodeR: sodeR
+        case .offArmUpper: offArmUpper
+        case .offArmFore: offArmFore
+        case .swordArmUpper: swordArmUpper
+        case .swordFore: swordFore
+        case .katana: katana
+        case .chestCord: chestCord
+        case .sashTailL: sashTailL
+        case .sashTailR: sashTailR
+        case .kusazuriL: kusazuriL
+        case .kusazuriFL: kusazuriFL
+        case .kusazuriFR: kusazuriFR
+        case .kusazuriR: kusazuriR
+        case .scabbard: scabbard
+        case .legL: legL
+        case .legR: legR
+        }
+    }
+
+    /// Opacity override for the cross-faded expression layers.
+    func opacity(of layer: SamuraiArt.Layer) -> Double {
+        switch layer.name {
+        case "browsFierce", "eyeWhites", "pupilPair": fierceOpacity
+        case "browsEase": easeOpacity
+        case "eyesTriumph": triumphOpacity
+        default: layer.restOpacity
+        }
+    }
 }
 
-/// A samurai, drawn entirely from SwiftUI primitives.
+/// The samurai, drawn from `SamuraiArt`'s path data.
 ///
-/// Authored in a 56×44pt box with the origin at top-left and the pill's edge as the
-/// "horizon" at y=44 — see the art-direction spec. Nothing below the waist is drawn
-/// in detail, because the pill covers it.
+/// Draw order is global and independent of the rig, so transforms are composed per
+/// layer from its ancestor chain rather than by nesting groups — `shikoro` belongs
+/// to `kabuto` but must be drawn behind the body.
 public struct SamuraiView: View {
 
-    public static let boxSize = CGSize(width: 56, height: 44)
+    public static let canvas = SamuraiArt.canvas
 
     let pose: SamuraiPose
 
@@ -35,139 +104,68 @@ public struct SamuraiView: View {
         self.pose = pose
     }
 
-    // Palette
-    private let armor = Color(red: 0.231, green: 0.290, blue: 0.420)     // #3B4A6B
-    private let armorDark = Color(red: 0.180, green: 0.227, blue: 0.333) // #2E3A55
-    private let gold = Color(red: 0.949, green: 0.706, blue: 0.255)      // #F2B441
-    private let skin = Color(red: 0.961, green: 0.788, blue: 0.627)      // #F5C9A0
-    private let handleRed = Color(red: 0.753, green: 0.224, blue: 0.169) // #C0392B
-    private let ink = Color(red: 0.149, green: 0.165, blue: 0.200)       // #262A33
-
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            swordArmGroup
-            bodyGroup
-            headGroup
-            helmetGroup
-        }
-        .frame(width: Self.boxSize.width, height: Self.boxSize.height, alignment: .topLeading)
-        .rotationEffect(.degrees(pose.rootRotation), anchor: anchor(26, 40))
-        .scaleEffect(pose.rootScale, anchor: anchor(26, 44))
-    }
-
-    // MARK: - Sword arm
-
-    private var swordArmGroup: some View {
-        ZStack(alignment: .topLeading) {
-            capsule(5, 10, at: (41, 31), armor)
-            capsule(3, 7, at: (41, 29.5), handleRed)
-            // Blade before guard so the tsuba reads as sitting in front of it.
-            Capsule()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(red: 0.957, green: 0.969, blue: 0.980),
-                                 Color(red: 0.843, green: 0.871, blue: 0.910)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: 3.5, height: 22)
-                .opacity(pose.bladeOpacity)
-                .position(x: 41, y: 13.5)
-            circle(5.5, at: (41, 25), gold)
-        }
-        .frame(width: Self.boxSize.width, height: Self.boxSize.height, alignment: .topLeading)
-        // Anchor at the shoulder (41, 36) so the blade swings around the joint.
-        .rotationEffect(.degrees(pose.swordArm), anchor: anchor(41, 36))
-    }
-
-    // MARK: - Body
-
-    private var bodyGroup: some View {
-        ZStack(alignment: .topLeading) {
-            roundedRect(26, 16, radius: 7, at: (26, 42), armor)
-            roundedRect(10, 8, radius: 3, at: (13, 36), armorDark).rotationEffect(.degrees(-10))
-            roundedRect(10, 8, radius: 3, at: (39, 36), armorDark).rotationEffect(.degrees(10))
-        }
-        .frame(width: Self.boxSize.width, height: Self.boxSize.height, alignment: .topLeading)
-    }
-
-    // MARK: - Head
-
-    private var headGroup: some View {
-        ZStack(alignment: .topLeading) {
-            circle(22, at: (26, 26), skin)
-
-            // Stern V brows — the whole expression, since nothing else survives at
-            // this size.
-            capsule(5, 1.5, at: (21, 27.5), ink).rotationEffect(.degrees(-18))
-            capsule(5, 1.5, at: (31, 27.5), ink).rotationEffect(.degrees(18))
-
-            eye(at: (21, 30.5))
-            eye(at: (31, 30.5))
-
-            capsule(4, 1.5, at: (26, 34.5), ink)
-        }
-        .frame(width: Self.boxSize.width, height: Self.boxSize.height, alignment: .topLeading)
-    }
-
-    /// Squashes vertically to a closed, content eye.
-    private func eye(at point: (Double, Double)) -> some View {
-        Capsule()
-            .fill(ink)
-            .frame(width: 2, height: 4)
-            .scaleEffect(y: pose.eyeScaleY)
-            .position(x: point.0, y: point.1)
-    }
-
-    // MARK: - Helmet
-
-    private var helmetGroup: some View {
-        ZStack(alignment: .topLeading) {
-            roundedRect(8, 10, radius: 3, at: (12, 16), armorDark).rotationEffect(.degrees(-18))
-            roundedRect(8, 10, radius: 3, at: (40, 16), armorDark).rotationEffect(.degrees(18))
-            circle(26, at: (26, 13), armorDark)
-
-            ZStack(alignment: .topLeading) {
-                capsule(3, 11, at: (22, 7), gold).rotationEffect(.degrees(-28))
-                capsule(3, 11, at: (30, 7), gold).rotationEffect(.degrees(28))
-                circle(5, at: (26, 11), gold)
+            ForEach(SamuraiArt.layers) { layer in
+                rigged(layer)
             }
-            .frame(width: Self.boxSize.width, height: Self.boxSize.height, alignment: .topLeading)
-            .rotationEffect(.degrees(pose.crest), anchor: anchor(26, 11))
         }
-        .frame(width: Self.boxSize.width, height: Self.boxSize.height, alignment: .topLeading)
+        .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
+        .scaleEffect(y: pose.rootScaleY, anchor: .bottom)
+        .rotationEffect(.degrees(pose.rootLean), anchor: SamuraiArt.Part.root.anchor)
     }
 
-    // MARK: - Primitives
+    /// One layer, wrapped in its ancestors' rotations from the torso down.
+    ///
+    /// `root` is handled once on the whole stack instead of per layer — it carries
+    /// the emergence offset and the body scale, which are not per-part transforms.
+    @ViewBuilder
+    private func rigged(_ layer: SamuraiArt.Layer) -> some View {
+        let chain = layer.part.chain.filter { $0 != .root }
+        let opacity = pose.opacity(of: layer)
 
-    /// Box coordinates to a `UnitPoint` of the 56×44 frame, since SwiftUI rotation
-    /// anchors are fractions of the view's own bounds.
-    private func anchor(_ x: Double, _ y: Double) -> UnitPoint {
-        UnitPoint(x: x / Self.boxSize.width, y: y / Self.boxSize.height)
+        if opacity > 0 {
+            chain.reduce(AnyView(shape(layer))) { view, part in
+                AnyView(
+                    view
+                        .rotationEffect(.degrees(pose.rotation(of: part)), anchor: part.anchor)
+                        .modifier(PartExtras(part: part, pose: pose))
+                )
+            }
+            .opacity(opacity)
+        }
     }
 
-    private func circle(_ diameter: Double, at point: (Double, Double), _ fill: Color) -> some View {
-        Circle()
-            .fill(fill)
-            .frame(width: diameter, height: diameter)
-            .position(x: point.0, y: point.1)
+    private func shape(_ layer: SamuraiArt.Layer) -> some View {
+        ZStack(alignment: .topLeading) {
+            layer.path.fill(layer.fill)
+            if let width = layer.stroke {
+                layer.path.stroke(
+                    SamuraiArt.Ink.outline,
+                    style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
+                )
+            }
+        }
+        .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
     }
+}
 
-    private func capsule(_ w: Double, _ h: Double, at point: (Double, Double), _ fill: Color) -> some View {
-        Capsule()
-            .fill(fill)
-            .frame(width: w, height: h)
-            .position(x: point.0, y: point.1)
-    }
+/// The few parts that move by more than a rotation.
+private struct PartExtras: ViewModifier {
+    let part: SamuraiArt.Part
+    let pose: SamuraiPose
 
-    private func roundedRect(
-        _ w: Double, _ h: Double, radius: Double,
-        at point: (Double, Double), _ fill: Color
-    ) -> some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(fill)
-            .frame(width: w, height: h)
-            .position(x: point.0, y: point.1)
+    func body(content: Content) -> some View {
+        switch part {
+        case .torso:
+            content.scaleEffect(y: pose.torsoScaleY, anchor: UnitPoint(x: 0.5, y: 168.0 / 260.0))
+        case .head:
+            content.scaleEffect(pose.headScale, anchor: SamuraiArt.Part.head.anchor)
+        case .kabuto:
+            // "Cap pops" — the helmet lifts a beat off the head on hard accents.
+            content.offset(y: pose.kabutoLift)
+        default:
+            content
+        }
     }
 }
