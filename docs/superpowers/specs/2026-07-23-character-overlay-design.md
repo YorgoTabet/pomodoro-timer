@@ -155,6 +155,38 @@ cheap and ignoring it is wrong.
 - The animations themselves are verified by screenshotting the running app at several
   points through each variation, using the preview buttons to fire them on demand.
 
+## Verification status (2026-07-23)
+
+Verified by offscreen `ImageRenderer`, which works with the display locked:
+
+- All 60 paths transcribe correctly; the samurai renders as designed.
+- The composed stage is correct — character behind the pill, feet occluded at the
+  ground line, correct scale — at risen, hidden, and mid-emergence.
+- `CharacterCue` mapping and `StageEdge` flipping are unit-tested.
+
+**Not yet verified: the animation running in the live app.** Three false diagnoses
+were made and later retracted during this work, all from bad observations rather
+than bad reasoning:
+
+1. "`.position` inside nested frames blanks the hosting view" — the evidence was a
+   screenshot taken before the app had drawn (~3s after launch).
+2. "Mounting `SamuraiView` blanks the panel" — an A/B that looked conclusive but was
+   taken against a **locked screen**, where no window renders at all.
+3. "The CoreAudio gate prevents starting music when nothing plays" — the property
+   reads `true` in silence on this Mac, so the gate never fired.
+
+The lesson worth keeping: before concluding anything from a screenshot, confirm the
+screen is awake, the app has finished its first draw, and no modal is blocking the
+run loop. A capture that shows nothing is not evidence that nothing was drawn.
+
+One real bug *was* found and fixed: `KeyframeAnimator` only animates when its trigger
+changes, and the stage created one at the moment of the cue — so it mounted with the
+trigger already final, never ran, and rendered its initial (fully hidden) pose. The
+animator is now always mounted with a generation counter as trigger.
+
+Use `POMODORO_DEMO=focusStart|breakStart|longBreak` to play a cue ~1.5s after launch
+rather than waiting out a real session.
+
 ## Limitations
 
 - 1.15 is a bold scale — ~35pt of width on a 236pt pill. It is a single constant so
