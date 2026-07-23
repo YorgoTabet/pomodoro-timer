@@ -1,7 +1,12 @@
-# Character art direction
+# Character art direction — v1 (chibi)
 
 **Date:** 2026-07-23
 **Engineering design:** see `2026-07-23-character-overlay-design.md`
+**Status:** the Samurai section here is SUPERSEDED by
+`2026-07-23-samurai-art-direction-v2.md`, a far more detailed 60-path rig built
+to a reference image. The other four characters below are still at this chibi
+quality bar and will need re-specifying to match the Samurai before they are
+drawn.
 
 Every character lives in a 56×44pt box, origin (0,0) top-left. Positions are the
 *centre* of the shape; sizes are width×height in points. The occluding pill edge is
