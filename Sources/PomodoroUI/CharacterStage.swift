@@ -69,8 +69,11 @@ public struct CharacterStage: View {
         // Mounted whenever a character is chosen, not only during a performance:
         // the animator has to exist *before* the trigger changes. At rest its
         // initial pose is fully hidden behind the pill, so nothing is drawn.
-        if character != .none, character.isImplemented,
-           generation > 0 || ProcessInfo.processInfo.environment["POMODORO_HOLD"] != nil {
+        // No `generation > 0` gate. KeyframeAnimator only animates when its trigger
+        // *changes*, so it must already be mounted when the cue fires — gating on
+        // generation meant it appeared with the trigger final and sat at its initial
+        // pose forever. At rest that pose is fully hidden, so mounting costs nothing.
+        if character != .none, character.isImplemented {
             performance(cue)
                 // Purely decorative: the stage must never intercept a click meant
                 // for whatever is behind the transparent panel.
@@ -131,6 +134,11 @@ public struct CharacterStage: View {
     ) -> some View {
         KeyframeAnimator(initialValue: SamuraiPose(), trigger: generation) { pose in
             SamuraiView(pose: pose)
+                // Invisible at both ends of every timeline. The mask cannot be
+                // relied on for this: cues that step in front of the pill run
+                // unmasked, which left the resting pose parked in plain sight below
+                // the widget. Opacity works for masked and unmasked alike.
+                .opacity(pose.emergence >= 185 ? 0 : 1)
                 // `scaleEffect` does not change reported layout size, so the frame
                 // needs .topLeading or the still-200x260 content gets centred and
                 // shifted out of the mask.
@@ -154,7 +162,19 @@ public struct CharacterStage: View {
     /// Maps the authored 0…200 emergence scale onto the real distance this edge
     /// needs, so "hidden" means hidden on every side.
     private func hidden(_ emergence: Double) -> Double {
-        emergence / 200 * CharacterStage.hideDistance(for: edge)
+        emergence / 200 * hideDistance
+    }
+
+    /// Far enough that the resting pose clears the mask entirely.
+    ///
+    /// Using just the character's height left his head inside the pill, where the
+    /// translucent glass showed him faintly at rest. The pill's own depth has to be
+    /// included because the mask cuts at its far edge, not its near one.
+    private var hideDistance: Double {
+        switch edge {
+        case .top, .bottom: CharacterStage.displaySize.height + pillFrame.height
+        case .leading, .trailing: CharacterStage.displaySize.width + pillFrame.width
+        }
     }
 
     /// Key poses from the three timelines, for the hold aid above.
@@ -207,16 +227,9 @@ struct StagePlacement: ViewModifier {
         content
             .frame(width: box.width, height: box.height)
             .position(x: origin.x, y: origin.y)
-            // Deliberately unmasked.
-            //
-            // The mask exists only to hide the part of the body below the pill's
-            // edge, since Liquid Glass is translucent and lets him ghost through.
-            // Two implementations of it — a GeometryReader drawing a Path, and
-            // aligned frames — both clipped the character away entirely rather than
-            // partially, and a character you cannot see is a worse bug than one
-            // faintly visible through glass. Re-enable via `masked` once the
-            // coordinate mismatch is understood.
-            .opacity(1)
+            .mask(alignment: .topLeading) {
+                if masked { maskShape } else { Rectangle() }
+            }
     }
 
     /// Centre of the character's box, in panel coordinates, when fully risen.
@@ -246,8 +259,15 @@ struct StagePlacement: ViewModifier {
     private var maskShape: some View {
         switch edge {
         case .top:
+            // Cut at the pill's *bottom* edge rather than its top.
+            //
+            // Cutting at the top edge is geometrically ideal but unforgiving: the
+            // character passes through that line during the rise, so any error in
+            // placement or timing removes him entirely rather than partially — which
+            // is exactly what happened. Cutting lower still kills the real artifact
+            // (a body dangling below the widget) while tolerating both.
             Rectangle()
-                .frame(height: max(pillFrame.minY, 0))
+                .frame(height: max(pillFrame.maxY, 0))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         case .bottom:
             Rectangle()

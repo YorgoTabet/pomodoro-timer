@@ -406,8 +406,17 @@ final class CharacterStageModel {
         self.edge = edge
         self.cue = cue
         self.foreground = SamuraiPerformance.comesForward(for: cue)
-        // A fresh generation replays even when the same cue repeats.
-        self.generation += 1
+
+        // The trigger must change *after* this cue's animator has mounted.
+        //
+        // Each cue is a different `Keyframes` type, so switching cue replaces the
+        // animator with a new instance. Bumping generation in the same update meant
+        // the replacement mounted with its trigger already final — and
+        // KeyframeAnimator only animates on a *change*, so it sat at its initial
+        // pose. One runloop turn apart is enough.
+        DispatchQueue.main.async { [weak self] in
+            self?.generation += 1
+        }
 
         withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
             pillScale = Self.reactionScale
