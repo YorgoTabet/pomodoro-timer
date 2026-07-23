@@ -165,7 +165,9 @@ public final class MediaKeyController: MusicController {
         didPrompt = true
 
         log.error("Media key dropped: requesting Accessibility permission.")
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        // The literal key rather than `kAXTrustedCheckOptionPrompt`: that symbol is
+        // a global mutable `var`, which Swift 6 strict concurrency rejects.
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
         return AXIsProcessTrustedWithOptions(options)
     }
 
