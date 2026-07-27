@@ -92,10 +92,61 @@ public struct CharacterStage: View {
             general(cue)
         case .rabbit:
             rabbit(cue)
+        case .animeGirl:
+            animeGirl(cue)
         default:
             // Declared in the roster but not drawn yet.
             EmptyView()
         }
+    }
+
+    // MARK: - Anime girl
+
+    @ViewBuilder
+    private func animeGirl(_ cue: CharacterCue) -> some View {
+        if reduceMotion {
+            AnimeGirlView(pose: animeGirlRestingPose)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+                .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+        } else {
+            switch cue {
+            case .focusStart: animeGirlAnimator { AnimeGirlPerformance.fistPump }
+            case .breakStart: animeGirlAnimator { AnimeGirlPerformance.happySway }
+            case .longBreak: animeGirlAnimator { AnimeGirlPerformance.twirl }
+            }
+        }
+    }
+
+    private func animeGirlAnimator<K: Keyframes<AnimeGirlPose>>(
+        @KeyframesBuilder<AnimeGirlPose> _ track: @escaping () -> K
+    ) -> some View {
+        KeyframeAnimator(initialValue: AnimeGirlPose(), trigger: generation) { pose in
+            AnimeGirlView(pose: pose)
+                .opacity(pose.emergence >= 185 ? 0 : 1)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .offset(
+                    x: -hidden(pose.emergence) * edge.inwardNormal.x,
+                    y: -hidden(pose.emergence) * edge.inwardNormal.y
+                )
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } keyframes: { _ in
+            track()
+        }
+    }
+
+    private var animeGirlRestingPose: AnimeGirlPose {
+        var pose = AnimeGirlPose()
+        pose.emergence = 0
+        return pose
     }
 
     // MARK: - Rabbit

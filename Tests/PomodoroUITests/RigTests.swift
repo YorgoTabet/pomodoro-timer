@@ -22,7 +22,7 @@ struct RigTests {
             .filter { $0.isImplemented && $0 != .none }
             .map(\.rawValue)
             .sorted()
-        let covered = ["general", "ninja", "rabbit", "samurai"]
+        let covered = ["animeGirl", "general", "ninja", "rabbit", "samurai"]
         #expect(implemented == covered, """
             Rig tests cover \(covered) but the app implements \(implemented).             Add the new character's Part/layers to this file.
             """)
@@ -50,6 +50,9 @@ struct RigTests {
             assertWellOrdered(part.chain, of: part.rawValue)
         }
         for part in RabbitArt.Part.allCases {
+            assertWellOrdered(part.chain, of: part.rawValue)
+        }
+        for part in AnimeGirlArt.Part.allCases {
             assertWellOrdered(part.chain, of: part.rawValue)
         }
     }
@@ -82,6 +85,9 @@ struct RigTests {
         for part in RabbitArt.Part.allCases {
             #expect(depth(of: part) <= 8, "\(part.rawValue) is suspiciously deep or cyclic")
         }
+        for part in AnimeGirlArt.Part.allCases {
+            #expect(depth(of: part) <= 8, "\(part.rawValue) is suspiciously deep or cyclic")
+        }
     }
 
     private func depth<P: RigPart>(of part: P) -> Int {
@@ -111,6 +117,9 @@ struct RigTests {
         }
         for part in RabbitArt.Part.allCases {
             expectInBounds(part.pivot, canvas: RabbitArt.canvas, name: part.rawValue)
+        }
+        for part in AnimeGirlArt.Part.allCases {
+            expectInBounds(part.pivot, canvas: AnimeGirlArt.canvas, name: part.rawValue)
         }
     }
 
@@ -143,6 +152,9 @@ struct RigTests {
 
         let rabbitIDs = RabbitArt.layers.map(\.id)
         #expect(Set(rabbitIDs).count == rabbitIDs.count, "duplicate rabbit layer id")
+
+        let girlIDs = AnimeGirlArt.layers.map(\.id)
+        #expect(Set(girlIDs).count == girlIDs.count, "duplicate anime girl layer id")
     }
 
     @Test("Every layer parses to a non-empty path")
@@ -158,6 +170,9 @@ struct RigTests {
         }
         for layer in RabbitArt.layers {
             #expect(!layer.path.isEmpty, "rabbit layer \(layer.name) parsed to an empty path")
+        }
+        for layer in AnimeGirlArt.layers {
+            #expect(!layer.path.isEmpty, "anime girl layer \(layer.name) parsed to an empty path")
         }
     }
 
@@ -176,6 +191,9 @@ struct RigTests {
         }
         for layer in RabbitArt.layers {
             expectPlausible(layer.path.boundingRect, canvas: RabbitArt.canvas, name: layer.name)
+        }
+        for layer in AnimeGirlArt.layers {
+            expectPlausible(layer.path.boundingRect, canvas: AnimeGirlArt.canvas, name: layer.name)
         }
     }
 
