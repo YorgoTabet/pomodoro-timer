@@ -86,10 +86,105 @@ public struct CharacterStage: View {
         switch character {
         case .samurai:
             samurai(cue)
+        case .ninja:
+            ninja(cue)
         default:
             // Declared in the roster but not drawn yet.
             EmptyView()
         }
+    }
+
+    // MARK: - Ninja
+
+    @ViewBuilder
+    private func ninja(_ cue: CharacterCue) -> some View {
+        if reduceMotion {
+            NinjaView(pose: ninjaRestingPose)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+                .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+        } else if let held = ProcessInfo.processInfo.environment["POMODORO_HOLD"] {
+            NinjaView(pose: ninjaHeldPose(named: held))
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } else {
+            switch cue {
+            case .focusStart: ninjaAnimator { NinjaPerformance.shurikenThrow }
+            case .breakStart: ninjaAnimator { NinjaPerformance.perch }
+            case .longBreak: ninjaAnimator { NinjaPerformance.backflip }
+            }
+        }
+    }
+
+    private func ninjaAnimator<K: Keyframes<NinjaPose>>(
+        @KeyframesBuilder<NinjaPose> _ track: @escaping () -> K
+    ) -> some View {
+        KeyframeAnimator(initialValue: NinjaPose(), trigger: generation) { pose in
+            NinjaView(pose: pose)
+                .opacity(pose.emergence >= 185 ? 0 : 1)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .offset(
+                    x: -hidden(pose.emergence) * edge.inwardNormal.x,
+                    y: -hidden(pose.emergence) * edge.inwardNormal.y
+                )
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } keyframes: { _ in
+            track()
+        }
+    }
+
+    /// Development aid, matching `heldPose` — a representative frame per cue.
+    private func ninjaHeldPose(named name: String) -> NinjaPose {
+        var pose = NinjaPose()
+        pose.emergence = 0
+        switch name {
+        case "breakStart":
+            pose.emergence = 52
+            pose.torso = 9
+            pose.head = -13
+            pose.alertOpacity = 0
+            pose.contentOpacity = 1
+            pose.throwArmUpper = -10
+            pose.throwForearm = -16
+            pose.offArmUpper = 12
+        case "longBreak":
+            pose.emergence = -58
+            pose.figureRotation = -240
+            pose.legFrontThigh = -62
+            pose.legFrontShin = 74
+            pose.legBackThigh = -48
+            pose.legBackShin = 62
+            pose.throwArmUpper = -54
+            pose.offArmUpper = 48
+            pose.eyesScaleY = 0.55
+            pose.sparkOpacity = 1
+        default:                       // focusStart
+            pose.throwArmUpper = 38
+            pose.throwForearm = 58
+            pose.torso = -10
+            pose.head = 5
+            pose.eyesScaleY = 0.62
+            pose.shurikenOpacity = 0
+        }
+        return pose
+    }
+
+    private var ninjaRestingPose: NinjaPose {
+        var pose = NinjaPose()
+        pose.emergence = 0
+        return pose
     }
 
     // MARK: - Samurai

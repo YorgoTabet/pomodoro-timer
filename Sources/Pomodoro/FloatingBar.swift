@@ -407,7 +407,7 @@ final class CharacterStageModel {
         self.character = character
         self.edge = edge
         self.cue = cue
-        self.foreground = SamuraiPerformance.comesForward(for: cue)
+        self.foreground = CharacterPlan.comesForward(for: cue, character: character)
 
         // The trigger must change *after* this cue's animator has mounted.
         //
@@ -424,7 +424,7 @@ final class CharacterStageModel {
             pillScale = Self.reactionScale
         }
 
-        let duration = SamuraiPerformance.duration(for: cue)
+        let duration = CharacterPlan.duration(for: cue, character: character)
         clearTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled else { return }

@@ -125,10 +125,14 @@ public struct SamuraiView: View {
     /// the emergence offset and the body scale, which are not per-part transforms.
     @ViewBuilder
     private func rigged(_ layer: SamuraiArt.Layer) -> some View {
-        let chain = layer.part.chain.filter { $0 != .root }
+        let chain = layer.part.chain.filter { $0 != .root }.reversed()
         let opacity = pose.opacity(of: layer)
 
         if opacity > 0 {
+            // Leaf-first, root-last. SwiftUI applies modifiers bottom-up, so the
+            // ancestor's rotation must wrap the child's — otherwise the child's
+            // anchor is evaluated against already-rotated content and the part
+            // flies off its joint. Small angles hid this; a full backflip did not.
             chain.reduce(AnyView(shape(layer))) { view, part in
                 AnyView(
                     view

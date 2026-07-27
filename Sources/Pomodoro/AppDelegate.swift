@@ -110,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard settings.character != .none, let bar = floatingBar else { return }
 
         let edge = StageEdge.resolve(
-            preferred: SamuraiPerformance.preferredEdge(for: cue),
+            preferred: CharacterPlan.preferredEdge(for: cue, character: settings.character),
             pill: bar.pillScreenFrameFlipped,
             screen: flippedScreenFrame(),
             needed: CharacterStage.margin
