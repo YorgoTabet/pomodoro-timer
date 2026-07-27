@@ -106,7 +106,8 @@ public struct NinjaView: View {
 }
 
 /// Parts that move by more than a rotation.
-private struct NinjaPartExtras: ViewModifier {
+/// Internal rather than private so render tests can compose a single rig part.
+struct NinjaPartExtras: ViewModifier {
     let part: NinjaArt.Part
     let pose: NinjaPose
 
