@@ -28,6 +28,10 @@ rarer long-break celebration.
    switches; flip `isImplemented` in `PomodoroCharacter`.
 5. Render the rest pose offscreen with `ImageRenderer` **before** wiring it in.
 
+All fifteen performances (five characters x three cues) are verified running
+live by pose trace, each showing ~300-400 view rebuilds with its authored
+signature property sweeping the expected range.
+
 All five transcribed correctly on the first render. That is the payoff for
 keeping the spec's own path strings and parsing them, rather than hand-converting
 several hundred coordinates into Swift calls: the risk lives in one small
