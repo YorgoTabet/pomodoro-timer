@@ -90,10 +90,61 @@ public struct CharacterStage: View {
             ninja(cue)
         case .general:
             general(cue)
+        case .rabbit:
+            rabbit(cue)
         default:
             // Declared in the roster but not drawn yet.
             EmptyView()
         }
+    }
+
+    // MARK: - Rabbit
+
+    @ViewBuilder
+    private func rabbit(_ cue: CharacterCue) -> some View {
+        if reduceMotion {
+            RabbitView(pose: rabbitRestingPose)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+                .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+        } else {
+            switch cue {
+            case .focusStart: rabbitAnimator { RabbitPerformance.reluctantSalute }
+            case .breakStart: rabbitAnimator { RabbitPerformance.twoHops }
+            case .longBreak: rabbitAnimator { RabbitPerformance.fullMascotMode }
+            }
+        }
+    }
+
+    private func rabbitAnimator<K: Keyframes<RabbitPose>>(
+        @KeyframesBuilder<RabbitPose> _ track: @escaping () -> K
+    ) -> some View {
+        KeyframeAnimator(initialValue: RabbitPose(), trigger: generation) { pose in
+            RabbitView(pose: pose)
+                .opacity(pose.emergence >= 185 ? 0 : 1)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .offset(
+                    x: -hidden(pose.emergence) * edge.inwardNormal.x,
+                    y: -hidden(pose.emergence) * edge.inwardNormal.y
+                )
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } keyframes: { _ in
+            track()
+        }
+    }
+
+    private var rabbitRestingPose: RabbitPose {
+        var pose = RabbitPose()
+        pose.emergence = 0
+        return pose
     }
 
     // MARK: - General

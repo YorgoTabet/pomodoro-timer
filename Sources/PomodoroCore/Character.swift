@@ -31,8 +31,8 @@ public enum PomodoroCharacter: String, Codable, Sendable, CaseIterable, Identifi
     /// the settings UI can show what's coming, but only some are implemented.
     public var isImplemented: Bool {
         switch self {
-        case .none, .samurai, .ninja, .general: true
-        case .rabbit, .animeGirl: false
+        case .none, .samurai, .ninja, .general, .rabbit: true
+        case .animeGirl: false
         }
     }
 }

@@ -14,6 +14,7 @@ public enum CharacterPlan {
         switch character {
         case .ninja: NinjaPerformance.preferredEdge(for: cue)
         case .general: GeneralPerformance.preferredEdge(for: cue)
+        case .rabbit: RabbitPerformance.preferredEdge(for: cue)
         default: SamuraiPerformance.preferredEdge(for: cue)
         }
     }
@@ -24,6 +25,7 @@ public enum CharacterPlan {
         switch character {
         case .ninja: NinjaPerformance.comesForward(for: cue)
         case .general: GeneralPerformance.comesForward(for: cue)
+        case .rabbit: RabbitPerformance.comesForward(for: cue)
         default: SamuraiPerformance.comesForward(for: cue)
         }
     }
@@ -32,6 +34,7 @@ public enum CharacterPlan {
         switch character {
         case .ninja: NinjaPerformance.duration(for: cue)
         case .general: GeneralPerformance.duration(for: cue)
+        case .rabbit: RabbitPerformance.duration(for: cue)
         default: SamuraiPerformance.duration(for: cue)
         }
     }
