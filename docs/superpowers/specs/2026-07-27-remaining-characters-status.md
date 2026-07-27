@@ -1,49 +1,46 @@
-# Remaining characters — status
+# Character roster — status
 
 **Date:** 2026-07-27
 
 ## Shipped
 
-| Character | Paths | Rig parts | Performances | Verified |
-|---|---|---|---|---|
-| Samurai | 60 | 22 | 3 | offscreen render + live pose trace |
-| Ninja | 55 | 18 | 3 | offscreen render + live pose trace |
+| Character | Paths | Rig parts | Verified |
+|---|---|---|---|
+| Samurai | 60 | 22 | offscreen render + live pose trace |
+| Ninja | 55 | 18 | offscreen render + live pose trace |
+| General | 52 | 17 | offscreen render + live pose trace |
+| Rabbit-costume guy | 48 | 14 | offscreen render + live pose trace |
 
-Both are selectable in Settings → Character.
+All four are selectable in Settings → Character, each with three performances.
 
-## Not yet drawn
+## Not drawn
 
-Rabbit-costume guy ("Mochi"), Anime girl ("Hoshi"), Army General.
+**Anime girl.** The 2026-07-27 art-direction pass returned her expressions,
+timelines and silhouette test but **not her layer table or palette**, which are
+the two things transcription actually needs. Re-run the art direction for her
+alone before implementing — asking one agent for three characters is what
+overran and lost them.
 
-An art-direction pass was run for all three on 2026-07-27 and **came back
-truncated**. What survived:
+## The pipeline, now proven four times
 
-- **General** — complete: 52-path layer table, 12-colour palette, 17-part rig,
-  all three timelines, silhouette test. Transcribable as-is.
-- **Anime girl (Hoshi)** — partial: expressions, all three timelines and the
-  silhouette test arrived; **the layer table and palette did not**.
-- **Rabbit (Mochi)** — nothing usable arrived.
+1. `<Name>Art.swift` — palette, a `Part` enum conforming to `RigPart` (parents +
+   pivots), and the layer table as SVG-style path strings.
+2. `<Name>View.swift` — a `Pose` struct with one field per animated joint, plus a
+   `PartExtras` modifier for anything moving by more than a rotation. The draw
+   logic is inherited from `RigView`.
+3. `<Name>Performance.swift` — three `KeyframeTrack` sets.
+4. One case each in `CharacterStage.performance(_:)` and the three `CharacterPlan`
+   switches; flip `isImplemented` in `PomodoroCharacter`.
+5. Render the rest pose offscreen with `ImageRenderer` **before** wiring it into
+   the app. All four transcribed correctly on the first render, which is the
+   payoff for keeping the spec's own path strings rather than hand-converting
+   them into Swift calls.
 
-## What transcription now costs
+## Verification method
 
-The pipeline is proven and mechanical, roughly two hours of careful work per
-character:
-
-1. Generate `<Name>Art.swift` — palette, `Part` enum conforming to `RigPart`
-   (parents + pivots), and the layer table as SVG-style path strings.
-2. Write `<Name>View.swift` — a `Pose` struct with one field per animated joint,
-   plus a `PartExtras` modifier for anything moving by more than a rotation.
-   The draw logic itself is inherited from `RigView`.
-3. Write `<Name>Performance.swift` — three `KeyframeTrack` sets.
-4. Add one case each to `CharacterStage.performance(_:)` and the three
-   `CharacterPlan` switches, and flip `isImplemented` in `PomodoroCharacter`.
-5. Verify offscreen with `ImageRenderer` before touching the running app.
-
-Steps 4 and 5 are minutes. Steps 1–3 are the transcription.
-
-## Before drawing the remaining three
-
-Re-run the art direction for Mochi and Hoshi — the existing v1 chibi specs in
-`2026-07-23-character-art-direction.md` are below the bar the Samurai and Ninja
-set, and the 2026-07-27 pass did not fully land. Ask for one character per
-agent run rather than three; the three-in-one request is what overran.
+Screenshots of a 2–3 second performance are a coin flip. Tracing pose values
+across view rebuilds is deterministic and works with the screen locked: each
+character shows hundreds of rebuilds with its signature property sweeping its
+full authored range — the ninja's backflip and the rabbit's spin both cover a
+complete 360, the General's march drives his legs to -27 and his stick arm
+to -122.
