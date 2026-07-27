@@ -27,14 +27,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Two traces, not nine. A wedged App Group container once hung launch
+        // before any UI existed, and step-by-step tracing to a file was the only
+        // thing that found it — os_log and print both lied. These two bracket the
+        // whole of launch, which is enough to catch a recurrence.
         pomodoroDiag("didFinishLaunching start")
         controller = TimerController(settings: settings, stats: stats)
-        pomodoroDiag("controller built")
         notifier = Notifier(settings: settings)
-        pomodoroDiag("notifier built")
         menuBar = MenuBarController(controller: controller, settings: settings, stats: stats)
 
-        pomodoroDiag("menuBar built")
         controller.onUpdate = { [weak self] in self?.refreshViews() }
         controller.onPhaseElapsed = { [weak self] finished, next in
             self?.handlePhaseChange(finished: finished, next: next)
@@ -44,8 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return }
             controller.settingsChanged()
             floatingBar?.stage.character = settings.character
-            pomodoroDiag("auth requested")
-        syncFloatingBarVisibility()
+            syncFloatingBarVisibility()
             if !settings.controlMusic { music.forgetPaused() }
         }
 
@@ -56,12 +56,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settings.showFloatingBar.toggle()
         }
 
-        pomodoroDiag("callbacks wired")
         LoginItem.reconcile(desired: settings.launchAtLogin)
-        pomodoroDiag("loginItem reconciled")
         notifier.requestAuthorization()
         syncFloatingBarVisibility()
-        pomodoroDiag("bar synced")
         startCommandPolling()
         startDemoIfRequested()
         pomodoroDiag("didFinishLaunching end; character=\(settings.character.rawValue) showBar=\(settings.showFloatingBar) barExists=\(floatingBar != nil)")

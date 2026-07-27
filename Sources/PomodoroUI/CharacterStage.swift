@@ -260,14 +260,6 @@ public struct CharacterStage: View {
                 .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
                                          box: CharacterStage.displaySize, masked: !foreground))
                 .transition(.opacity.animation(.easeInOut(duration: 0.4)))
-        } else if let held = ProcessInfo.processInfo.environment["POMODORO_HOLD"] {
-            NinjaView(pose: ninjaHeldPose(named: held))
-                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
-                .frame(width: CharacterStage.displaySize.width,
-                       height: CharacterStage.displaySize.height,
-                       alignment: .topLeading)
-                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
-                                         box: CharacterStage.displaySize, masked: !foreground))
         } else {
             switch cue {
             case .focusStart: ninjaAnimator { NinjaPerformance.shurikenThrow }
@@ -298,42 +290,6 @@ public struct CharacterStage: View {
         }
     }
 
-    /// Development aid, matching `heldPose` — a representative frame per cue.
-    private func ninjaHeldPose(named name: String) -> NinjaPose {
-        var pose = NinjaPose()
-        pose.emergence = 0
-        switch name {
-        case "breakStart":
-            pose.emergence = 52
-            pose.torso = 9
-            pose.head = -13
-            pose.alertOpacity = 0
-            pose.contentOpacity = 1
-            pose.throwArmUpper = -10
-            pose.throwForearm = -16
-            pose.offArmUpper = 12
-        case "longBreak":
-            pose.emergence = -58
-            pose.figureRotation = -240
-            pose.legFrontThigh = -62
-            pose.legFrontShin = 74
-            pose.legBackThigh = -48
-            pose.legBackShin = 62
-            pose.throwArmUpper = -54
-            pose.offArmUpper = 48
-            pose.eyesScaleY = 0.55
-            pose.sparkOpacity = 1
-        default:                       // focusStart
-            pose.throwArmUpper = 38
-            pose.throwForearm = 58
-            pose.torso = -10
-            pose.head = 5
-            pose.eyesScaleY = 0.62
-            pose.shurikenOpacity = 0
-        }
-        return pose
-    }
-
     private var ninjaRestingPose: NinjaPose {
         var pose = NinjaPose()
         pose.emergence = 0
@@ -352,17 +308,6 @@ public struct CharacterStage: View {
                 .frame(width: CharacterStage.displaySize.width, height: CharacterStage.displaySize.height, alignment: .topLeading)
                 .modifier(StagePlacement(edge: edge, pillFrame: pillFrame, box: CharacterStage.displaySize, masked: !foreground))
                 .transition(.opacity.animation(.easeInOut(duration: 0.4)))
-        } else if let held = ProcessInfo.processInfo.environment["POMODORO_HOLD"] {
-            // Development aid: hold a pose instead of animating, so placement and
-            // scale can be judged from a single screenshot rather than by trying
-            // to catch a 2.5-second performance mid-flight.
-            SamuraiView(pose: heldPose(named: held))
-                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
-                .frame(width: CharacterStage.displaySize.width,
-                       height: CharacterStage.displaySize.height,
-                       alignment: .topLeading)
-                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
-                                         box: CharacterStage.displaySize, masked: !foreground))
         } else {
             // Each performance is its own opaque `Keyframes` type, so the switch
             // happens here in a ViewBuilder — which can unify branches — rather than
@@ -423,28 +368,6 @@ public struct CharacterStage: View {
         case .top, .bottom: CharacterStage.displaySize.height + pillFrame.height
         case .leading, .trailing: CharacterStage.displaySize.width + pillFrame.width
         }
-    }
-
-    /// Key poses from the three timelines, for the hold aid above.
-    private func heldPose(named name: String) -> SamuraiPose {
-        var p = SamuraiPose()
-        p.emergence = 0
-        switch name {
-        case "focusStart":
-            p.rootScale = 1.06; p.swordArmUpper = 24; p.swordFore = 52
-            p.katana = -18; p.torso = -6; p.head = 4; p.pupilDrop = -0.9
-        case "breakStart":
-            p.emergence = 38; p.rootLean = 7; p.head = 11; p.kabuto = 5
-            p.swordArmUpper = 22; p.swordFore = 10; p.katana = -16
-            p.torsoScaleY = 0.96; p.sodeL = 8; p.sodeR = -8
-            p.fierceOpacity = 0; p.easeOpacity = 1; p.pupilDrop = 1.4
-        case "longBreak":
-            p.emergence = -8; p.swordArmUpper = -55; p.swordFore = -14; p.katana = 16
-            p.offArmUpper = -68; p.offArmFore = -46; p.head = -11
-            p.fierceOpacity = 0; p.triumphOpacity = 1
-        default: break
-        }
-        return p
     }
 
     private var restingPose: SamuraiPose {
