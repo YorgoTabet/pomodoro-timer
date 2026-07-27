@@ -169,7 +169,20 @@ Verified by offscreen `ImageRenderer`, which works with the display locked:
   ground line, correct scale — at risen, hidden, and mid-emergence.
 - `CharacterCue` mapping and `StageEdge` flipping are unit-tested.
 
-**Not yet verified: the animation running in the live app.** Three false diagnoses
+**Since resolved: the animations do run.** Proved by tracing pose values across
+view rebuilds rather than chasing screenshots — the samurai's three cues produce
+three distinct motion signatures over hundreds of rebuilds each, and the ninja's
+backflip sweeps a full -360 degrees. Held-pose screenshots confirm each reads as
+intended. The method matters more than the result: a state trace is deterministic
+where a screenshot of a 2.4-second window is a coin flip.
+
+**One rig bug was found this way and fixed.** Transforms were composed root-first,
+so an ancestor's rotation applied *inside* its child's and the child's anchor was
+evaluated against already-rotated content. Small angles hid it; the ninja's
+backflip detached the eyes from the head. Reversing the chain fixed it and
+incidentally corrected the samurai's elbows.
+
+**Historical note — three retracted diagnoses.** Three false diagnoses
 were made and later retracted during this work, all from bad observations rather
 than bad reasoning:
 
