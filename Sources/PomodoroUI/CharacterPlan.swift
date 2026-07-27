@@ -13,6 +13,7 @@ public enum CharacterPlan {
     public static func preferredEdge(for cue: CharacterCue, character: PomodoroCharacter) -> StageEdge {
         switch character {
         case .ninja: NinjaPerformance.preferredEdge(for: cue)
+        case .general: GeneralPerformance.preferredEdge(for: cue)
         default: SamuraiPerformance.preferredEdge(for: cue)
         }
     }
@@ -22,6 +23,7 @@ public enum CharacterPlan {
     public static func comesForward(for cue: CharacterCue, character: PomodoroCharacter) -> Bool {
         switch character {
         case .ninja: NinjaPerformance.comesForward(for: cue)
+        case .general: GeneralPerformance.comesForward(for: cue)
         default: SamuraiPerformance.comesForward(for: cue)
         }
     }
@@ -29,6 +31,7 @@ public enum CharacterPlan {
     public static func duration(for cue: CharacterCue, character: PomodoroCharacter) -> Double {
         switch character {
         case .ninja: NinjaPerformance.duration(for: cue)
+        case .general: GeneralPerformance.duration(for: cue)
         default: SamuraiPerformance.duration(for: cue)
         }
     }

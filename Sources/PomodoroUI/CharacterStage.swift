@@ -88,10 +88,61 @@ public struct CharacterStage: View {
             samurai(cue)
         case .ninja:
             ninja(cue)
+        case .general:
+            general(cue)
         default:
             // Declared in the roster but not drawn yet.
             EmptyView()
         }
+    }
+
+    // MARK: - General
+
+    @ViewBuilder
+    private func general(_ cue: CharacterCue) -> some View {
+        if reduceMotion {
+            GeneralView(pose: generalRestingPose)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+                .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+        } else {
+            switch cue {
+            case .focusStart: generalAnimator { GeneralPerformance.backToTheFront }
+            case .breakStart: generalAnimator { GeneralPerformance.atEase }
+            case .longBreak: generalAnimator { GeneralPerformance.paradeOfOne }
+            }
+        }
+    }
+
+    private func generalAnimator<K: Keyframes<GeneralPose>>(
+        @KeyframesBuilder<GeneralPose> _ track: @escaping () -> K
+    ) -> some View {
+        KeyframeAnimator(initialValue: GeneralPose(), trigger: generation) { pose in
+            GeneralView(pose: pose)
+                .opacity(pose.emergence >= 185 ? 0 : 1)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .offset(
+                    x: -hidden(pose.emergence) * edge.inwardNormal.x,
+                    y: -hidden(pose.emergence) * edge.inwardNormal.y
+                )
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } keyframes: { _ in
+            track()
+        }
+    }
+
+    private var generalRestingPose: GeneralPose {
+        var pose = GeneralPose()
+        pose.emergence = 0
+        return pose
     }
 
     // MARK: - Ninja
