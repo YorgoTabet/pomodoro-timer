@@ -85,10 +85,12 @@ final class FloatingBar: NSPanel {
            screenContains(NSPoint(x: origin.x, y: origin.y)) {
             setPillOrigin(NSPoint(x: origin.x, y: origin.y))
         } else if let visible = NSScreen.main?.visibleFrame {
-            // Default: top-right, tucked just under the menu bar.
+            // Default: upper-right, but left far enough below the menu bar that the
+            // character has room to rise from the top. Tucking it against the menu
+            // bar the way it used to would leave the top-reveal with nowhere to go.
             setPillOrigin(NSPoint(
                 x: visible.maxX - Self.size.width - 24,
-                y: visible.maxY - Self.size.height - 12
+                y: visible.maxY - Self.size.height - Self.margin - 24
             ))
         }
     }
