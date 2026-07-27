@@ -1,4 +1,5 @@
 import CoreGraphics
+import PomodoroCore
 import Testing
 @testable import PomodoroUI
 
@@ -9,6 +10,23 @@ import Testing
 /// pose at the right moment. Cheap invariants catch it at build time instead.
 @Suite("Rig structure")
 struct RigTests {
+
+    // MARK: - Coverage
+
+    /// Every implemented character must appear here. The structural checks below
+    /// iterate this rather than naming characters inline, so adding a fifth rig
+    /// without adding it to this list fails `allImplementedRigsAreCovered`.
+    @Test("Every implemented character has its rig checked here")
+    func allImplementedRigsAreCovered() {
+        let implemented = PomodoroCharacter.allCases
+            .filter { $0.isImplemented && $0 != .none }
+            .map(\.rawValue)
+            .sorted()
+        let covered = ["general", "ninja", "rabbit", "samurai"]
+        #expect(implemented == covered, """
+            Rig tests cover \(covered) but the app implements \(implemented).             Add the new character's Part/layers to this file.
+            """)
+    }
 
     // MARK: - Chain ordering
 
@@ -26,6 +44,12 @@ struct RigTests {
             assertWellOrdered(part.chain, of: part.rawValue)
         }
         for part in NinjaArt.Part.allCases {
+            assertWellOrdered(part.chain, of: part.rawValue)
+        }
+        for part in GeneralArt.Part.allCases {
+            assertWellOrdered(part.chain, of: part.rawValue)
+        }
+        for part in RabbitArt.Part.allCases {
             assertWellOrdered(part.chain, of: part.rawValue)
         }
     }
@@ -52,6 +76,12 @@ struct RigTests {
         for part in NinjaArt.Part.allCases {
             #expect(depth(of: part) <= 8, "\(part.rawValue) is suspiciously deep or cyclic")
         }
+        for part in GeneralArt.Part.allCases {
+            #expect(depth(of: part) <= 8, "\(part.rawValue) is suspiciously deep or cyclic")
+        }
+        for part in RabbitArt.Part.allCases {
+            #expect(depth(of: part) <= 8, "\(part.rawValue) is suspiciously deep or cyclic")
+        }
     }
 
     private func depth<P: RigPart>(of part: P) -> Int {
@@ -75,6 +105,12 @@ struct RigTests {
         }
         for part in NinjaArt.Part.allCases {
             expectInBounds(part.pivot, canvas: NinjaArt.canvas, name: part.rawValue)
+        }
+        for part in GeneralArt.Part.allCases {
+            expectInBounds(part.pivot, canvas: GeneralArt.canvas, name: part.rawValue)
+        }
+        for part in RabbitArt.Part.allCases {
+            expectInBounds(part.pivot, canvas: RabbitArt.canvas, name: part.rawValue)
         }
     }
 
@@ -101,6 +137,12 @@ struct RigTests {
 
         let ninjaIDs = NinjaArt.layers.map(\.id)
         #expect(Set(ninjaIDs).count == ninjaIDs.count, "duplicate ninja layer id")
+
+        let generalIDs = GeneralArt.layers.map(\.id)
+        #expect(Set(generalIDs).count == generalIDs.count, "duplicate general layer id")
+
+        let rabbitIDs = RabbitArt.layers.map(\.id)
+        #expect(Set(rabbitIDs).count == rabbitIDs.count, "duplicate rabbit layer id")
     }
 
     @Test("Every layer parses to a non-empty path")
@@ -110,6 +152,12 @@ struct RigTests {
         }
         for layer in NinjaArt.layers {
             #expect(!layer.path.isEmpty, "ninja layer \(layer.name) parsed to an empty path")
+        }
+        for layer in GeneralArt.layers {
+            #expect(!layer.path.isEmpty, "general layer \(layer.name) parsed to an empty path")
+        }
+        for layer in RabbitArt.layers {
+            #expect(!layer.path.isEmpty, "rabbit layer \(layer.name) parsed to an empty path")
         }
     }
 
@@ -122,6 +170,12 @@ struct RigTests {
         }
         for layer in NinjaArt.layers {
             expectPlausible(layer.path.boundingRect, canvas: NinjaArt.canvas, name: layer.name)
+        }
+        for layer in GeneralArt.layers {
+            expectPlausible(layer.path.boundingRect, canvas: GeneralArt.canvas, name: layer.name)
+        }
+        for layer in RabbitArt.layers {
+            expectPlausible(layer.path.boundingRect, canvas: RabbitArt.canvas, name: layer.name)
         }
     }
 
