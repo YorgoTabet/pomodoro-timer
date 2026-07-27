@@ -92,48 +92,16 @@ public struct NinjaView: View {
     public init(pose: NinjaPose) { self.pose = pose }
 
     public var body: some View {
-        ZStack(alignment: .topLeading) {
-            ForEach(NinjaArt.layers) { layer in
-                rigged(layer)
+        RigView(
+            layers: NinjaArt.layers,
+            pose: pose,
+            outline: NinjaArt.Ink.outline,
+            rotation: { $0.rotation(of: $1) },
+            opacity: { $0.opacity(of: $1) },
+            extras: { view, part, pose in
+                AnyView(view.modifier(NinjaPartExtras(part: part, pose: pose)))
             }
-        }
-        .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
-    }
-
-    @ViewBuilder
-    private func rigged(_ layer: NinjaArt.Layer) -> some View {
-        // `root` carries nothing here — emergence is applied by the stage — so it is
-        // dropped from the chain like it is for the samurai.
-        let chain = layer.part.chain.filter { $0 != .root }.reversed()
-        let opacity = pose.opacity(of: layer)
-
-        if opacity > 0 {
-            // Leaf-first, root-last. SwiftUI applies modifiers bottom-up, so the
-            // ancestor's rotation must wrap the child's — otherwise the child's
-            // anchor is evaluated against already-rotated content and the part
-            // flies off its joint. Small angles hid this; a full backflip did not.
-            chain.reduce(AnyView(shape(layer))) { view, part in
-                AnyView(
-                    view
-                        .rotationEffect(.degrees(pose.rotation(of: part)), anchor: part.anchor)
-                        .modifier(NinjaPartExtras(part: part, pose: pose))
-                )
-            }
-            .opacity(opacity)
-        }
-    }
-
-    private func shape(_ layer: NinjaArt.Layer) -> some View {
-        ZStack(alignment: .topLeading) {
-            layer.path.fill(layer.fill)
-            if let width = layer.stroke {
-                layer.path.stroke(
-                    NinjaArt.Ink.outline,
-                    style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
-                )
-            }
-        }
-        .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
+        )
     }
 }
 

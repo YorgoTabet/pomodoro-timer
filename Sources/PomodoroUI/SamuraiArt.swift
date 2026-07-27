@@ -32,7 +32,9 @@ public enum SamuraiArt {
     // MARK: - Rig
 
     /// A jointed part. `parent` gives the transform chain; `pivot` is in design units.
-    public enum Part: String, CaseIterable, Sendable {
+    public enum Part: String, CaseIterable, RigPart {
+        public static var canvas: CGSize { SamuraiArt.canvas }
+
         case root, legL, legR, torso, head, kabuto, maedate
         case sodeL, sodeR, offArmUpper, offArmFore
         case swordArmUpper, swordFore, katana
@@ -83,56 +85,11 @@ public enum SamuraiArt {
             }
         }
 
-        public var anchor: UnitPoint {
-            UnitPoint(x: pivot.x / canvas.width, y: pivot.y / canvas.height)
-        }
-
-        /// Root first, then each descendant down to this part.
-        public var chain: [Part] {
-            var chain: [Part] = []
-            var node: Part? = self
-            while let current = node {
-                chain.insert(current, at: 0)
-                node = current.parent
-            }
-            return chain
-        }
     }
 
     // MARK: - Layers
 
-    public struct Layer: Identifiable, Sendable {
-        public let id: Int
-        public let name: String
-        public let part: Part
-        public let fill: Color
-        public let stroke: CGFloat?
-        public let path: Path
-        /// Layers that begin invisible and are cross-faded in for an expression.
-        public let restOpacity: Double
-
-        init(_ id: Int, _ name: String, _ part: Part, _ fill: Color,
-             stroke: CGFloat?, _ data: String, restOpacity: Double = 1) {
-            self.id = id
-            self.name = name
-            self.part = part
-            self.fill = fill
-            self.stroke = stroke
-            self.path = VectorPath.parse(data)
-            self.restOpacity = restOpacity
-        }
-
-        init(_ id: Int, _ name: String, _ part: Part, _ fill: Color,
-             stroke: CGFloat?, path: Path, restOpacity: Double = 1) {
-            self.id = id
-            self.name = name
-            self.part = part
-            self.fill = fill
-            self.stroke = stroke
-            self.path = path
-            self.restOpacity = restOpacity
-        }
-    }
+    public typealias Layer = RigLayer<Part>
 
     /// Back to front. Draw order is global and independent of the rig hierarchy —
     /// `shikoro` belongs to `kabuto` but is drawn third, behind almost everything.

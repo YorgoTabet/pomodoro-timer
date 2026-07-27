@@ -108,53 +108,19 @@ public struct SamuraiView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .topLeading) {
-            ForEach(SamuraiArt.layers) { layer in
-                rigged(layer)
+        RigView(
+            layers: SamuraiArt.layers,
+            pose: pose,
+            outline: SamuraiArt.Ink.outline,
+            rotation: { $0.rotation(of: $1) },
+            opacity: { $0.opacity(of: $1) },
+            extras: { view, part, pose in
+                AnyView(view.modifier(PartExtras(part: part, pose: pose)))
             }
-        }
-        .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
+        )
         .scaleEffect(y: pose.rootScaleY, anchor: .bottom)
         .scaleEffect(pose.rootScale, anchor: .bottom)
         .rotationEffect(.degrees(pose.rootLean), anchor: SamuraiArt.Part.root.anchor)
-    }
-
-    /// One layer, wrapped in its ancestors' rotations from the torso down.
-    ///
-    /// `root` is handled once on the whole stack instead of per layer — it carries
-    /// the emergence offset and the body scale, which are not per-part transforms.
-    @ViewBuilder
-    private func rigged(_ layer: SamuraiArt.Layer) -> some View {
-        let chain = layer.part.chain.filter { $0 != .root }.reversed()
-        let opacity = pose.opacity(of: layer)
-
-        if opacity > 0 {
-            // Leaf-first, root-last. SwiftUI applies modifiers bottom-up, so the
-            // ancestor's rotation must wrap the child's — otherwise the child's
-            // anchor is evaluated against already-rotated content and the part
-            // flies off its joint. Small angles hid this; a full backflip did not.
-            chain.reduce(AnyView(shape(layer))) { view, part in
-                AnyView(
-                    view
-                        .rotationEffect(.degrees(pose.rotation(of: part)), anchor: part.anchor)
-                        .modifier(PartExtras(part: part, pose: pose))
-                )
-            }
-            .opacity(opacity)
-        }
-    }
-
-    private func shape(_ layer: SamuraiArt.Layer) -> some View {
-        ZStack(alignment: .topLeading) {
-            layer.path.fill(layer.fill)
-            if let width = layer.stroke {
-                layer.path.stroke(
-                    SamuraiArt.Ink.outline,
-                    style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
-                )
-            }
-        }
-        .frame(width: Self.canvas.width, height: Self.canvas.height, alignment: .topLeading)
     }
 }
 

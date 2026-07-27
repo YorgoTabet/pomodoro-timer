@@ -28,7 +28,9 @@ public enum NinjaArt {
 
     /// A jointed part. `figure` wraps the whole body between `root` (which owns the
     /// emergence offset) and everything else, so full-body flips don't fight it.
-    public enum Part: String, CaseIterable, Sendable {
+    public enum Part: String, CaseIterable, RigPart {
+        public static var canvas: CGSize { NinjaArt.canvas }
+
         case root, figure, torso, head, eyes, ribbonNear, ribbonFar
         case throwArmUpper, throwForearm, shuriken
         case offArmUpper, offForearm, ninjato, sashTail
@@ -73,38 +75,9 @@ public enum NinjaArt {
             }
         }
 
-        public var anchor: UnitPoint {
-            UnitPoint(x: pivot.x / canvas.width, y: pivot.y / canvas.height)
-        }
-
-        public var chain: [Part] {
-            var chain: [Part] = []
-            var node: Part? = self
-            while let current = node { chain.insert(current, at: 0); node = current.parent }
-            return chain
-        }
     }
 
-    public struct Layer: Identifiable, Sendable {
-        public let id: Int
-        public let name: String
-        public let part: Part
-        public let fill: Color
-        public let stroke: CGFloat?
-        public let path: Path
-        public let restOpacity: Double
-
-        init(_ id: Int, _ name: String, _ part: Part, _ fill: Color,
-             stroke: CGFloat?, _ data: String, restOpacity: Double = 1) {
-            self.id = id; self.name = name; self.part = part; self.fill = fill
-            self.stroke = stroke; self.path = VectorPath.parse(data); self.restOpacity = restOpacity
-        }
-        init(_ id: Int, _ name: String, _ part: Part, _ fill: Color,
-             stroke: CGFloat?, path: Path, restOpacity: Double = 1) {
-            self.id = id; self.name = name; self.part = part; self.fill = fill
-            self.stroke = stroke; self.path = path; self.restOpacity = restOpacity
-        }
-    }
+    public typealias Layer = RigLayer<Part>
 
     /// Back to front. Draw order is the spec's numeric order and independent of the
     /// rig hierarchy.
