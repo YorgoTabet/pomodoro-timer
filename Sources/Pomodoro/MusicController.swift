@@ -5,13 +5,17 @@ import os
 
 private let log = Logger(subsystem: "com.yorgotabet.pomodoro", category: "music")
 
-/// Pauses and resumes whatever the user is listening to.
+/// Starts and stops whatever the user is listening to, alongside the focus timer.
 ///
-/// The contract is deliberately narrow: only ever resume something this app paused.
-/// If the user paused their own music mid-focus, we must not start it playing again.
+/// The contract is deliberately narrow: never guess. Playback is only started when a
+/// player can be *seen* to be sitting paused, or when this app is the one that paused
+/// it. A blind toggle that might stop music the user just started is worse than doing
+/// nothing at all.
 public protocol MusicController {
     /// Pause any player that is currently playing. Returns `true` if something was paused.
     @discardableResult func pauseIfPlaying() -> Bool
+    /// Start playback for a focus session. Returns `true` if a player was found to act on.
+    @discardableResult func startForFocus() -> Bool
     /// Resume only what this controller paused.
     func resumeIfWePaused()
     /// Forget any pending resume (e.g. the user turned music control off).
@@ -54,6 +58,34 @@ public final class ScriptedMusicController: MusicController {
             }
         }
         return didPause
+    }
+
+    /// Resume what we paused; failing that, start a player that is loaded and idle.
+    ///
+    /// Only a player reporting `paused` is started. A `stopped` player has no current
+    /// track, so telling it to play would pick something at random — a surprise, not
+    /// a focus soundtrack.
+    @discardableResult
+    public func startForFocus() -> Bool {
+        if !paused.isEmpty {
+            resumeIfWePaused()
+            return true
+        }
+
+        for target in targets where isRunning(target) {
+            switch playerState(target) {
+            case "playing":
+                // Already going. Nothing to do, and nothing for the fallback either.
+                return true
+            case "paused":
+                guard run("tell application \"\(target.appName)\" to play", target: target) != nil else { continue }
+                log.notice("Started \(target.appName, privacy: .public) for focus")
+                return true
+            default:
+                continue
+            }
+        }
+        return false
     }
 
     public func resumeIfWePaused() {
@@ -139,6 +171,18 @@ public final class MediaKeyController: MusicController {
         return true
     }
 
+    /// Only ever un-pauses our own pause.
+    ///
+    /// The key is a toggle with no readable state, so firing it speculatively at focus
+    /// start is as likely to stop the user's music as to start it. When we did not
+    /// pause anything, the honest answer is to do nothing.
+    @discardableResult
+    public func startForFocus() -> Bool {
+        guard didPause else { return false }
+        resumeIfWePaused()
+        return true
+    }
+
     public func resumeIfWePaused() {
         guard didPause else { return }
         Self.postPlayPause()
@@ -216,6 +260,20 @@ public final class ChainedMusicController: MusicController {
             return scripted.pauseIfPlaying()
         }
         return mediaKey.pauseIfPlaying()
+    }
+
+    @discardableResult
+    public func startForFocus() -> Bool {
+        // The scripted players can be seen, so they answer first and definitively:
+        // if one is playing, paused, or was paused by us, the media key must stay out
+        // of it or it would toggle that same audio back off.
+        if scripted.startForFocus() {
+            log.notice("focus start handled by scripted player")
+            return true
+        }
+        let handled = mediaKey.startForFocus()
+        log.notice("focus start: mediaKeyResumed=\(handled, privacy: .public)")
+        return handled
     }
 
     public func resumeIfWePaused() {

@@ -45,6 +45,17 @@ public final class TimerController {
     /// Fired when a phase elapses naturally: `(finished, next)`.
     @ObservationIgnored public var onPhaseElapsed: ((Phase, Phase) -> Void)?
 
+    /// Fired when focus starts or stops running, and only on a real change.
+    ///
+    /// One boolean rather than a `(phase, isRunning)` pair because that pair is
+    /// ambiguous at exactly the moment it matters: `transition` moves `phase` to the
+    /// break before it clears `isRunning`, so an observer would be told "break
+    /// stopped" for the focus session that just ended. The derived flag has no such
+    /// blind spot — it goes false whether focus ended, was paused, skipped, or reset.
+    @ObservationIgnored public var onFocusRunningChanged: ((Bool) -> Void)?
+
+    @ObservationIgnored private var lastFocusRunning = false
+
     public init(settings: PomodoroSettings, stats: StatsStore) {
         self.settings = settings
         self.stats = stats
@@ -166,7 +177,11 @@ public final class TimerController {
     }
 
     /// The current phase ran to completion.
-    private func elapse() {
+    ///
+    /// Internal rather than private so tests can drive it directly: the real trigger
+    /// is a deadline at least a minute out, and durations are clamped, so there is no
+    /// way to reach this from the public surface inside a test's lifetime.
+    func elapse() {
         let finished = phase
 
         if finished == .focus {
@@ -199,8 +214,22 @@ public final class TimerController {
     }
 
     private func publish() {
+        // Before the view refresh, so that when a focus session elapses the music
+        // stops ahead of the chime. The media-key fallback decides whether to act by
+        // whether anything is playing, and our own chime would answer for it.
+        notifyFocusRunning()
         onUpdate?()
         mirrorToWidget()
+    }
+
+    /// Hung off `publish` rather than off each intent, because every path that can
+    /// change the run state already ends in `publish` — including ones added later.
+    /// The change check keeps ticks and settings edits from re-announcing.
+    private func notifyFocusRunning() {
+        let running = phase == .focus && isRunning
+        guard running != lastFocusRunning else { return }
+        lastFocusRunning = running
+        onFocusRunningChanged?(running)
     }
 
     // MARK: - Widget bridge

@@ -97,9 +97,22 @@ public final class BarPresentationModel {
             self.acknowledgementBackstop = acknowledgementBackstop
         }
 
+        /// Deliberately asymmetric, because the two edges are not felt alike.
+        ///
+        /// Waiting to *arrive* is nearly invisible — the pointer is still travelling,
+        /// and 90ms is inside the window a flick across the bar occupies, so an
+        /// accidental pass cancels itself before anything moves. That matters more
+        /// than it should: the secondary controls animate by insertion, which cannot
+        /// reverse in flight, so a flick that reaches them looks broken however well
+        /// the rest of the pill is tuned.
+        ///
+        /// Waiting to *leave* is felt immediately, because the pointer has already
+        /// gone and the bar is visibly lagging behind it. 50ms is enough to ride out
+        /// a boundary jitter and short enough to read as instant. The 350ms this
+        /// started at was the single worst thing about the interaction.
         public static let standard = Timings(
-            hoverEnter: .milliseconds(110),
-            hoverExit: .milliseconds(120),
+            hoverEnter: .milliseconds(90),
+            hoverExit: .milliseconds(50),
             acknowledgementBackstop: .seconds(30)
         )
     }

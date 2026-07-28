@@ -32,16 +32,21 @@ expanded rect strictly contains the compact one, so collapse can only fire once
 the cursor is outside a region it was already outside — expand/collapse cannot
 oscillate. This is a property worth preserving if the geometry is ever retuned.
 
-**Both edges are debounced** — 110ms in, 120ms out — and a pending edge is
-cancelled by its opposite.
+**Both edges are debounced, asymmetrically** — 90ms in, 50ms out — and a pending
+edge is cancelled by its opposite.
 
 The cancellation is the point, not the delay. A cursor flicked across the bar
-produces an enter and a leave inside the window; they annihilate, and nothing
-animates at all. Without it a flick drove a full open and close back to back, and
-the secondary controls — which animate by insertion, not by a spring — restart
-rather than reverse, so a flick looked broken. A deliberate hover outlives the
-window and lands normally. Both values sit under the ~150ms that reads as a wait:
-the delay exists to reject accidents, not to pace the interaction.
+produces an enter and a leave inside the same window; they annihilate, and nothing
+animates at all. A deliberate hover outlives the window and lands normally.
+
+Asymmetric because the two edges are not felt alike. Waiting to *arrive* is nearly
+invisible — the pointer is still travelling. Waiting to *leave* is felt at once,
+because the pointer has gone and the bar is visibly lagging behind it.
+
+The enter debounce is load-bearing rather than cosmetic. The secondary controls
+animate by insertion (see below), and a transition cannot reverse in flight: a
+flick that reaches them restarts them from the other end, which looks broken
+however well the rest of the pill is tuned. 90ms keeps flicks from reaching them.
 
 The exit was briefly 350ms, to stop a window drag collapsing the pill under the
 user's grip. That fear was unfounded — a background drag moves the window *with*
@@ -191,6 +196,25 @@ stage. Fading on the same curve as the width was the other half of the swap feel
 
 `glassPanel(in:)` takes any `Shape`, so the same call site serves both forms with
 an animated radius.
+
+The whole morph runs on one spring — `.spring(response: 0.58, dampingFraction:
+0.88)`, shared by the box, the ring's scale, and the hover controls. A spring
+rather than a timing curve because springs carry velocity through a reversal: an
+open interrupted halfway becomes a close, instead of snapping and replaying.
+
+### The one thing that cannot reverse
+
+`controls` inserts and removes the Reset and Skip buttons rather than parking them
+at zero opacity. That was tried and does not work: `glassGroup` is a
+`GlassEffectContainer`, and it harvests the shapes tagged by `glassMorphID` and
+draws them itself, so an `.opacity()` applied outside the glass effect never
+reaches them. The result is both glyphs stacked on the play button with its tint
+disc reduced to a ring.
+
+Insertion is also what the container is *for* — `glassMorphID` exists so these
+morph out of their neighbours instead of popping. The cost is one transition in an
+otherwise fully interruptible interaction, and the enter debounce is what keeps a
+flicked cursor from ever triggering it.
 
 ### Hit testing has to become stateful
 

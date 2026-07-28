@@ -66,7 +66,7 @@ final class FloatingBar: NSPanel {
     /// the gap. A spring has no exact duration, so this is its settling time rounded
     /// up: erring long is safe, since it only means the target stays large a moment
     /// past the animation rather than shrinking out from under a click.
-    static let morphDuration: Double = 0.5
+    static let morphDuration: Double = 0.65
 
     /// Drives the character; owned here so the panel can hand it the same instance
     /// the SwiftUI tree observes.
@@ -286,7 +286,7 @@ struct FloatingBarView: View {
     private var morph: Animation {
         reduceMotion
             ? .linear(duration: 0.01)
-            : .spring(response: 0.44, dampingFraction: 0.85)
+            : .spring(response: 0.58, dampingFraction: 0.88)
     }
 
     /// The readout and controls fade on the morph's own curve, just quicker.
@@ -301,7 +301,7 @@ struct FloatingBarView: View {
     /// with `controls`' own 0.28s insertion that made three different start and end
     /// times for one gesture, which is what read as mechanical.
     private var contentFade: Animation {
-        reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.24)
+        reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.32)
     }
 
     /// Whether the pill still does its little hover lift.
@@ -491,6 +491,19 @@ struct FloatingBarView: View {
     /// tuck back under it on exit — `zIndex` keeps them behind it the whole way, so
     /// they read as emerging from the primary control rather than shrinking into a
     /// dot beside it.
+    ///
+    /// Inserted and removed rather than parked at zero opacity, deliberately.
+    ///
+    /// Mounting them permanently and hiding them with `.opacity(0)` does not work:
+    /// `glassGroup` is a `GlassEffectContainer`, and it harvests the shapes tagged by
+    /// `glassMorphID` and draws them itself, so an opacity applied outside the glass
+    /// effect never reaches them. What you get is the reset and skip glyphs stacked
+    /// on top of the play button and its tint disc reduced to a ring.
+    ///
+    /// Insertion is also what the container is *for* — `glassMorphID` exists so these
+    /// morph out of their neighbours instead of popping. Working with that costs a
+    /// transition that cannot reverse mid-flight, which is what the hover debounce is
+    /// there to keep a flicked cursor from ever reaching.
     private var controls: some View {
         HStack(spacing: 5) {
             if hovering {
@@ -512,8 +525,11 @@ struct FloatingBarView: View {
             .zIndex(2)
         }
         .glassGroup(spacing: 5)
-        .animation(.smooth(duration: 0.28), value: hovering)
+        // The same spring as the box, so hover drives one motion rather than two of
+        // different lengths.
+        .animation(morph, value: hovering)
     }
+
 
     /// Secondary actions get a glass circle; the primary one gets a solid tinted
     /// disc. Glass on glass is nearly invisible — the play button was reading as a
