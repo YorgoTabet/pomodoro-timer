@@ -2,15 +2,20 @@
 
 **Date:** 2026-07-28
 
-An opt-in mode where the floating bar shrinks to a bare progress ring while the
-timer runs, expands back to the full pill on hover, and expands again on its own
-at every phase change so the character performance has a stage to play on.
+An opt-in mode where the floating bar sheds its controls while the timer runs,
+expands back to the full pill on hover, and expands again on its own at every
+phase change so the character performance has a stage to play on.
 
-The bar earns its place by being ignorable. Today it is quiet but not small: a
-236pt pill with a countdown that changes every second sits on top of whatever you
-are doing for the entire session. Compact mode removes the two things that pull
-the eye — the moving digits and the width — and keeps the one thing worth
-glancing at, which is how far through the phase you are.
+The bar earns its place by being ignorable. A 236pt pill carrying three buttons
+sits on top of whatever you are doing for the entire session, and the buttons are
+the part that pulls the eye — a row of targets reads as something wanting to be
+used. Compact mode drops them, keeping the ring and the countdown at 133pt.
+
+An earlier revision collapsed all the way to a 46pt ring, on the theory that the
+changing digits were the distraction. In use that was too far: a timer that will
+not tell you the time is a progress bar, and having to hover to read it defeats
+the point of a bar that is always on screen. The seconds are the arguable half of
+this; the controls are not.
 
 ## Behaviour
 
@@ -27,7 +32,7 @@ is produced.
 
 ### Hover
 
-Entering the compact circle expands the pill; leaving it collapses again. The
+Entering the collapsed bar expands it; leaving it collapses again. The
 expanded rect strictly contains the compact one, so collapse can only fire once
 the cursor is outside a region it was already outside — expand/collapse cannot
 oscillate. This is a property worth preserving if the geometry is ever retuned.
@@ -134,20 +139,23 @@ That single decision removes most of the risk: no window-resize animation, no
 change to what `floatingBarOrigin` means, no re-anchoring across displays, and no
 migration for an already-dragged position.
 
-The compact form is a **46pt circle concentric with the pill**, and the pill grows
+The compact form is a **133x46 pill concentric with the open one**, which grows
 symmetrically out of it.
+
+133 is the layout cut exactly where the readout ends: 11 leading + 28 ring + 10 gap
++ 74 readout + 10 trailing. Cutting there leaves the readout the same air it has in
+the open pill, so the collapsed bar is a real end to the layout rather than a crop
+through it.
 
 Concentric is a pointer decision before it is an aesthetic one: whatever the cursor
 was resting on to trigger the expansion becomes the centre of what it expands into,
 so **the pointer ends up in the middle of the open bar**. It never lands on a
-control that swept underneath it, and every control is an equally short trip away.
-Growing off a fixed leading edge instead would sweep the whole pill out from under
-the cursor.
+control that swept underneath it. Growing off a fixed leading edge instead would
+sweep the whole pill out from under the cursor.
 
-46 is the pill's own height, so the circle is exactly as tall as the bar it comes
-from. That also keeps the compact rect symmetric about the panel's centre in both
-axes, which is what lets `FloatingBarHostingView.hitTest` go on ignoring whether
-its view is flipped.
+Height is the pill's own, which keeps the compact rect symmetric about the panel's
+centre in both axes — what lets `FloatingBarHostingView.hitTest` go on ignoring
+whether its view is flipped.
 
 `StagePlacement` anchors the character to `pillFrame.midX`, which is unaffected:
 the character only ever performs against the expanded pill.
@@ -161,46 +169,36 @@ One layout, always at full width, with the box clipping it:
   block that the opening carries with it.
 
   Centring the content instead left the ring as the only element free to move, and
-  it had to be offset ~93pt to reach the middle of the circle. A symmetric box with
-  a single element tracking leftward across it reads as opening *to the left*, not
-  from the middle — two motions where there should be one. Pinning to the edge also
-  deletes the offset outright: at 9pt padding plus a 28pt ring the ring's centre is
-  at 23, exactly half the 46pt circle, so it lands centred for free.
+  it had to be offset ~93pt to reach the middle of the collapsed bar. A symmetric
+  box with a single element tracking leftward across it reads as opening *to the
+  left*, not from the middle — two motions where there should be one.
 
-- `phaseRing` is laid out at a fixed 28pt in both forms and scales to 36pt to fill
-  the compact circle. A `scaleEffect`, so it never disturbs the layout underneath.
+- `phaseRing` and `readout` are a fixed 28pt and 74pt in both forms and are never
+  hidden. The collapse simply stops short of the controls.
+- The outer frame animates 236 -> 133 wide and `clipShape` turns that width change
+  into a reveal.
+- **The shape is constant, at a 15pt corner.** While the collapsed form was a
+  circle this interpolated 23 -> 15, rebuilding a continuous-corner path every
+  frame for the clip and again for the glass, which re-rasterises whenever its
+  shape changes. A collapsed pill wants the same corner as an open one, so that
+  cost is simply gone and only the width moves.
 
-  The scale is not decoration. Without it there are two circles rather than one:
-  the glass disc, which is really the pill closed down to 46pt, and a 28pt ring
-  floating at 61% of its width. On opening, the disc becomes the whole pill while
-  the ring stays the size it was — so the object the eye is tracking has nothing to
-  grow into, and the change reads as two interfaces swapping even though the view
-  tree is identical throughout. At 36pt the ring owns the circle and shrinks back
-  into its slot, which is what ties the two states into one object.
-- The readout and controls are **always mounted**, at their expanded positions.
-  Only their opacity changes.
-- The outer frame animates 236 -> 46 wide, centre-aligned, and `clipShape` turns
-  that width change into a reveal.
-- The `RoundedRectangle` radius animates 15 -> 23, a circle at 46pt.
+Conditionally inserting the readout is what made the first attempt read as a
+replacement: SwiftUI re-ran the layout, so everything arrived at once in a box
+that was still moving. Holding one fixed layout and moving only the clip means
+nothing is ever laid out twice.
 
-Conditionally inserting the readout and controls is what made the first attempt
-read as a replacement: SwiftUI re-ran the layout, so everything arrived at once in
-a box that was still moving. Holding one fixed layout and moving only the clip and
-one offset means nothing is ever laid out twice.
+The whole morph runs on one critically damped spring, `.smooth(duration: 0.55)`,
+shared by the box and the hover controls. Springs carry velocity through a
+reversal, so an open interrupted halfway becomes a close rather than snapping and
+replaying. Critically damped rather than springy: an earlier 0.88 damping was
+chosen for weight and was wrong here, because the content rides the box's leading
+edge and travels across the collapse, so even a small overshoot carried the ring
+past its resting place and drew it back — which reads as the ring snapping into
+position rather than arriving at it.
 
-The content fade is deliberately **off** the width's curve — `easeOut(0.16)` with
-a 0.11s delay on the way open, and no delay on the way closed. Opening, the pill
-starts widening before the text arrives, so the text is never seen in a box too
-small to hold it; closing, the text leaves first and the pill shuts on an empty
-stage. Fading on the same curve as the width was the other half of the swap feel.
-
-`glassPanel(in:)` takes any `Shape`, so the same call site serves both forms with
-an animated radius.
-
-The whole morph runs on one spring — `.spring(response: 0.58, dampingFraction:
-0.88)`, shared by the box, the ring's scale, and the hover controls. A spring
-rather than a timing curve because springs carry velocity through a reversal: an
-open interrupted halfway becomes a close, instead of snapping and replaying.
+`glassPanel(in:)` takes the same constant `Shape` as the clip, so the glass is
+configured once rather than reconfigured per frame.
 
 ### The one thing that cannot reverse
 
@@ -220,7 +218,7 @@ flicked cursor from ever triggering it.
 
 `FloatingBarHostingView.hitTest` currently rejects anything outside a hard-coded
 236x46 rect. Left alone, a collapsed bar would swallow clicks across a region
-where nothing is drawn; narrowed to the circle unconditionally, the expanded
+where nothing is drawn; narrowed to the collapsed rect unconditionally, the expanded
 controls would be unclickable.
 
 It reads its rect from a small shared `BarGeometry` reference instead. The rule
@@ -314,5 +312,5 @@ past 550.
   reachable, and the stated goal is not distracting *while the timer is on*.
 - Any change to the menu bar item, the widget, or the character performances.
 - A separate compact position. The bar has one position; the two forms share it.
-- Clicking the compact circle as a shortcut. Reaching it means hovering, and
+- Clicking the collapsed bar as a shortcut. Reaching it means hovering, and
   hovering has already expanded the pill by the time a click lands.

@@ -37,18 +37,21 @@ final class FloatingBar: NSPanel {
         CGRect(x: margin, y: margin, width: size.width, height: size.height)
     }
 
-    /// The collapsed form: a circle concentric with the pill.
+    /// The collapsed form: the ring and the countdown, without the actions.
     ///
-    /// Concentric so that the pill grows symmetrically out of it — which is what
-    /// leaves the pointer in the middle of the open bar. Whatever the cursor was
-    /// resting on to trigger the expansion becomes the centre of what it expands
-    /// into, so the pointer never ends up sitting on a control that swept underneath
-    /// it, and every control is an equally short trip away.
+    /// A timer that will not tell you the time is a progress bar. What actually
+    /// pulls the eye is the *actions* appearing and disappearing, and — arguably —
+    /// the seconds; the choice here is to keep both the ring and the readout and
+    /// drop only the controls.
     ///
-    /// Square on the pill's own height, so the circle is exactly as tall as the bar
-    /// it comes from. That also keeps this rect symmetric about the panel's centre
-    /// in both axes, which is what lets `hitTest` ignore whether its view is flipped.
-    static let compactSize = NSSize(width: 46, height: 46)
+    /// Width is the leading padding, the ring, the gap, the readout, and the
+    /// trailing padding: 11 + 28 + 10 + 74 + 10. Cutting exactly there leaves the
+    /// readout with the same 10pt of air it has in the open pill, so the collapsed
+    /// bar is a real end to the layout rather than a crop through it.
+    ///
+    /// Height is the pill's own, which keeps this rect symmetric about the panel's
+    /// vertical centre — what lets `hitTest` ignore whether its view is flipped.
+    static let compactSize = NSSize(width: 133, height: 46)
 
     static var compactFrame: CGRect {
         CGRect(
@@ -233,40 +236,24 @@ struct FloatingBarView: View {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
     }
 
-    /// 23 on a 46pt box is a circle, so one shape serves both forms and the radius
-    /// simply animates between them.
+    /// Constant, and that is the point.
+    ///
+    /// While the collapsed form was a circle this had to interpolate 23 -> 15, and a
+    /// continuous-corner path was being rebuilt every frame — for the clip and again
+    /// for the glass, which re-rasterises whenever its shape changes. Now that the
+    /// collapsed bar is a shorter pill rather than a circle, both forms want the same
+    /// 15pt corner, so there is one shape for the whole morph and only the width
+    /// moves.
     private var shape: RoundedRectangle {
-        RoundedRectangle(
-            cornerRadius: isCompact ? FloatingBar.compactSize.height / 2 : 15,
-            style: .continuous
-        )
+        RoundedRectangle(cornerRadius: 15, style: .continuous)
     }
 
     /// Leading inset, chosen so the ring lands dead centre of the compact circle
     /// once it has travelled: 9 + 28/2 == 23 == 46/2.
-    private static let leadingPadding: CGFloat = 9
+    private static let leadingPadding: CGFloat = 11
 
-    /// The ring's diameter in the open pill.
-    ///
-    /// Note what `leadingPadding + ringSize / 2` comes to: 9 + 14 == 23, which is
-    /// exactly half of the 46pt compact circle. Pin the content to the box's leading
-    /// edge and the ring is dead centre of that circle for free — no offset, no
-    /// correction, nothing to keep in sync if either number is ever retuned.
+    /// The ring's diameter, the same in both forms.
     private static let ringSize: CGFloat = 28
-
-    /// The ring grows to fill the compact circle instead of floating inside it.
-    ///
-    /// Without this there are two circles, not one: the glass disc — which is really
-    /// the pill closed down to 46pt — and a 28pt ring sitting in the middle of it at
-    /// 61% of its width. On opening, the disc becomes the whole pill while the ring
-    /// stays the size it was, so the object the eye was tracking has nothing to grow
-    /// into. Letting the ring own the circle and shrink back into its slot is what
-    /// makes the two states one object.
-    ///
-    /// A `scaleEffect`, deliberately, not a frame: the ring sits inside the layout
-    /// the clip is revealing, and resizing it there would re-run that layout on every
-    /// frame — the exact churn this whole design exists to avoid.
-    private static let compactRingScale: CGFloat = 36 / ringSize
 
     /// The only dimension that travels. Height is shared by both forms, so one
     /// animating number and one offset carry the whole change.
@@ -362,17 +349,16 @@ struct FloatingBarView: View {
         // out twice — only the clip and one offset move.
         HStack(spacing: 10) {
             phaseRing
-                // Grows to own the circle. Visual only — a frame change here would
-                // re-run the layout the clip is revealing.
-                .scaleEffect(isCompact ? Self.compactRingScale : 1)
+            readout
 
-            Group {
-                readout
-                Spacer(minLength: 4)
-                controls
-            }
-            .opacity(isCompact ? 0 : 1)
-            .animation(contentFade, value: isCompact)
+            Spacer(minLength: 4)
+
+            // The only thing the collapse actually hides. It is already outside the
+            // clip by then; the fade is for the moment in between, when the box is
+            // wide enough to show it but the bar is on its way to not having it.
+            controls
+                .opacity(isCompact ? 0 : 1)
+                .animation(contentFade, value: isCompact)
         }
         .padding(.leading, Self.leadingPadding)
         .padding(.trailing, 10)
@@ -460,10 +446,6 @@ struct FloatingBarView: View {
                 pulse = true
             }
         }
-        // Compact strips the countdown and the phase label off the screen. VoiceOver
-        // never sees that form — the policy refuses to collapse while it is running —
-        // but the tooltip is the sighted equivalent, and it costs nothing.
-        .help(isCompact ? "\(controller.phase.title) — \(controller.displayTime) left" : "")
         .accessibilityLabel("\(controller.phase.title), \(controller.displayTime) remaining")
     }
 
