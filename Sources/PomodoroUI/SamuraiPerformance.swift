@@ -43,7 +43,7 @@ public enum SamuraiPerformance {
             CubicKeyframe(150, duration: 0.10)            // helmet crest peeks
             SpringKeyframe(-18, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
             SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.62))
-            LinearKeyframe(0, duration: 1.42)
+            Hold.moving(0, duration: 1.42, drift: 1.4)
             CubicKeyframe(-6, duration: 0.10)
             CubicKeyframe(200, duration: 0.28)
         }
@@ -52,7 +52,7 @@ public enum SamuraiPerformance {
             LinearKeyframe(0.86, duration: 0.10)
             SpringKeyframe(1.12, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
             SpringKeyframe(1.06, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.62))
-            LinearKeyframe(1.06, duration: 1.42)
+            Hold.moving(1.06, duration: 1.42, drift: 0.014)
             CubicKeyframe(0.9, duration: 0.38)
         }
         KeyframeTrack(\.rootScaleY) {
@@ -60,7 +60,7 @@ public enum SamuraiPerformance {
             SpringKeyframe(1.06, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.50))
             SpringKeyframe(0.94, duration: 0.12, spring: .init(response: 0.28, dampingRatio: 0.50))
             SpringKeyframe(1.0, duration: 0.18, spring: .init(response: 0.30, dampingRatio: 0.60))
-            LinearKeyframe(1.0, duration: 1.80)
+            Hold.moving(1.0, duration: 1.8, drift: 0.014)
         }
         // The point: blade swings down and levels straight at the viewer.
         KeyframeTrack(\.swordArmUpper) {
@@ -68,76 +68,96 @@ public enum SamuraiPerformance {
             CubicKeyframe(-38, duration: 0.14)            // cocks back
             SpringKeyframe(30, duration: 0.16, spring: .init(response: 0.26, dampingRatio: 0.55))
             SpringKeyframe(24, duration: 0.14, spring: .init(response: 0.26, dampingRatio: 0.62))
-            LinearKeyframe(24, duration: 1.18)            // held, aimed at you
+            Hold.moving(24, duration: 1.14, drift: 1.8)            // held, aimed at you
             CubicKeyframe(0, duration: 0.42)
         }
         KeyframeTrack(\.swordFore) {
             LinearKeyframe(0, duration: 0.40)
             CubicKeyframe(-14, duration: 0.14)
             SpringKeyframe(52, duration: 0.30, spring: .init(response: 0.26, dampingRatio: 0.58))
-            LinearKeyframe(52, duration: 1.18)
+            Hold.moving(52, duration: 1.14, drift: 1.8)
             CubicKeyframe(0, duration: 0.42)
         }
         KeyframeTrack(\.katana) {
             LinearKeyframe(0, duration: 0.46)
             SpringKeyframe(-18, duration: 0.34, spring: .init(response: 0.30, dampingRatio: 0.50))
-            LinearKeyframe(-18, duration: 1.18)
+            Hold.moving(-18, duration: 1.18, drift: 1.8)
             CubicKeyframe(0, duration: 0.42)
         }
         KeyframeTrack(\.torso) {
             LinearKeyframe(0, duration: 0.40)
             SpringKeyframe(-6, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.60))
-            LinearKeyframe(-6, duration: 1.28)            // leans in behind the point
+            Hold.moving(-6, duration: 1.28, drift: 1.8)            // leans in behind the point
             CubicKeyframe(0, duration: 0.42)
         }
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.54)
             CubicKeyframe(4, duration: 0.16)              // chin down, eyes on you
-            LinearKeyframe(4, duration: 1.28)
+            Hold.moving(4, duration: 1.28, drift: 1.8)
             CubicKeyframe(0, duration: 0.42)
         }
         KeyframeTrack(\.maedate) {
             LinearKeyframe(12, duration: 0.24)
             SpringKeyframe(-6, duration: 0.14, spring: .init(response: 0.50, dampingRatio: 0.35))
             SpringKeyframe(0, duration: 0.18, spring: .init(response: 0.50, dampingRatio: 0.35))
-            LinearKeyframe(0, duration: 1.56)
+            Hold.moving(0, duration: 1.56, drift: 1.8)
             CubicKeyframe(-12, duration: 0.28)
         }
         KeyframeTrack(\.kusazuriL) {
             LinearKeyframe(-16, duration: 0.20)
             SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.48, dampingRatio: 0.40))
-            LinearKeyframe(0, duration: 1.86)
+            Hold.moving(0, duration: 1.86, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriFL) {
             LinearKeyframe(-9, duration: 0.26)
             SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.48, dampingRatio: 0.40))
-            LinearKeyframe(0, duration: 1.80)
+            Hold.moving(0, duration: 1.8, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriFR) {
             LinearKeyframe(9, duration: 0.32)
             SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.48, dampingRatio: 0.40))
-            LinearKeyframe(0, duration: 1.74)
+            Hold.moving(0, duration: 1.74, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriR) {
             LinearKeyframe(16, duration: 0.38)
             SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.48, dampingRatio: 0.40))
-            LinearKeyframe(0, duration: 1.68)
+            Hold.moving(0, duration: 1.68, drift: 1.8)
         }
         KeyframeTrack(\.sodeL) {
             LinearKeyframe(-16, duration: 0.22)
             SpringKeyframe(0, duration: 0.36, spring: .init(response: 0.50, dampingRatio: 0.48))
-            LinearKeyframe(0, duration: 1.82)
+            Hold.moving(0, duration: 1.82, drift: 1.8)
         }
         KeyframeTrack(\.sodeR) {
             LinearKeyframe(16, duration: 0.22)
             SpringKeyframe(-10, duration: 0.24, spring: .init(response: 0.45, dampingRatio: 0.45))
             SpringKeyframe(0, duration: 0.24, spring: .init(response: 0.45, dampingRatio: 0.45))
-            LinearKeyframe(0, duration: 1.70)
+            Hold.moving(0, duration: 1.7, drift: 1.8)
+        }
+        // The free arm, which did nothing at all here until now.
+        //
+        // A two-handed guard is a whole-body shape: the off hand comes across to
+        // brace, and it arrives *before* the blade settles, because it is what the
+        // blade settles against. Leaving it hanging made the stance read as a
+        // one-armed pose with a spare limb attached.
+        KeyframeTrack(\.offArmUpper) {
+            LinearKeyframe(0, duration: 0.34)
+            CubicKeyframe(-16, duration: 0.16)            // opens away as he cocks back
+            SpringKeyframe(26, duration: 0.20, spring: .init(response: 0.26, dampingRatio: 0.56))
+            Hold.moving(26, duration: 1.28, drift: 1.6)
+            CubicKeyframe(0, duration: 0.42)
+        }
+        KeyframeTrack(\.offArmFore) {
+            LinearKeyframe(0, duration: 0.34)
+            CubicKeyframe(-8, duration: 0.18)
+            SpringKeyframe(44, duration: 0.24, spring: .init(response: 0.26, dampingRatio: 0.52))
+            Hold.moving(44, duration: 1.22, drift: 2.0)
+            CubicKeyframe(0, duration: 0.42)
         }
         KeyframeTrack(\.pupilDrop) {
             LinearKeyframe(0, duration: 0.54)
             CubicKeyframe(-0.9, duration: 0.16)
-            LinearKeyframe(-0.9, duration: 1.70)
+            Hold.moving(-0.9, duration: 1.7, drift: 0.12)
         }
     }
 
@@ -152,13 +172,13 @@ public enum SamuraiPerformance {
             // Only comes up two-thirds — he is leaning on the pill, not standing
             // to attention behind it.
             SpringKeyframe(38, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.85))
-            LinearKeyframe(38, duration: 2.10)
+            Hold.moving(38, duration: 2.1, drift: 1.4)
             CubicKeyframe(200, duration: 0.30)
         }
         KeyframeTrack(\.rootLean) {
             LinearKeyframe(0, duration: 0.40)
             CubicKeyframe(7, duration: 0.35)             // slumps sideways
-            LinearKeyframe(7, duration: 1.75)
+            Hold.moving(7, duration: 1.75, drift: 1.8)
             CubicKeyframe(0, duration: 0.30)
         }
         KeyframeTrack(\.torsoScaleY) {
@@ -183,7 +203,7 @@ public enum SamuraiPerformance {
         KeyframeTrack(\.kabuto) {
             LinearKeyframe(0, duration: 0.55)
             CubicKeyframe(5, duration: 0.45)             // helmet tips over the eyes
-            LinearKeyframe(5, duration: 1.50)
+            Hold.moving(5, duration: 1.5, drift: 1.8)
             CubicKeyframe(0, duration: 0.30)
         }
         KeyframeTrack(\.maedate) {
@@ -198,40 +218,62 @@ public enum SamuraiPerformance {
         KeyframeTrack(\.swordArmUpper) {
             LinearKeyframe(0, duration: 0.40)
             CubicKeyframe(22, duration: 0.45)
-            LinearKeyframe(22, duration: 1.65)
+            Hold.moving(22, duration: 1.65, drift: 1.8)
             CubicKeyframe(0, duration: 0.30)
         }
         KeyframeTrack(\.swordFore) {
             LinearKeyframe(0, duration: 0.40)
             CubicKeyframe(10, duration: 0.45)
-            LinearKeyframe(10, duration: 1.65)
+            Hold.moving(10, duration: 1.65, drift: 1.8)
             CubicKeyframe(0, duration: 0.30)
         }
         KeyframeTrack(\.katana) {
             LinearKeyframe(0, duration: 0.40)
             SpringKeyframe(-16, duration: 0.50, spring: .init(response: 0.55, dampingRatio: 0.55))
-            LinearKeyframe(-16, duration: 1.60)
+            Hold.moving(-16, duration: 1.6, drift: 1.8)
             CubicKeyframe(0, duration: 0.30)
         }
         KeyframeTrack(\.sodeL) {
             LinearKeyframe(0, duration: 0.40)
             SpringKeyframe(8, duration: 0.35, spring: .init(response: 0.60, dampingRatio: 0.70))
-            LinearKeyframe(8, duration: 2.05)
+            Hold.moving(8, duration: 2.05, drift: 1.8)
         }
         KeyframeTrack(\.sodeR) {
             LinearKeyframe(0, duration: 0.40)
             SpringKeyframe(-8, duration: 0.35, spring: .init(response: 0.60, dampingRatio: 0.70))
-            LinearKeyframe(-8, duration: 2.05)
+            Hold.moving(-8, duration: 2.05, drift: 1.8)
+        }
+        // The off arm gives up first. It is the limb with nothing to hold, so it is
+        // the one that shows he has stopped being on duty — and it was static here.
+        KeyframeTrack(\.offArmUpper) {
+            LinearKeyframe(0, duration: 0.44)
+            SpringKeyframe(-9, duration: 0.50, spring: .init(response: 0.72, dampingRatio: 0.78))
+            Hold.breathing(-9, duration: 1.56, drift: 1.7)
+            CubicKeyframe(0, duration: 0.30)
+        }
+        KeyframeTrack(\.offArmFore) {
+            LinearKeyframe(0, duration: 0.50)
+            SpringKeyframe(-19, duration: 0.54, spring: .init(response: 0.78, dampingRatio: 0.74))
+            Hold.breathing(-19, duration: 1.46, drift: 2.2)
+            CubicKeyframe(0, duration: 0.30)
+        }
+        // Torso breathing: the one track that makes a sleeping figure look asleep
+        // rather than paused. Slower and deeper than the drift on any other joint.
+        KeyframeTrack(\.torso) {
+            LinearKeyframe(0, duration: 0.44)
+            CubicKeyframe(4, duration: 0.46)
+            Hold.breathing(4, duration: 1.60, drift: 3.0)
+            CubicKeyframe(0, duration: 0.30)
         }
         KeyframeTrack(\.kusazuriL) {
             LinearKeyframe(-6, duration: 0.16)
             SpringKeyframe(4, duration: 0.40, spring: .init(response: 0.55, dampingRatio: 0.50))
-            LinearKeyframe(4, duration: 2.24)
+            Hold.moving(4, duration: 2.24, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriR) {
             LinearKeyframe(6, duration: 0.22)
             SpringKeyframe(-4, duration: 0.40, spring: .init(response: 0.55, dampingRatio: 0.50))
-            LinearKeyframe(-4, duration: 2.18)
+            Hold.moving(-4, duration: 2.18, drift: 1.8)
         }
         // Eyes close and stay closed — the whole point of the beat.
         KeyframeTrack(\.fierceOpacity) {
@@ -247,7 +289,7 @@ public enum SamuraiPerformance {
         KeyframeTrack(\.pupilDrop) {
             LinearKeyframe(0, duration: 0.45)
             CubicKeyframe(1.4, duration: 0.25)
-            LinearKeyframe(1.4, duration: 2.10)
+            Hold.moving(1.4, duration: 2.1, drift: 0.12)
         }
     }
 
@@ -276,7 +318,7 @@ public enum SamuraiPerformance {
             LinearKeyframe(0.90, duration: 0.20)         // crouch, then launch
             SpringKeyframe(1.08, duration: 0.28, spring: .init(response: 0.32, dampingRatio: 0.48))
             SpringKeyframe(1.0, duration: 0.18, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(1.0, duration: 2.24)
+            Hold.moving(1.0, duration: 2.24, drift: 0.014)
             CubicKeyframe(1.04, duration: 0.30)
         }
         // Both arms punch overhead — the cheer.
@@ -284,46 +326,46 @@ public enum SamuraiPerformance {
             LinearKeyframe(0, duration: 0.28)
             SpringKeyframe(-62, duration: 0.28, spring: .init(response: 0.30, dampingRatio: 0.48))
             SpringKeyframe(-55, duration: 0.16, spring: .init(response: 0.30, dampingRatio: 0.55))
-            LinearKeyframe(-55, duration: 1.98)
+            Hold.moving(-55, duration: 1.98, drift: 1.8)
             CubicKeyframe(-10, duration: 0.30)
             LinearKeyframe(-10, duration: 0.20)
         }
         KeyframeTrack(\.swordFore) {
             LinearKeyframe(0, duration: 0.28)
             SpringKeyframe(-14, duration: 0.44, spring: .init(response: 0.30, dampingRatio: 0.50))
-            LinearKeyframe(-14, duration: 1.98)
+            Hold.moving(-14, duration: 1.98, drift: 1.8)
             CubicKeyframe(0, duration: 0.50)
         }
         KeyframeTrack(\.katana) {
             LinearKeyframe(0, duration: 0.34)
             SpringKeyframe(16, duration: 0.40, spring: .init(response: 0.35, dampingRatio: 0.45))
-            LinearKeyframe(16, duration: 1.96)
+            Hold.moving(16, duration: 1.96, drift: 1.8)
             CubicKeyframe(0, duration: 0.50)
         }
         KeyframeTrack(\.offArmUpper) {
             LinearKeyframe(0, duration: 0.34)
             SpringKeyframe(-78, duration: 0.26, spring: .init(response: 0.32, dampingRatio: 0.48))
             SpringKeyframe(-68, duration: 0.16, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(-68, duration: 1.94)
+            Hold.moving(-68, duration: 1.94, drift: 1.8)
             CubicKeyframe(0, duration: 0.50)
         }
         KeyframeTrack(\.offArmFore) {
             LinearKeyframe(0, duration: 0.34)
             SpringKeyframe(-46, duration: 0.42, spring: .init(response: 0.32, dampingRatio: 0.50))
-            LinearKeyframe(-46, duration: 1.94)
+            Hold.moving(-46, duration: 1.94, drift: 1.8)
             CubicKeyframe(0, duration: 0.50)
         }
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.34)
             CubicKeyframe(-11, duration: 0.24)           // chin up, looking skyward
-            LinearKeyframe(-11, duration: 2.12)
+            Hold.breathing(-11, duration: 2.12, drift: 1.8)
             CubicKeyframe(0, duration: 0.50)
         }
         KeyframeTrack(\.kabutoLift) {
             LinearKeyframe(0, duration: 0.56)
             SpringKeyframe(-4, duration: 0.18, spring: .init(response: 0.35, dampingRatio: 0.42))
             SpringKeyframe(0, duration: 0.24, spring: .init(response: 0.35, dampingRatio: 0.45))
-            LinearKeyframe(0, duration: 1.92)
+            Hold.moving(0, duration: 1.92, drift: 0.5)
             CubicKeyframe(-3, duration: 0.30)
         }
         KeyframeTrack(\.maedate) {
@@ -336,11 +378,11 @@ public enum SamuraiPerformance {
             CubicKeyframe(0, duration: 0.22)
             CubicKeyframe(8, duration: 0.22)
             CubicKeyframe(0, duration: 0.22)
-            LinearKeyframe(0, duration: 0.94)
+            Hold.moving(0, duration: 0.92, drift: 1.8)
             CubicKeyframe(-12, duration: 0.30)
         }
         KeyframeTrack(\.rootLean) {
-            LinearKeyframe(0, duration: 0.90)
+            Hold.moving(0, duration: 0.9, drift: 1.8)
             CubicKeyframe(-4, duration: 0.30)
             CubicKeyframe(4, duration: 0.44)
             CubicKeyframe(-3, duration: 0.44)
@@ -350,32 +392,32 @@ public enum SamuraiPerformance {
         KeyframeTrack(\.kusazuriL) {
             LinearKeyframe(-15, duration: 0.30)
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.38))
-            LinearKeyframe(0, duration: 2.50)
+            Hold.moving(0, duration: 2.5, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriFL) {
             LinearKeyframe(-10, duration: 0.36)
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.38))
-            LinearKeyframe(0, duration: 2.44)
+            Hold.moving(0, duration: 2.44, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriFR) {
             LinearKeyframe(10, duration: 0.42)
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.38))
-            LinearKeyframe(0, duration: 2.38)
+            Hold.moving(0, duration: 2.38, drift: 1.8)
         }
         KeyframeTrack(\.kusazuriR) {
             LinearKeyframe(15, duration: 0.48)
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.38))
-            LinearKeyframe(0, duration: 2.32)
+            Hold.moving(0, duration: 2.32, drift: 1.8)
         }
         KeyframeTrack(\.sashTailL) {
             LinearKeyframe(-24, duration: 0.32)
             SpringKeyframe(0, duration: 0.44, spring: .init(response: 0.60, dampingRatio: 0.32))
-            LinearKeyframe(0, duration: 2.44)
+            Hold.moving(0, duration: 2.44, drift: 1.8)
         }
         KeyframeTrack(\.sashTailR) {
             LinearKeyframe(24, duration: 0.32)
             SpringKeyframe(0, duration: 0.44, spring: .init(response: 0.60, dampingRatio: 0.32))
-            LinearKeyframe(0, duration: 2.44)
+            Hold.moving(0, duration: 2.44, drift: 1.8)
         }
         KeyframeTrack(\.fierceOpacity) {
             LinearKeyframe(1, duration: 0.50)

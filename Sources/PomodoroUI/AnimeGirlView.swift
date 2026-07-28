@@ -20,6 +20,9 @@ public struct AnimeGirlPose: Equatable, Sendable {
     public var legR: Double = 0
     public var armL: Double = 0
     public var armR: Double = 0
+    /// Elbows. Positive bends the hand away from the body.
+    public var armL_fore: Double = 0
+    public var armR_fore: Double = 0
     public var head: Double = 0
 
     public var eyesScale: Double = 1
@@ -52,6 +55,8 @@ public struct AnimeGirlPose: Equatable, Sendable {
         case .legR: legR
         case .armL: armL
         case .armR: armR
+        case .armL_fore: armL_fore
+        case .armR_fore: armR_fore
         case .head: head
         case .ahoge: ahoge
         case .tailL_base: tailL_base

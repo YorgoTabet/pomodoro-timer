@@ -34,6 +34,7 @@ public enum AnimeGirlArt {
 
         case root, sparkles, figure, hips, legL, legR, torso
         case armL, armR, head, eyes, ahoge
+        case armL_fore, armR_fore
         case tailL_base, tailL_tip, tailR_base, tailR_tip
 
         public var parent: Part? {
@@ -43,6 +44,8 @@ public enum AnimeGirlArt {
             case .hips: .figure
             case .legL, .legR, .torso: .hips
             case .armL, .armR, .head: .torso
+            case .armL_fore: .armL
+            case .armR_fore: .armR
             case .eyes, .ahoge, .tailL_base, .tailR_base: .head
             case .tailL_tip: .tailL_base
             case .tailR_tip: .tailR_base
@@ -60,6 +63,10 @@ public enum AnimeGirlArt {
             case .torso: CGPoint(x: 100, y: 164)
             case .armL: CGPoint(x: 77, y: 122)
             case .armR: CGPoint(x: 123, y: 122)
+            // Elbows, set where the blazer sleeve stops flaring and runs straight
+            // down to the cuff.
+            case .armL_fore: CGPoint(x: 69.5, y: 138)
+            case .armR_fore: CGPoint(x: 130.5, y: 138)
             case .head: CGPoint(x: 100, y: 118)
             case .eyes: CGPoint(x: 100, y: 83)
             case .ahoge: CGPoint(x: 98, y: 22)
@@ -91,16 +98,21 @@ public enum AnimeGirlArt {
         .init(13, "shoeR", .legR, Ink.roseDeep, stroke: 3.0, "M 104.0 226.0 Q 103.0 232.0 104.0 240.0 L 119.0 240.0 Q 121.0 234.0 116.0 226.0 Z"),
         .init(14, "skirt", .hips, Ink.blazer, stroke: 3.0, "M 77.0 163.0 L 123.0 163.0 L 133.0 189.0 L 124.0 186.5 L 116.0 190.0 L 108.0 186.5 L 100.0 190.0 L 92.0 186.5 L 84.0 190.0 L 76.0 186.5 L 67.0 189.0 Z"),
         .init(15, "skirtShade", .hips, Ink.blazerShadow, stroke: nil, "M 110.0 163.0 L 123.0 163.0 L 133.0 189.0 L 124.0 186.5 L 116.0 190.0 Z"),
-        .init(16, "armL_sleeve", .armL, Ink.blazer, stroke: 3.0, "M 76.0 118.0 Q 66.0 124.0 63.0 138.0 L 60.0 150.0 Q 65.0 155.0 72.0 153.0 L 76.0 138.0 Q 79.0 127.0 76.0 118.0 Z"),
-        .init(17, "handL", .armL, Ink.skin, stroke: 1.8, path: VectorPath.circle(65.0, 159.0, 5.5)),
+        // Split at the elbow. Same construction as the rabbit's: the upper sleeve is
+        // cut flat below the pivot and the forearm's rounded proximal cap is centred
+        // on it and drawn over the top, so no gap can open at any angle.
+        .init(16, "armL_sleeve", .armL, Ink.blazer, stroke: 3.0, "M 76.0 118.0 Q 66.0 124.0 62.5 142.0 L 75.6 142.0 Q 79.0 127.0 76.0 118.0 Z"),
+        .init(56, "armL_fore", .armL_fore, Ink.blazer, stroke: 3.0, "M 62.5 138.0 Q 63.0 131.0 69.5 131.0 Q 76.2 131.0 76.5 138.0 L 72.0 153.0 Q 65.0 155.0 60.0 150.0 Z"),
+        .init(17, "handL", .armL_fore, Ink.skin, stroke: 1.8, path: VectorPath.circle(65.0, 159.0, 5.5)),
         .init(18, "torsoBlazer", .torso, Ink.blazer, stroke: 3.0, "M 74.0 126.0 Q 78.0 118.0 88.0 116.0 L 112.0 116.0 Q 122.0 118.0 126.0 126.0 L 131.0 150.0 Q 132.0 162.0 123.0 165.0 L 77.0 165.0 Q 68.0 162.0 69.0 150.0 Z"),
         .init(19, "blazerShade", .torso, Ink.blazerShadow, stroke: nil, "M 112.0 117.0 Q 121.0 119.0 125.0 127.0 L 129.0 150.0 Q 130.0 160.0 122.0 163.0 L 112.0 163.0 Z"),
         .init(20, "shirtV", .torso, Ink.white, stroke: 1.8, "M 91.0 116.0 L 100.0 132.0 L 109.0 116.0 Z"),
         .init(21, "lapels", .torso, Ink.blazerShadow, stroke: 1.8, "M 91.0 116.0 L 86.0 129.0 L 94.0 125.0 Z M 109.0 116.0 L 114.0 129.0 L 106.0 125.0 Z"),
         .init(22, "bowLoops", .torso, Ink.rose, stroke: 1.8, "M 100.0 129.0 Q 89.0 121.0 85.0 128.0 Q 82.0 136.0 92.0 137.0 Q 98.0 136.0 100.0 129.0 Z M 100.0 129.0 Q 111.0 121.0 115.0 128.0 Q 118.0 136.0 108.0 137.0 Q 102.0 136.0 100.0 129.0 Z"),
         .init(23, "bowKnot", .torso, Ink.roseDeep, stroke: 1.8, path: VectorPath.circle(100.0, 130.0, 3.5)),
-        .init(24, "armR_sleeve", .armR, Ink.blazer, stroke: 3.0, "M 124.0 118.0 Q 134.0 124.0 137.0 138.0 L 140.0 150.0 Q 135.0 155.0 128.0 153.0 L 124.0 138.0 Q 121.0 127.0 124.0 118.0 Z"),
-        .init(25, "handR", .armR, Ink.skin, stroke: 1.8, path: VectorPath.circle(135.0, 159.0, 5.5)),
+        .init(24, "armR_sleeve", .armR, Ink.blazer, stroke: 3.0, "M 124.0 118.0 Q 134.0 124.0 137.5 142.0 L 124.4 142.0 Q 121.0 127.0 124.0 118.0 Z"),
+        .init(57, "armR_fore", .armR_fore, Ink.blazer, stroke: 3.0, "M 137.5 138.0 Q 137.0 131.0 130.5 131.0 Q 123.8 131.0 123.5 138.0 L 128.0 153.0 Q 135.0 155.0 140.0 150.0 Z"),
+        .init(25, "handR", .armR_fore, Ink.skin, stroke: 1.8, path: VectorPath.circle(135.0, 159.0, 5.5)),
         .init(26, "neck", .torso, Ink.skin, stroke: nil, "M 93.0 106.0 L 92.0 122.0 L 108.0 122.0 L 107.0 106.0 Z"),
         .init(27, "headBase", .head, Ink.skin, stroke: 3.0, "M 62.0 66.0 Q 62.0 40.0 80.0 31.0 Q 100.0 23.0 120.0 31.0 Q 138.0 40.0 138.0 66.0 Q 138.0 86.0 126.0 100.0 Q 114.0 113.0 100.0 115.0 Q 86.0 113.0 74.0 100.0 Q 62.0 86.0 62.0 66.0 Z"),
         .init(28, "blush", .head, Ink.blush, stroke: nil, "M 65.0 96.0 Q 71.0 91.5 77.0 96.0 Q 71.0 100.0 65.0 96.0 Z M 123.0 96.0 Q 129.0 91.5 135.0 96.0 Q 129.0 100.0 123.0 96.0 Z"),

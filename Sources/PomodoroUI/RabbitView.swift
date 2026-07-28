@@ -23,6 +23,9 @@ public struct RabbitPose: Equatable, Sendable {
     public var tail: Double = 0
     public var armL: Double = 0
     public var armR: Double = 0
+    /// Elbows. Positive bends the paw forward, away from the body.
+    public var armL_fore: Double = 0
+    public var armR_fore: Double = 0
     public var zipperPull: Double = 0
 
     public var head: Double = 0
@@ -45,6 +48,8 @@ public struct RabbitPose: Equatable, Sendable {
         case .tail: tail
         case .armL: armL
         case .armR: armR
+        case .armL_fore: armL_fore
+        case .armR_fore: armR_fore
         case .zipperPull: zipperPull
         case .head: head
         case .earL_base: earL_base

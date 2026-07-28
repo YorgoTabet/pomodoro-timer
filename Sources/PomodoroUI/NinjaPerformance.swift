@@ -36,7 +36,7 @@ public enum NinjaPerformance {
             // Twice the samurai's entry speed; no peek, no anticipation.
             SpringKeyframe(-14, duration: 0.24, spring: .init(response: 0.24, dampingRatio: 0.55))
             SpringKeyframe(0, duration: 0.16, spring: .init(response: 0.26, dampingRatio: 0.65))
-            LinearKeyframe(0, duration: 1.42)
+            Hold.moving(0, duration: 1.42, drift: 1.4)
             CubicKeyframe(-8, duration: 0.10)
             CubicKeyframe(200, duration: 0.28)
         }
@@ -51,7 +51,7 @@ public enum NinjaPerformance {
         KeyframeTrack(\.smokeScale) {
             LinearKeyframe(0.5, duration: 0.02)
             CubicKeyframe(0.95, duration: 0.30)
-            LinearKeyframe(0.95, duration: 1.48)
+            Hold.moving(0.95, duration: 1.48, drift: 0.014)
             CubicKeyframe(0.6, duration: 0.10)
             CubicKeyframe(0.9, duration: 0.30)
         }
@@ -61,21 +61,21 @@ public enum NinjaPerformance {
             CubicKeyframe(-58, duration: 0.14)
             SpringKeyframe(46, duration: 0.14, spring: .init(response: 0.22, dampingRatio: 0.52))
             SpringKeyframe(38, duration: 0.12, spring: .init(response: 0.24, dampingRatio: 0.62))
-            LinearKeyframe(38, duration: 1.18)
+            Hold.moving(38, duration: 1.18, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.throwForearm) {
             LinearKeyframe(-30, duration: 0.24)
             CubicKeyframe(-44, duration: 0.14)
             SpringKeyframe(58, duration: 0.26, spring: .init(response: 0.22, dampingRatio: 0.55))
-            LinearKeyframe(58, duration: 1.18)
+            Hold.moving(58, duration: 1.18, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         // Spins through the throw, then vanishes — it left his hand.
         KeyframeTrack(\.shuriken) {
             LinearKeyframe(0, duration: 0.38)
             CubicKeyframe(540, duration: 0.14)
-            LinearKeyframe(540, duration: 1.68)
+            Hold.moving(540, duration: 1.68, drift: 1.8)
         }
         KeyframeTrack(\.shurikenOpacity) {
             LinearKeyframe(1, duration: 0.46)
@@ -86,19 +86,19 @@ public enum NinjaPerformance {
         KeyframeTrack(\.torso) {
             LinearKeyframe(8, duration: 0.24)         // coiled away from the throw
             CubicKeyframe(-10, duration: 0.28)        // uncoils into it
-            LinearKeyframe(-10, duration: 1.30)
+            Hold.breathing(-10, duration: 1.3, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.38)
             CubicKeyframe(5, duration: 0.14)          // eyes down the line of the throw
-            LinearKeyframe(5, duration: 1.30)
+            Hold.breathing(5, duration: 1.3, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.eyesScaleY) {
             LinearKeyframe(1, duration: 0.38)
             CubicKeyframe(0.62, duration: 0.12)       // narrows — taking aim
-            LinearKeyframe(0.62, duration: 1.32)
+            Hold.moving(0.62, duration: 1.32, drift: 0.014)
             CubicKeyframe(1, duration: 0.38)
         }
         // Ribbons stream opposite the body, 70ms late, and never fully settle.
@@ -106,25 +106,36 @@ public enum NinjaPerformance {
             LinearKeyframe(-34, duration: 0.30)
             SpringKeyframe(12, duration: 0.22, spring: .init(response: 0.42, dampingRatio: 0.32))
             SpringKeyframe(0, duration: 0.26, spring: .init(response: 0.42, dampingRatio: 0.32))
-            LinearKeyframe(0, duration: 1.14)
+            Hold.moving(0, duration: 1.14, drift: 1.8)
             CubicKeyframe(-26, duration: 0.28)
         }
         KeyframeTrack(\.ribbonFar) {
             LinearKeyframe(-26, duration: 0.36)
             SpringKeyframe(9, duration: 0.22, spring: .init(response: 0.46, dampingRatio: 0.30))
             SpringKeyframe(0, duration: 0.26, spring: .init(response: 0.46, dampingRatio: 0.30))
-            LinearKeyframe(0, duration: 1.08)
+            Hold.moving(0, duration: 1.08, drift: 1.8)
             CubicKeyframe(-20, duration: 0.28)
         }
         KeyframeTrack(\.sashTail) {
             LinearKeyframe(-18, duration: 0.32)
             SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.50, dampingRatio: 0.36))
-            LinearKeyframe(0, duration: 1.54)
+            Hold.moving(0, duration: 1.54, drift: 1.8)
         }
         KeyframeTrack(\.offArmUpper) {
             LinearKeyframe(-14, duration: 0.24)
             SpringKeyframe(16, duration: 0.28, spring: .init(response: 0.30, dampingRatio: 0.58))
-            LinearKeyframe(16, duration: 1.30)
+            Hold.moving(16, duration: 1.3, drift: 1.8)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        // The off arm's elbow, which until now never bent in any performance — the
+        // whole limb swung from the shoulder as one rigid stick. It trails the upper
+        // arm by ~80ms and overshoots it, which is what an unweighted forearm does
+        // when the shoulder stops: the elbow keeps going, then catches up.
+        KeyframeTrack(\.offForearm) {
+            LinearKeyframe(-22, duration: 0.30)
+            SpringKeyframe(30, duration: 0.30, spring: .init(response: 0.34, dampingRatio: 0.48))
+            SpringKeyframe(21, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.60))
+            Hold.moving(21, duration: 1.02, drift: 2.2)
             CubicKeyframe(0, duration: 0.38)
         }
     }
@@ -141,13 +152,13 @@ public enum NinjaPerformance {
             SpringKeyframe(44, duration: 0.42, spring: .init(response: 0.48, dampingRatio: 0.82))
             LinearKeyframe(44, duration: 0.30)
             CubicKeyframe(52, duration: 0.60)         // settles lower as he relaxes
-            LinearKeyframe(52, duration: 1.10)
+            Hold.moving(52, duration: 1.1, drift: 1.4)
             CubicKeyframe(200, duration: 0.38)
         }
         KeyframeTrack(\.torso) {
             LinearKeyframe(0, duration: 0.42)
             CubicKeyframe(9, duration: 0.42)          // slouches sideways
-            LinearKeyframe(9, duration: 1.58)
+            Hold.breathing(9, duration: 1.58, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.head) {
@@ -176,19 +187,29 @@ public enum NinjaPerformance {
         KeyframeTrack(\.throwArmUpper) {
             LinearKeyframe(0, duration: 0.42)
             SpringKeyframe(-10, duration: 0.46, spring: .init(response: 0.60, dampingRatio: 0.72))
-            LinearKeyframe(-10, duration: 1.54)
+            Hold.moving(-10, duration: 1.54, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.throwForearm) {
             LinearKeyframe(0, duration: 0.42)
             SpringKeyframe(-16, duration: 0.46, spring: .init(response: 0.62, dampingRatio: 0.70))
-            LinearKeyframe(-16, duration: 1.54)
+            Hold.moving(-16, duration: 1.54, drift: 1.8)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.offArmUpper) {
             LinearKeyframe(0, duration: 0.42)
             SpringKeyframe(12, duration: 0.46, spring: .init(response: 0.60, dampingRatio: 0.72))
-            LinearKeyframe(12, duration: 1.54)
+            Hold.moving(12, duration: 1.54, drift: 1.8)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        // Elbow gives out further than the shoulder does. Going slack is not the
+        // whole arm rotating by one angle — it is the upper arm dropping a little
+        // and the forearm folding a lot, which is the difference between a resting
+        // limb and a mannequin's.
+        KeyframeTrack(\.offForearm) {
+            LinearKeyframe(0, duration: 0.46)
+            SpringKeyframe(26, duration: 0.52, spring: .init(response: 0.66, dampingRatio: 0.66))
+            Hold.breathing(26, duration: 1.44, drift: 2.4)
             CubicKeyframe(0, duration: 0.38)
         }
         // Ribbons drift rather than whip — the one place they are calm.
@@ -228,7 +249,7 @@ public enum NinjaPerformance {
             LinearKeyframe(-58, duration: 0.22)       // apex
             CubicKeyframe(4, duration: 0.34)          // fall
             SpringKeyframe(0, duration: 0.24, spring: .init(response: 0.26, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.06)
+            Hold.moving(0, duration: 1.06, drift: 1.4)
             CubicKeyframe(200, duration: 0.38)
         }
         // One clean revolution, timed to complete just before he lands.
@@ -237,7 +258,7 @@ public enum NinjaPerformance {
             CubicKeyframe(-120, duration: 0.30)
             LinearKeyframe(-240, duration: 0.22)
             CubicKeyframe(-360, duration: 0.34)
-            LinearKeyframe(-360, duration: 1.68)
+            Hold.moving(-360, duration: 1.68, drift: 1.8)
         }
         KeyframeTrack(\.figureScaleY) {
             LinearKeyframe(1, duration: 0.30)
@@ -246,7 +267,7 @@ public enum NinjaPerformance {
             LinearKeyframe(1.0, duration: 0.50)
             CubicKeyframe(0.82, duration: 0.18)       // landing squash
             SpringKeyframe(1.0, duration: 0.30, spring: .init(response: 0.28, dampingRatio: 0.50))
-            LinearKeyframe(1.0, duration: 1.40)
+            Hold.moving(1.0, duration: 1.4, drift: 0.014)
         }
         // Tucks on the way round, opens for the landing.
         KeyframeTrack(\.legFrontThigh) {
@@ -255,7 +276,7 @@ public enum NinjaPerformance {
             LinearKeyframe(-62, duration: 0.40)
             CubicKeyframe(-16, duration: 0.22)
             SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.34, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.40)
+            Hold.moving(0, duration: 1.4, drift: 1.8)
         }
         KeyframeTrack(\.legFrontShin) {
             LinearKeyframe(0, duration: 0.46)
@@ -263,7 +284,7 @@ public enum NinjaPerformance {
             LinearKeyframe(74, duration: 0.40)
             CubicKeyframe(20, duration: 0.22)
             SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.34, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.40)
+            Hold.moving(0, duration: 1.4, drift: 1.8)
         }
         KeyframeTrack(\.legBackThigh) {
             LinearKeyframe(0, duration: 0.52)
@@ -271,7 +292,7 @@ public enum NinjaPerformance {
             LinearKeyframe(-48, duration: 0.34)
             CubicKeyframe(-12, duration: 0.22)
             SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.36, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.40)
+            Hold.moving(0, duration: 1.4, drift: 1.8)
         }
         KeyframeTrack(\.legBackShin) {
             LinearKeyframe(0, duration: 0.52)
@@ -279,21 +300,43 @@ public enum NinjaPerformance {
             LinearKeyframe(62, duration: 0.34)
             CubicKeyframe(16, duration: 0.22)
             SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.36, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.40)
+            Hold.moving(0, duration: 1.4, drift: 1.8)
         }
         KeyframeTrack(\.throwArmUpper) {
             LinearKeyframe(0, duration: 0.46)
             CubicKeyframe(-54, duration: 0.24)        // arms in for the spin
             LinearKeyframe(-54, duration: 0.40)
             SpringKeyframe(0, duration: 0.36, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.54)
+            Hold.moving(0, duration: 1.54, drift: 1.8)
         }
         KeyframeTrack(\.offArmUpper) {
             LinearKeyframe(0, duration: 0.46)
             CubicKeyframe(48, duration: 0.24)
             LinearKeyframe(48, duration: 0.40)
             SpringKeyframe(0, duration: 0.36, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.54)
+            Hold.moving(0, duration: 1.54, drift: 1.8)
+        }
+        // Both elbows fold hard for the rotation and fling open on the landing.
+        //
+        // Tucking is the whole reason a backflip is possible — pulling mass toward
+        // the axis is what lets the spin come round in time. With straight arms the
+        // physics read as wrong even to someone who could not say why, and until now
+        // neither forearm moved at all through the entire revolution.
+        KeyframeTrack(\.throwForearm) {
+            LinearKeyframe(0, duration: 0.46)
+            CubicKeyframe(-72, duration: 0.22)        // snaps in ahead of the shoulder
+            Hold.moving(-72, duration: 0.42, drift: 2.5)
+            CubicKeyframe(-26, duration: 0.20)        // starts opening for the ground
+            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.48))
+            Hold.moving(0, duration: 1.40, drift: 1.8)
+        }
+        KeyframeTrack(\.offForearm) {
+            LinearKeyframe(0, duration: 0.50)
+            CubicKeyframe(66, duration: 0.22)
+            Hold.moving(66, duration: 0.38, drift: 2.5)
+            CubicKeyframe(24, duration: 0.20)
+            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.32, dampingRatio: 0.46))
+            Hold.moving(0, duration: 1.40, drift: 1.8)
         }
         // Ribbons trail the whole rotation and are still catching up on landing.
         KeyframeTrack(\.ribbonNear) {
@@ -301,21 +344,21 @@ public enum NinjaPerformance {
             CubicKeyframe(58, duration: 0.50)
             CubicKeyframe(-30, duration: 0.36)
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.42, dampingRatio: 0.30))
-            LinearKeyframe(0, duration: 1.28)
+            Hold.moving(0, duration: 1.28, drift: 1.8)
         }
         KeyframeTrack(\.ribbonFar) {
             LinearKeyframe(-16, duration: 0.52)
             CubicKeyframe(48, duration: 0.50)
             CubicKeyframe(-24, duration: 0.36)
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.46, dampingRatio: 0.28))
-            LinearKeyframe(0, duration: 1.22)
+            Hold.moving(0, duration: 1.22, drift: 1.8)
         }
         KeyframeTrack(\.sashTail) {
             LinearKeyframe(-14, duration: 0.46)
             CubicKeyframe(42, duration: 0.50)
             CubicKeyframe(-18, duration: 0.36)
             SpringKeyframe(0, duration: 0.42, spring: .init(response: 0.52, dampingRatio: 0.32))
-            LinearKeyframe(0, duration: 1.26)
+            Hold.moving(0, duration: 1.26, drift: 1.8)
         }
         // Smoke on the launch and again on the landing.
         KeyframeTrack(\.smokeOpacity) {
@@ -332,7 +375,7 @@ public enum NinjaPerformance {
             CubicKeyframe(0.85, duration: 0.36)
             LinearKeyframe(0.5, duration: 0.50)
             CubicKeyframe(0.95, duration: 0.48)
-            LinearKeyframe(0.95, duration: 1.20)
+            Hold.moving(0.95, duration: 1.2, drift: 0.014)
         }
         // A spark of satisfaction on the landing, then back to neutral.
         KeyframeTrack(\.sparkOpacity) {
@@ -346,7 +389,7 @@ public enum NinjaPerformance {
             CubicKeyframe(0.55, duration: 0.24)       // squeezed shut through the spin
             LinearKeyframe(0.55, duration: 0.62)
             SpringKeyframe(1, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
-            LinearKeyframe(1, duration: 1.38)
+            Hold.moving(1, duration: 1.38, drift: 0.014)
         }
     }
 }

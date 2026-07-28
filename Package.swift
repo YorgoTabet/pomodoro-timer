@@ -24,6 +24,14 @@ let package = Package(
             dependencies: ["PomodoroCore", "PomodoroUI"]
         ),
 
+        // Animation authoring tool: `swift run RigStudio`. Deliberately a separate
+        // executable rather than a debug window in the app — it is a workbench, not
+        // a feature, and nothing it contains should ever ship in Pomodoro.app.
+        .executableTarget(
+            name: "RigStudio",
+            dependencies: ["PomodoroCore", "PomodoroUI"]
+        ),
+
         .testTarget(
             name: "PomodoroCoreTests",
             dependencies: ["PomodoroCore"]
@@ -34,6 +42,14 @@ let package = Package(
         .testTarget(
             name: "PomodoroUITests",
             dependencies: ["PomodoroUI"]
+        ),
+
+        // Covers the app target's own logic. Testing an executable works because
+        // `main.swift` runs only when the binary is launched, not when the test
+        // bundle links against it.
+        .testTarget(
+            name: "PomodoroAppTests",
+            dependencies: ["Pomodoro", "PomodoroCore"]
         ),
     ]
 )

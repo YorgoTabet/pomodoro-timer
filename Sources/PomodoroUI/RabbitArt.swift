@@ -36,6 +36,7 @@ public enum RabbitArt {
         public static var canvas: CGSize { RabbitArt.canvas }
 
         case root, figure, torso, legs, tail, armL, armR, zipperPull
+        case armL_fore, armR_fore
         case head, earL_base, earL_tip, earR_base, earR_tip, face
 
         public var parent: Part? {
@@ -44,6 +45,8 @@ public enum RabbitArt {
             case .figure: .root
             case .torso: .figure
             case .legs, .tail, .armL, .armR, .zipperPull, .head: .torso
+            case .armL_fore: .armL
+            case .armR_fore: .armR
             case .earL_base, .earR_base, .face: .head
             case .earL_tip: .earL_base
             case .earR_tip: .earR_base
@@ -59,6 +62,10 @@ public enum RabbitArt {
             case .tail: CGPoint(x: 61, y: 181)
             case .armL: CGPoint(x: 70, y: 120)
             case .armR: CGPoint(x: 130, y: 120)
+            // Elbows, level with each other and set where the sleeve's curve turns
+            // from heading outward to heading down.
+            case .armL_fore: CGPoint(x: 62, y: 140.5)
+            case .armR_fore: CGPoint(x: 138, y: 140.5)
             case .zipperPull: CGPoint(x: 100, y: 141.5)
             case .head: CGPoint(x: 100, y: 112)
             case .earL_base: CGPoint(x: 78, y: 33)
@@ -83,8 +90,18 @@ public enum RabbitArt {
         .init(6, "footL", .legs, Ink.bellyCream, stroke: 3.0, "M 56.0 242.0 C 56.0 235.4 65.0 230.5 76.0 230.5 C 87.0 230.5 96.0 235.4 96.0 242.0 C 96.0 248.6 87.0 253.5 76.0 253.5 C 65.0 253.5 56.0 248.6 56.0 242.0 Z"),
         .init(7, "footR", .legs, Ink.bellyCream, stroke: 3.0, "M 104.0 242.0 C 104.0 235.4 113.0 230.5 124.0 230.5 C 135.0 230.5 144.0 235.4 144.0 242.0 C 144.0 248.6 135.0 253.5 124.0 253.5 C 113.0 253.5 104.0 248.6 104.0 242.0 Z"),
         .init(8, "tail_pouf", .tail, Ink.bellyCream, stroke: 3.0, path: VectorPath.circle(61.0, 181.0, 11.0)),
-        .init(9, "armL_upper", .armL, Ink.creamBase, stroke: 3.0, "M 80.0 112.0 C 68.0 114.0 58.5 125.0 55.0 140.0 C 52.8 149.5 53.5 159.0 57.0 166.5 C 59.0 170.5 65.0 170.5 67.0 166.5 C 63.5 156.0 65.0 144.0 70.5 133.5 C 73.5 127.5 78.0 121.5 83.5 117.5 Q 84.0 112.5 80.0 112.0 Z"),
-        .init(10, "armL_paw", .armL, Ink.creamBase, stroke: 3.0, "M 50.0 172.0 C 50.0 165.5 55.0 161.5 61.5 162.0 C 68.5 162.5 72.5 167.0 72.0 174.0 C 71.5 181.0 66.5 185.0 60.5 184.5 C 54.0 184.0 50.0 179.0 50.0 172.0 Z"),
+        // The left arm, split at the elbow. It was one rigid tube from shoulder to
+        // paw, which is why it swung like a broom handle.
+        //
+        // The upper arm's distal end is cut flat *below* the elbow pivot and the
+        // forearm's proximal end is a cap centred *on* that pivot, drawn over it.
+        // Because the cap's every point is equidistant from the centre of rotation,
+        // the joint's silhouette stays a circle at any angle and the flat cut can
+        // never be exposed — the standard cutout-rig trick for hiding a seam without
+        // mesh deformation.
+        .init(9, "armL_upper", .armL, Ink.creamBase, stroke: 3.0, "M 80.0 112.0 C 68.0 114.0 58.5 125.0 55.0 144.0 L 68.5 144.5 C 68.5 136.5 71.0 129.5 74.5 125.5 C 77.0 122.0 80.5 119.5 83.5 117.5 Q 84.0 112.5 80.0 112.0 Z"),
+        .init(50, "armL_fore", .armL_fore, Ink.creamBase, stroke: 3.0, "M 54.5 140.5 Q 55.0 132.5 62.0 132.5 Q 69.2 132.5 69.5 140.5 C 66.0 148.5 64.0 157.5 67.0 166.5 C 65.0 170.5 59.0 170.5 57.0 166.5 C 53.5 159.0 52.8 149.5 54.5 140.5 Z"),
+        .init(10, "armL_paw", .armL_fore, Ink.creamBase, stroke: 3.0, "M 50.0 172.0 C 50.0 165.5 55.0 161.5 61.5 162.0 C 68.5 162.5 72.5 167.0 72.0 174.0 C 71.5 181.0 66.5 185.0 60.5 184.5 C 54.0 184.0 50.0 179.0 50.0 172.0 Z"),
         .init(11, "torso_body", .torso, Ink.creamBase, stroke: 3.0, "M 100.0 107.0 C 122.0 107.5 136.5 120.0 140.5 143.0 C 143.8 163.0 141.0 185.0 137.0 204.0 L 63.0 204.0 C 59.0 185.0 56.2 163.0 59.5 143.0 C 63.5 120.0 78.0 107.5 100.0 107.0 Z"),
         .init(12, "torso_shade", .torso, Ink.creamShade, stroke: nil, "M 128.0 122.0 C 136.0 132.0 139.8 148.0 140.5 162.0 C 141.3 178.0 139.5 192.0 137.0 202.0 L 129.0 202.0 C 132.5 188.0 134.5 170.0 132.5 152.0 C 131.0 138.0 129.0 128.0 124.0 120.0 Z"),
         .init(13, "belly_patch", .torso, Ink.bellyCream, stroke: 1.8, "M 100.0 130.0 C 114.5 130.0 125.0 141.8 125.0 158.0 C 125.0 174.2 114.5 186.0 100.0 186.0 C 85.5 186.0 75.0 174.2 75.0 158.0 C 75.0 141.8 85.5 130.0 100.0 130.0 Z"),
@@ -120,8 +137,10 @@ public enum RabbitArt {
         .init(43, "earR_base_seg", .earR_base, Ink.creamBase, stroke: 3.0, "M 116.0 30.0 C 116.5 22.0 121.0 14.5 128.0 13.0 C 133.0 12.0 138.0 14.0 139.5 19.0 C 140.5 23.5 137.0 27.5 131.0 30.0 Q 122.5 33.0 116.0 30.0 Z"),
         .init(44, "earR_tip_seg", .earR_tip, Ink.creamBase, stroke: 3.0, "M 130.0 15.0 C 138.0 10.0 146.0 12.0 150.5 20.0 C 155.5 29.5 158.0 44.0 156.5 56.0 C 155.5 63.5 150.5 66.5 146.5 61.5 C 142.5 56.5 143.5 42.0 140.0 31.0 C 137.5 23.0 133.0 19.0 130.0 15.0 Z"),
         .init(45, "earR_inner", .earR_tip, Ink.pinkInner, stroke: nil, "M 146.0 22.0 C 150.0 28.0 152.5 40.0 151.5 51.0 C 151.0 57.0 148.0 58.5 146.0 54.5 C 144.0 50.5 144.8 39.0 142.5 30.0 Q 141.0 24.0 146.0 22.0 Z"),
-        .init(46, "armR_upper", .armR, Ink.creamBase, stroke: 3.0, "M 120.0 112.0 C 132.0 114.0 141.5 125.0 145.0 140.0 C 147.2 149.5 146.5 159.0 143.0 166.5 C 141.0 170.5 135.0 170.5 133.0 166.5 C 136.5 156.0 135.0 144.0 129.5 133.5 C 126.5 127.5 122.0 121.5 116.5 117.5 Q 116.0 112.5 120.0 112.0 Z"),
-        .init(47, "armR_paw", .armR, Ink.creamBase, stroke: 3.0, "M 128.0 174.0 C 128.0 167.0 132.0 162.5 138.5 162.0 C 145.0 161.5 150.0 165.5 150.0 172.0 C 150.0 179.0 146.0 184.0 139.5 184.5 C 133.5 185.0 128.0 181.0 128.0 174.0 Z"),
-        .init(48, "armR_cuff", .armR, Ink.clear, stroke: 1.8, "M 132.0 165.0 Q 139.0 169.0 146.0 164.5"),
+        // Mirror of the left arm, about x = 100.
+        .init(46, "armR_upper", .armR, Ink.creamBase, stroke: 3.0, "M 120.0 112.0 C 132.0 114.0 141.5 125.0 145.0 144.0 L 131.5 144.5 C 131.5 136.5 129.0 129.5 125.5 125.5 C 123.0 122.0 119.5 119.5 116.5 117.5 Q 116.0 112.5 120.0 112.0 Z"),
+        .init(51, "armR_fore", .armR_fore, Ink.creamBase, stroke: 3.0, "M 145.5 140.5 Q 145.0 132.5 138.0 132.5 Q 130.8 132.5 130.5 140.5 C 134.0 148.5 136.0 157.5 133.0 166.5 C 135.0 170.5 141.0 170.5 143.0 166.5 C 146.5 159.0 147.2 149.5 145.5 140.5 Z"),
+        .init(47, "armR_paw", .armR_fore, Ink.creamBase, stroke: 3.0, "M 128.0 174.0 C 128.0 167.0 132.0 162.5 138.5 162.0 C 145.0 161.5 150.0 165.5 150.0 172.0 C 150.0 179.0 146.0 184.0 139.5 184.5 C 133.5 185.0 128.0 181.0 128.0 174.0 Z"),
+        .init(48, "armR_cuff", .armR_fore, Ink.clear, stroke: 1.8, "M 132.0 165.0 Q 139.0 169.0 146.0 164.5"),
     ]
 }
