@@ -59,6 +59,16 @@ struct SettingsTests {
         #expect(stored?.y == 640)
     }
 
+    @Test("The compact bar is off until it's asked for, then round-trips")
+    func compactFloatingBarIsOptIn() {
+        let defaults = makeDefaults()
+        let settings = PomodoroSettings(defaults: defaults)
+        #expect(!settings.compactFloatingBar)
+
+        settings.compactFloatingBar = true
+        #expect(PomodoroSettings(defaults: defaults).compactFloatingBar)
+    }
+
     @Test("onChange fires on every write, so views can redraw")
     func changeCallback() {
         let settings = PomodoroSettings(defaults: makeDefaults())

@@ -160,4 +160,17 @@ public final class BarPresentationModel {
         backstopTask = nil
         policy.awaitingAcknowledgement = false
     }
+
+    /// Waits for any pending timer to finish, so a test can assert on the settled
+    /// state instead of racing a wall clock.
+    ///
+    /// Sleeping for "long enough" is not good enough here: these timers resume on
+    /// the main actor, and the render tests hold it for whole seconds at a time, so
+    /// a margin that passes alone fails in the full suite. Nothing in the app calls
+    /// this — cancelled timers are nil by the time they are cancelled, so there is
+    /// never anything to await but live work.
+    func settle() async {
+        await hoverExitTask?.value
+        await backstopTask?.value
+    }
 }

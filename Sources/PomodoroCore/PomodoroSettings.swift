@@ -23,6 +23,7 @@ public final class PomodoroSettings {
         case controlMusic
         case resumeMusicOnFocusStart
         case showFloatingBar
+        case compactFloatingBar
         case launchAtLogin
         case character
         case floatingBarX
@@ -53,6 +54,7 @@ public final class PomodoroSettings {
             Key.controlMusic.rawValue: true,
             Key.resumeMusicOnFocusStart.rawValue: true,
             Key.showFloatingBar.rawValue: true,
+            Key.compactFloatingBar.rawValue: false,
             Key.launchAtLogin.rawValue: false,
             Key.character.rawValue: PomodoroCharacter.none.rawValue,
         ])
@@ -141,6 +143,14 @@ public final class PomodoroSettings {
     public var showFloatingBar: Bool {
         get { access(keyPath: \.showFloatingBar); return defaults.bool(forKey: Key.showFloatingBar.rawValue) }
         set { write(.showFloatingBar, newValue, \.showFloatingBar) }
+    }
+
+    /// Shrink the bar to a bare progress ring while the timer runs.
+    ///
+    /// Opt-in: an existing install keeps the full pill until it is asked for.
+    public var compactFloatingBar: Bool {
+        get { access(keyPath: \.compactFloatingBar); return defaults.bool(forKey: Key.compactFloatingBar.rawValue) }
+        set { write(.compactFloatingBar, newValue, \.compactFloatingBar) }
     }
 
     /// What the user asked for, which is not the same as what the system reports.

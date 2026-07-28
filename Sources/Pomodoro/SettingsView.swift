@@ -198,6 +198,12 @@ struct SettingsView: View {
             Toggle("Start next focus automatically", isOn: $settings.autoStartFocus)
             Toggle("Show floating bar", isOn: $settings.showFloatingBar)
 
+            Toggle("Shrink it to a ring while running", isOn: $settings.compactFloatingBar)
+                .disabled(!settings.showFloatingBar)
+            if settings.compactFloatingBar {
+                caption("While the timer runs the bar becomes a bare progress ring. Point at it to bring the controls back — and it opens on its own when a phase ends.")
+            }
+
             Toggle("Launch at login", isOn: $settings.launchAtLogin)
                 .disabled(!LoginItem.isAvailable)
                 .onChange(of: settings.launchAtLogin) { _, newValue in
@@ -217,12 +223,13 @@ struct SettingsView: View {
         .onChange(of: settings.shortBreakMinutes) { _, _ in onChange() }
         .onChange(of: settings.longBreakMinutes) { _, _ in onChange() }
         .onChange(of: settings.showFloatingBar) { _, _ in onChange() }
+        .onChange(of: settings.compactFloatingBar) { _, _ in onChange() }
     }
 
     private var musicSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Toggle("Pause music when focus ends", isOn: $settings.controlMusic)
-            Toggle("Resume music when focus starts", isOn: $settings.resumeMusicOnFocusStart)
+            Toggle("Stop music when focus ends", isOn: $settings.controlMusic)
+            Toggle("Start music when focus starts", isOn: $settings.resumeMusicOnFocusStart)
                 .disabled(!settings.controlMusic)
 
             Divider().opacity(0.4)
@@ -233,7 +240,7 @@ struct SettingsView: View {
                 sourceRow("globe", "Browsers, Podcasts, anything else", "System play/pause key")
             }
 
-            caption("Only ever resumes what Pomodoro itself paused, so music you stopped by hand stays stopped. macOS will ask once for permission to control Music and Spotify.")
+            caption("Music follows the focus timer: it starts when you start focusing and stops when focus ends, is paused, or is skipped. Playback is only started from a player that is sitting paused, or that Pomodoro paused itself — nothing is ever started blind. macOS will ask once for permission to control Music and Spotify.")
         }
         .toggleStyle(.switch)
         .font(.system(size: 12))

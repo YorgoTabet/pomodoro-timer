@@ -89,9 +89,11 @@ struct BarPresentationPolicyTests {
 
 /// The timers around the policy.
 ///
-/// Timings are injected so this suite runs in about a second instead of the half
-/// minute the real backstop takes. The "not yet" assertions are safe against a
-/// loaded machine: a timer can fire late, never early.
+/// Timings are injected so this suite runs in milliseconds instead of the half
+/// minute the real backstop takes, and every wait goes through `settle()` rather
+/// than a wall clock. That is not fastidiousness: these timers resume on the main
+/// actor, the render tests hold it for seconds at a stretch, and margins generous
+/// enough to pass this suite alone still failed it in the full run.
 @Suite("Bar presentation model")
 @MainActor
 struct BarPresentationModelTests {
@@ -122,82 +124,79 @@ struct BarPresentationModelTests {
     }
 
     @Test("Leaving the bar collapses it, but not instantly")
-    func hoverOutIsDebounced() async throws {
+    func hoverOutIsDebounced() async {
         let model = makeModel()
         model.setHovering(true)
         model.setHovering(false)
         #expect(model.mode == .expanded)
 
-        try await Task.sleep(for: .milliseconds(120))
+        await model.settle()
         #expect(model.mode == .compact)
     }
 
     @Test("Re-entering inside the delay cancels the pending collapse")
-    func hoverInCancelsPendingCollapse() async throws {
+    func hoverInCancelsPendingCollapse() async {
         let model = makeModel()
         model.setHovering(true)
         model.setHovering(false)
         model.setHovering(true)
 
-        try await Task.sleep(for: .milliseconds(120))
+        await model.settle()
         #expect(model.mode == .expanded)
     }
 
     @Test("A phase change holds the bar open with the cursor nowhere near it")
-    func phaseChangeHolds() async throws {
+    func phaseChangeHolds() {
         let model = makeModel()
         model.beginPhaseChange()
-        #expect(model.mode == .expanded)
-
-        try await Task.sleep(for: .milliseconds(100))
         #expect(model.mode == .expanded)
     }
 
     @Test("Entering and leaving the bar acknowledges the phase change")
-    func hoverThenLeaveAcknowledges() async throws {
+    func hoverThenLeaveAcknowledges() async {
         let model = makeModel()
         model.beginPhaseChange()
 
         model.setHovering(true)
         model.setHovering(false)
 
-        try await Task.sleep(for: .milliseconds(120))
+        await model.settle()
         #expect(model.mode == .compact)
     }
 
     @Test("Hovering without leaving is not an acknowledgement")
-    func hoverAloneDoesNotAcknowledge() async throws {
+    func hoverAloneDoesNotAcknowledge() async {
         let model = makeModel()
         model.beginPhaseChange()
         model.setHovering(true)
 
-        try await Task.sleep(for: .milliseconds(120))
+        // Runs the backstop right out: even once it gives up waiting, the cursor
+        // still sitting on the bar keeps the pill open.
+        await model.settle()
         #expect(model.mode == .expanded)
     }
 
     @Test("The backstop collapses a phase change nobody ever looked at")
-    func backstopCollapses() async throws {
+    func backstopCollapses() async {
         let model = makeModel()
         model.beginPhaseChange()
 
-        try await Task.sleep(for: .milliseconds(500))
+        await model.settle()
         #expect(model.mode == .compact)
     }
 
     @Test("A second phase change restarts the hold rather than inheriting it")
-    func secondPhaseChangeRestartsHold() async throws {
+    func secondPhaseChangeRestartsHold() async {
         let model = makeModel()
         model.beginPhaseChange()
         model.setHovering(true)
         model.setHovering(false)
 
-        try await Task.sleep(for: .milliseconds(120))
+        await model.settle()
         #expect(model.mode == .compact)
 
+        // A fresh hold, not one inherited from the acknowledgement just given.
         model.beginPhaseChange()
-        #expect(model.mode == .expanded)
-
-        try await Task.sleep(for: .milliseconds(100))
         #expect(model.mode == .expanded)
     }
 
