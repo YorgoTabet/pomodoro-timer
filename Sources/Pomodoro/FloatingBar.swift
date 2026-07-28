@@ -368,6 +368,11 @@ struct FloatingBarView: View {
                 pulse = true
             }
         }
+        // Compact strips the countdown and the phase label off the screen. VoiceOver
+        // never sees that form — the policy refuses to collapse while it is running —
+        // but the tooltip is the sighted equivalent, and it costs nothing.
+        .help(isCompact ? "\(controller.phase.title) — \(controller.displayTime) left" : "")
+        .accessibilityLabel("\(controller.phase.title), \(controller.displayTime) remaining")
     }
 
     private var readout: some View {
