@@ -194,7 +194,8 @@ the existing `onChange` path so the bar picks it up live.
 
 ## Testing
 
-`Tests/PomodoroAppTests/BarPresentationTests.swift`:
+`Tests/PomodoroUITests/BarPresentationTests.swift` — the policy lives in
+`PomodoroUI`, and `PomodoroUITests` is the target with a direct dependency on it:
 
 - The policy truth table: every input independently forces `.expanded`, and only
   the all-clear combination yields `.compact`.
@@ -220,7 +221,8 @@ the lifecycle tests do not sleep for 30 seconds.
 | `Sources/Pomodoro/CharacterStageModel.swift` | **Moved** out of `FloatingBar.swift` |
 | `Sources/Pomodoro/AppDelegate.swift` | Phase-change sequencing, settings wiring |
 | `Sources/Pomodoro/SettingsView.swift` | The toggle |
-| `Tests/PomodoroAppTests/BarPresentationTests.swift` | **New** |
+| `Tests/PomodoroUITests/BarPresentationTests.swift` | **New** |
+| `Tests/PomodoroCoreTests/SettingsTests.swift` | Cover the new default |
 
 `CharacterStageModel` is moved because `FloatingBar.swift` is already 436 lines
 and this feature adds to it. The model is a distinct concern that happens to live
