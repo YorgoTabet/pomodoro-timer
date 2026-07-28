@@ -37,9 +37,38 @@ final class FloatingBar: NSPanel {
         CGRect(x: margin, y: margin, width: size.width, height: size.height)
     }
 
+    /// The collapsed form: a bare ring, concentric with the pill.
+    ///
+    /// Centred rather than aligned to an edge for two reasons that both pay off
+    /// elsewhere — the pill is already placed by its midpoint, so the frame can
+    /// change without repositioning anything; and `StagePlacement` anchors the
+    /// character to `pillFrame.midX`, so the character rises from the same point
+    /// whichever form the bar is in.
+    static let compactSize = NSSize(width: 44, height: 44)
+
+    static var compactFrame: CGRect {
+        CGRect(
+            x: pillFrame.midX - compactSize.width / 2,
+            y: pillFrame.midY - compactSize.height / 2,
+            width: compactSize.width,
+            height: compactSize.height
+        )
+    }
+
+    /// How long the two forms take to swap. One constant, shared by the animation,
+    /// by the delay before the hit rect narrows, and by the delay before a character
+    /// is cued — they have to agree or a click lands in the gap.
+    static let morphDuration: Double = 0.3
+
     /// Drives the character; owned here so the panel can hand it the same instance
     /// the SwiftUI tree observes.
     let stage = CharacterStageModel()
+
+    /// Which form the bar is in, and the timers that decide.
+    let presentation = BarPresentationModel()
+
+    /// The pill's current hit rect, shared with AppKit hit testing.
+    let geometry = BarGeometry()
 
     init(controller: TimerController, settings: PomodoroSettings) {
         super.init(
@@ -62,6 +91,7 @@ final class FloatingBar: NSPanel {
         isExcludedFromWindowsMenu = true
 
         let host = FloatingBarHostingView(rootView: FloatingBarView(controller: controller, stage: stage))
+        host.geometry = geometry
         host.frame = NSRect(origin: .zero, size: Self.panelSize)
         contentView = host
 
@@ -122,6 +152,38 @@ final class FloatingBar: NSPanel {
     func persistPosition(to settings: PomodoroSettings) {
         settings.floatingBarOrigin = (x: Double(pillOrigin.x), y: Double(pillOrigin.y))
     }
+
+    /// Re-derive hover from where the cursor actually is.
+    ///
+    /// When the pill collapses it moves out from under a stationary cursor. The view
+    /// moved, the mouse did not, and AppKit does not reliably deliver `mouseExited`
+    /// for that — so SwiftUI's `onHover` can be left stuck true with the cursor
+    /// nowhere near the ring. The mirror case is a cursor already parked on the bar
+    /// when the timer starts, where it can be left stuck false.
+    func reconcileHover() {
+        let mouse = NSEvent.mouseLocation
+        let local = NSPoint(x: mouse.x - frame.minX, y: mouse.y - frame.minY)
+        presentation.setHovering(geometry.hitFrame.contains(local))
+    }
+}
+
+// MARK: - Live geometry
+
+/// The pill's hit rect right now.
+///
+/// Deliberately a plain class rather than `@Observable`: nothing observes it. It
+/// exists so `FloatingBarHostingView.hitTest` — which runs in AppKit, outside any
+/// SwiftUI update — can ask what shape is currently drawn.
+///
+/// The invariant its writer must keep: widen it the moment expansion begins, narrow
+/// it only once the collapse has finished. Always the larger of the two while
+/// anything is moving, so no click can fall into the gap between the animation and
+/// the target.
+@MainActor
+final class BarGeometry {
+    /// In the panel's own coordinates. Starts expanded, which is the bar's state
+    /// before anything has had a chance to collapse it.
+    var hitFrame: CGRect = FloatingBar.pillFrame
 }
 
 // MARK: - Contents
@@ -358,17 +420,19 @@ private struct ControlSurface: ViewModifier {
 /// begin with a hit test.
 final class FloatingBarHostingView<Content: View>: NSHostingView<Content> {
 
+    /// Assigned right after construction — `NSHostingView`'s designated initialiser
+    /// takes only a root view, so this cannot be passed in.
+    var geometry: BarGeometry?
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         let local = convert(point, from: superview)
-        // The pill is centred in the panel with equal margins, so its rect is the
-        // same whether the view is flipped or not.
-        let pill = NSRect(
-            x: FloatingBar.margin,
-            y: FloatingBar.margin,
-            width: FloatingBar.size.width,
-            height: FloatingBar.size.height
-        )
-        guard pill.contains(local) else { return nil }
+        // Falls back to the full pill rather than to nothing: a missing geometry must
+        // degrade to the old behaviour, not to a bar that ignores every click.
+        //
+        // Both forms are centred in the panel with equal margins, so their rects are
+        // the same whether the view is flipped or not.
+        let target = geometry?.hitFrame ?? FloatingBar.pillFrame
+        guard target.contains(local) else { return nil }
         return super.hitTest(point)
     }
 }
