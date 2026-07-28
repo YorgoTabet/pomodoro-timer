@@ -86,3 +86,147 @@ struct BarPresentationPolicyTests {
         }
     }
 }
+
+/// The timers around the policy.
+///
+/// Timings are injected so this suite runs in about a second instead of the half
+/// minute the real backstop takes. The "not yet" assertions are safe against a
+/// loaded machine: a timer can fire late, never early.
+@Suite("Bar presentation model")
+@MainActor
+struct BarPresentationModelTests {
+
+    private static let fast = BarPresentationModel.Timings(
+        hoverExit: .milliseconds(20),
+        acknowledgementBackstop: .milliseconds(300)
+    )
+
+    /// A model already in the state where compact is permitted.
+    private func makeModel() -> BarPresentationModel {
+        let model = BarPresentationModel(timings: Self.fast)
+        model.setCompactEnabled(true)
+        model.setRunning(true)
+        return model
+    }
+
+    @Test("A running timer with the cursor away collapses")
+    func collapsesWhileRunning() {
+        #expect(makeModel().mode == .compact)
+    }
+
+    @Test("Hovering expands with no delay at all")
+    func hoverExpandsImmediately() {
+        let model = makeModel()
+        model.setHovering(true)
+        #expect(model.mode == .expanded)
+    }
+
+    @Test("Leaving the bar collapses it, but not instantly")
+    func hoverOutIsDebounced() async throws {
+        let model = makeModel()
+        model.setHovering(true)
+        model.setHovering(false)
+        #expect(model.mode == .expanded)
+
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(model.mode == .compact)
+    }
+
+    @Test("Re-entering inside the delay cancels the pending collapse")
+    func hoverInCancelsPendingCollapse() async throws {
+        let model = makeModel()
+        model.setHovering(true)
+        model.setHovering(false)
+        model.setHovering(true)
+
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(model.mode == .expanded)
+    }
+
+    @Test("A phase change holds the bar open with the cursor nowhere near it")
+    func phaseChangeHolds() async throws {
+        let model = makeModel()
+        model.beginPhaseChange()
+        #expect(model.mode == .expanded)
+
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(model.mode == .expanded)
+    }
+
+    @Test("Entering and leaving the bar acknowledges the phase change")
+    func hoverThenLeaveAcknowledges() async throws {
+        let model = makeModel()
+        model.beginPhaseChange()
+
+        model.setHovering(true)
+        model.setHovering(false)
+
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(model.mode == .compact)
+    }
+
+    @Test("Hovering without leaving is not an acknowledgement")
+    func hoverAloneDoesNotAcknowledge() async throws {
+        let model = makeModel()
+        model.beginPhaseChange()
+        model.setHovering(true)
+
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(model.mode == .expanded)
+    }
+
+    @Test("The backstop collapses a phase change nobody ever looked at")
+    func backstopCollapses() async throws {
+        let model = makeModel()
+        model.beginPhaseChange()
+
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(model.mode == .compact)
+    }
+
+    @Test("A second phase change restarts the hold rather than inheriting it")
+    func secondPhaseChangeRestartsHold() async throws {
+        let model = makeModel()
+        model.beginPhaseChange()
+        model.setHovering(true)
+        model.setHovering(false)
+
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(model.mode == .compact)
+
+        model.beginPhaseChange()
+        #expect(model.mode == .expanded)
+
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(model.mode == .expanded)
+    }
+
+    @Test("Pausing expands even mid-hold, and resuming collapses again")
+    func runningStateFlowsThrough() {
+        let model = makeModel()
+        model.setRunning(false)
+        #expect(model.mode == .expanded)
+
+        model.setRunning(true)
+        #expect(model.mode == .compact)
+    }
+
+    @Test("VoiceOver keeps the controls on screen no matter what")
+    func voiceOverNeverCollapses() {
+        let model = makeModel()
+        model.setVoiceOverRunning(true)
+        #expect(model.mode == .expanded)
+
+        model.setVoiceOverRunning(false)
+        #expect(model.mode == .compact)
+    }
+
+    @Test("Turning the feature off restores the pill at once")
+    func disablingRestoresThePill() {
+        let model = makeModel()
+        #expect(model.mode == .compact)
+
+        model.setCompactEnabled(false)
+        #expect(model.mode == .expanded)
+    }
+}
