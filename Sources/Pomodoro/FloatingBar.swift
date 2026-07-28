@@ -90,7 +90,13 @@ final class FloatingBar: NSPanel {
         hidesOnDeactivate = false
         isExcludedFromWindowsMenu = true
 
-        let host = FloatingBarHostingView(rootView: FloatingBarView(controller: controller, stage: stage))
+        let host = FloatingBarHostingView(rootView: FloatingBarView(
+            controller: controller,
+            stage: stage,
+            presentation: presentation,
+            geometry: geometry,
+            onCollapsed: { [weak self] in self?.reconcileHover() }
+        ))
         host.geometry = geometry
         host.frame = NSRect(origin: .zero, size: Self.panelSize)
         contentView = host
@@ -198,15 +204,47 @@ struct FloatingBarView: View {
 
     @Bindable var controller: TimerController
     @Bindable var stage: CharacterStageModel
+    @Bindable var presentation: BarPresentationModel
+    let geometry: BarGeometry
+    /// Called once a collapse has finished, so the panel can re-derive hover from
+    /// the cursor's real position.
+    let onCollapsed: () -> Void
 
-    @State private var hovering = false
     @State private var pulse = false
     @Namespace private var glass
 
     private var tint: Color { Theme.tint(for: controller.phase) }
 
+    /// Debounced, so the controls linger a moment after the cursor leaves rather
+    /// than snapping away from under a hand that is still moving.
+    private var hovering: Bool { presentation.policy.hovering }
+
+    private var isCompact: Bool { presentation.mode == .compact }
+
+    private var reduceMotion: Bool {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    }
+
+    /// 22 on a 44pt box is a circle, so one shape serves both forms and the radius
+    /// simply animates between them.
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 15, style: .continuous)
+        RoundedRectangle(
+            cornerRadius: isCompact ? FloatingBar.compactSize.height / 2 : 15,
+            style: .continuous
+        )
+    }
+
+    private var pillSize: CGSize {
+        isCompact
+            ? CGSize(width: FloatingBar.compactSize.width, height: FloatingBar.compactSize.height)
+            : CGSize(width: FloatingBar.size.width, height: FloatingBar.size.height)
+    }
+
+    /// Under Reduce Motion the box does not travel — it swaps, and only the contents
+    /// cross-fade. A hair above zero rather than `nil` so the content transitions
+    /// still have a parent animation to run inside.
+    private var morph: Animation {
+        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: FloatingBar.morphDuration)
     }
 
     var body: some View {
@@ -229,18 +267,42 @@ struct FloatingBarView: View {
                 .zIndex(1)
         }
         .frame(width: FloatingBar.panelSize.width, height: FloatingBar.panelSize.height)
+        .onChange(of: presentation.mode) { _, mode in
+            guard mode == .compact else {
+                // Widen the moment expansion begins, so a click during the morph
+                // still lands.
+                geometry.hitFrame = FloatingBar.pillFrame
+                return
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(FloatingBar.morphDuration))
+                // A hover during the collapse can have already reversed it.
+                guard presentation.mode == .compact else { return }
+                geometry.hitFrame = FloatingBar.compactFrame
+                onCollapsed()
+            }
+        }
     }
 
     private var pill: some View {
         HStack(spacing: 10) {
             phaseRing
-            readout
-            Spacer(minLength: 4)
-            controls
+
+            if !isCompact {
+                readout
+                    .transition(.opacity.animation(.easeOut(duration: reduceMotion ? 0.2 : 0.12)))
+                Spacer(minLength: 4)
+                controls
+                    .transition(.opacity.animation(.easeOut(duration: reduceMotion ? 0.2 : 0.12)))
+            }
         }
-        .padding(.leading, 11)
-        .padding(.trailing, 10)
-        .frame(width: FloatingBar.size.width, height: FloatingBar.size.height)
+        .padding(.leading, isCompact ? 0 : 11)
+        .padding(.trailing, isCompact ? 0 : 10)
+        .frame(width: pillSize.width, height: pillSize.height)
+        // Clipped for the same reason the wash below is: mid-morph the contents are
+        // briefly wider than the frame, and an unclipped overflow leaves the glass
+        // covering only part of the pill.
+        .clipShape(shape)
         // Order matters: the wash is clipped to the pill shape *before* the glass
         // goes over it. Backgrounding an unclipped gradient is what left a dark
         // rectangle hanging off the right-hand side.
@@ -254,8 +316,9 @@ struct FloatingBarView: View {
         .glassPanel(in: shape)
         .opacity(hovering ? 1 : 0.92)
         .scaleEffect(hovering ? 1.0 : 0.99, anchor: .center)
-        .onHover { hovering = $0 }
+        .onHover { presentation.setHovering($0) }
         .animation(.smooth(duration: 0.22), value: hovering)
+        .animation(morph, value: isCompact)
     }
 
     // MARK: - Pieces
@@ -271,7 +334,7 @@ struct FloatingBarView: View {
     private var phaseRing: some View {
         ZStack {
             Circle()
-                .stroke(.primary.opacity(0.14), lineWidth: 2.5)
+                .stroke(.primary.opacity(0.14), lineWidth: isCompact ? 3 : 2.5)
 
             // Nothing is drawn below half a percent: a round line cap on a
             // zero-length arc still paints a dot at 12 o'clock, which reads as a
@@ -284,21 +347,21 @@ struct FloatingBarView: View {
                         startPoint: .top,
                         endPoint: .bottom
                     ),
-                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+                    style: StrokeStyle(lineWidth: isCompact ? 3 : 2.5, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
                 .opacity(controller.progress > 0.005 ? 1 : 0)
                 .animation(.smooth(duration: 0.6), value: controller.progress)
 
             Image(systemName: Theme.symbol(for: controller.phase))
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: isCompact ? 14 : 10, weight: .semibold))
                 .foregroundStyle(tint)
                 .contentTransition(.symbolEffect(.replace))
                 // A slow breath while running — opacity only. An earlier version
                 // pulsed a coloured shadow, which at this size read as a smudge.
                 .opacity(controller.isRunning ? (pulse ? 1.0 : 0.55) : 0.75)
         }
-        .frame(width: 28, height: 28)
+        .frame(width: isCompact ? 40 : 28, height: isCompact ? 40 : 28)
         .animation(.smooth(duration: 0.4), value: controller.phase)
         .onAppear {
             withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: true)) {
