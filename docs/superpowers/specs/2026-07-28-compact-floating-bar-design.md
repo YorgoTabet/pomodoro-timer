@@ -113,26 +113,47 @@ That single decision removes most of the risk: no window-resize animation, no
 change to what `floatingBarOrigin` means, no re-anchoring across displays, and no
 migration for an already-dragged position.
 
-The compact form is a 44pt circle **concentric with the expanded pill**. Two
-things fall out of centring it rather than aligning it to an edge:
+The compact form is a **46pt circle concentric with the pill**, and the pill grows
+symmetrically out of it.
 
-- `pill` is already placed with `.position(x: pillFrame.midX, y: pillFrame.midY)`,
-  so changing its frame keeps it centred for free.
-- `StagePlacement` anchors the character to `pillFrame.midX`, so the character
-  rises from the same point in both forms.
+Concentric is a pointer decision before it is an aesthetic one: whatever the cursor
+was resting on to trigger the expansion becomes the centre of what it expands into,
+so **the pointer ends up in the middle of the open bar**. It never lands on a
+control that swept underneath it, and every control is an equally short trip away.
+Growing off a fixed leading edge instead would sweep the whole pill out from under
+the cursor.
 
-It also keeps true the existing comment on `FloatingBarHostingView.hitTest` that
-the pill's rect reads the same whether the view is flipped or not.
+46 is the pill's own height, so the circle is exactly as tall as the bar it comes
+from. That also keeps the compact rect symmetric about the panel's centre in both
+axes, which is what lets `FloatingBarHostingView.hitTest` go on ignoring whether
+its view is flipped.
 
-### The morph is one view, not two
+`StagePlacement` anchors the character to `pillFrame.midX`, which is unaffected:
+the character only ever performs against the expanded pill.
 
-`phaseRing` stays mounted across the transition and grows 28 -> 40pt. The readout
-and controls leave the `HStack`; the frame width animates 236 -> 44 and the
-`RoundedRectangle` corner radius animates 15 -> 22, which is a circle at 44pt.
+### The morph is a reveal, not a re-layout
 
-The readout fades faster than the width shrinks, so the digits never visibly
-squash — the existing frame is sized to the widest state precisely because
-content that overflows it silently breaks the glass treatment.
+One layout, always at full width, with the box clipping it:
+
+- `phaseRing` is a fixed 28pt in both forms. It rides `ringTravel` — the derived
+  distance between its resting centre and the pill's — to sit in the middle of the
+  circle, and back. That is an `offset`, so it never disturbs the layout underneath.
+- The readout and controls are **always mounted**, at their expanded positions.
+  Only their opacity changes.
+- The outer frame animates 236 -> 46 wide, centre-aligned, and `clipShape` turns
+  that width change into a reveal.
+- The `RoundedRectangle` radius animates 15 -> 23, a circle at 46pt.
+
+Conditionally inserting the readout and controls is what made the first attempt
+read as a replacement: SwiftUI re-ran the layout, so everything arrived at once in
+a box that was still moving. Holding one fixed layout and moving only the clip and
+one offset means nothing is ever laid out twice.
+
+The content fade is deliberately **off** the width's curve — `easeOut(0.16)` with
+a 0.11s delay on the way open, and no delay on the way closed. Opening, the pill
+starts widening before the text arrives, so the text is never seen in a box too
+small to hold it; closing, the text leaves first and the pill shuts on an empty
+stage. Fading on the same curve as the width was the other half of the swap feel.
 
 `glassPanel(in:)` takes any `Shape`, so the same call site serves both forms with
 an animated radius.
