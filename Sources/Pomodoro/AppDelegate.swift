@@ -40,11 +40,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.onPhaseElapsed = { [weak self] finished, next in
             self?.handlePhaseChange(finished: finished, next: next)
         }
+        controller.onFocusRunningChanged = { [weak self] running in
+            self?.handleFocusRunning(running)
+        }
 
         settings.onChange = { [weak self] in
             guard let self else { return }
             controller.settingsChanged()
             floatingBar?.stage.character = settings.character
+            floatingBar?.presentation.setCompactEnabled(settings.compactFloatingBar)
             syncFloatingBarVisibility()
             if !settings.controlMusic { music.forgetPaused() }
         }
@@ -85,20 +89,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Phase changes
 
     private func handlePhaseChange(finished: Phase, next: Phase) {
-        // Music first, chime second. The media-key fallback decides whether to act
-        // by asking CoreAudio if anything is playing — and our own chime would
-        // answer "yes", making it skip the pause it was supposed to perform.
-        musicLog.notice("phase change \(finished.rawValue, privacy: .public) -> \(next.rawValue, privacy: .public), controlMusic=\(self.settings.controlMusic, privacy: .public)")
-        if settings.controlMusic {
-            if finished == .focus {
-                music.pauseIfPlaying()
-            } else if next == .focus, settings.resumeMusicOnFocusStart {
-                music.resumeIfWePaused()
-            }
+        notifier.announce(finished: finished, next: next)
+
+        let cue = CharacterCue.cue(finished: finished, next: next)
+
+        guard let bar = floatingBar else {
+            performCharacter(cue)
+            return
         }
 
-        notifier.announce(finished: finished, next: next)
-        performCharacter(CharacterCue.cue(finished: finished, next: next))
+        let wasCompact = bar.presentation.mode == .compact
+        bar.presentation.beginPhaseChange()
+
+        guard wasCompact else {
+            performCharacter(cue)
+            return
+        }
+
+        // Let the pill finish opening before the character uses it as a stage.
+        // `CharacterStage` places and masks against the expanded `pillFrame`, so a
+        // cue fired mid-morph would emerge from a pill that is not there yet.
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(FloatingBar.morphDuration))
+            self.performCharacter(cue)
+        }
+    }
+
+    /// Music runs with the focus timer, not with the phase.
+    ///
+    /// Tied to the run state rather than to phase changes so that the soundtrack
+    /// matches what the user is actually doing: it starts when they press play, and
+    /// stops the moment focus stops — whether that is the timer elapsing, a pause,
+    /// a skip, or a reset. A focus session queued but not started stays silent.
+    private func handleFocusRunning(_ running: Bool) {
+        musicLog.notice("focus running=\(running, privacy: .public), controlMusic=\(self.settings.controlMusic, privacy: .public)")
+        guard settings.controlMusic else { return }
+
+        if running {
+            guard settings.resumeMusicOnFocusStart else { return }
+            music.startForFocus()
+        } else {
+            music.pauseIfPlaying()
+        }
     }
 
     /// Send the character on stage, if one is chosen and there is a pill for it to
@@ -135,6 +167,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // The floating bar is SwiftUI observing the controller directly, so only the
         // AppKit status item needs pushing.
         menuBar.refresh()
+
+        // Compact mode's two ambient inputs. Both are polled from here rather than
+        // observed: `publish` already fires on every state change and once a second
+        // while running, and a VoiceOver notification observer would be more
+        // machinery than a boolean read is worth.
+        floatingBar?.presentation.setRunning(controller.isRunning)
+        floatingBar?.presentation.setVoiceOverRunning(NSWorkspace.shared.isVoiceOverEnabled)
     }
 
     /// Pick up buttons pressed in the widget.
@@ -159,6 +198,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // The stage must know the chosen character before any cue fires —
                 // relying on `perform` to set it left it `.none` at rest.
                 floatingBar?.stage.character = settings.character
+                floatingBar?.presentation.setCompactEnabled(settings.compactFloatingBar)
+                floatingBar?.presentation.setRunning(controller.isRunning)
                 observeFloatingBarMoves()
             }
             floatingBar?.orderFrontRegardless()
