@@ -59,10 +59,14 @@ final class FloatingBar: NSPanel {
         )
     }
 
-    /// How long the two forms take to swap. One constant, shared by the animation,
-    /// by the delay before the hit rect narrows, and by the delay before a character
-    /// is cued — they have to agree or a click lands in the gap.
-    static let morphDuration: Double = 0.3
+    /// How long the two forms take to swap.
+    ///
+    /// Shared by the delay before the hit rect narrows and by the delay before a
+    /// character is cued — they have to agree with the animation or a click lands in
+    /// the gap. A spring has no exact duration, so this is its settling time rounded
+    /// up: erring long is safe, since it only means the target stays large a moment
+    /// past the animation rather than shrinking out from under a click.
+    static let morphDuration: Double = 0.5
 
     /// Drives the character; owned here so the panel can hand it the same instance
     /// the SwiftUI tree observes.
@@ -242,14 +246,27 @@ struct FloatingBarView: View {
     /// once it has travelled: 9 + 28/2 == 23 == 46/2.
     private static let leadingPadding: CGFloat = 9
 
-    /// How far the ring slides to sit in the middle of the compact circle.
+    /// The ring's diameter in the open pill.
     ///
-    /// Derived rather than written down, because it is exactly the distance between
-    /// the ring's resting centre and the pill's — get it wrong and the circle is
-    /// visibly off-centre at rest, which is the one state the eye has time to study.
-    private static var ringTravel: CGFloat {
-        FloatingBar.size.width / 2 - (leadingPadding + 28 / 2)
-    }
+    /// Note what `leadingPadding + ringSize / 2` comes to: 9 + 14 == 23, which is
+    /// exactly half of the 46pt compact circle. Pin the content to the box's leading
+    /// edge and the ring is dead centre of that circle for free — no offset, no
+    /// correction, nothing to keep in sync if either number is ever retuned.
+    private static let ringSize: CGFloat = 28
+
+    /// The ring grows to fill the compact circle instead of floating inside it.
+    ///
+    /// Without this there are two circles, not one: the glass disc — which is really
+    /// the pill closed down to 46pt — and a 28pt ring sitting in the middle of it at
+    /// 61% of its width. On opening, the disc becomes the whole pill while the ring
+    /// stays the size it was, so the object the eye was tracking has nothing to grow
+    /// into. Letting the ring own the circle and shrink back into its slot is what
+    /// makes the two states one object.
+    ///
+    /// A `scaleEffect`, deliberately, not a frame: the ring sits inside the layout
+    /// the clip is revealing, and resizing it there would re-run that layout on every
+    /// frame — the exact churn this whole design exists to avoid.
+    private static let compactRingScale: CGFloat = 36 / ringSize
 
     /// The only dimension that travels. Height is shared by both forms, so one
     /// animating number and one offset carry the whole change.
@@ -259,20 +276,32 @@ struct FloatingBarView: View {
 
     /// Under Reduce Motion the box does not travel — it swaps, and only the contents
     /// cross-fade.
+    ///
+    /// A spring rather than a timing curve, and a slower one than this started out.
+    /// Springs are the reason a flick that reverses mid-flight does not stutter: they
+    /// carry their velocity through the reversal instead of restarting from zero, so
+    /// an interrupted open turns into a close rather than snapping and replaying.
+    /// The damping is just under critical, which gives the settle its weight without
+    /// letting the pill visibly bounce.
     private var morph: Animation {
-        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: FloatingBar.morphDuration)
+        reduceMotion
+            ? .linear(duration: 0.01)
+            : .spring(response: 0.44, dampingFraction: 0.85)
     }
 
-    /// The readout and controls follow the opening rather than arriving with it.
+    /// The readout and controls fade on the morph's own curve, just quicker.
     ///
-    /// On the way out they wait until the pill has already started widening, so they
-    /// are never seen sitting in a box too small to hold them; on the way back they
-    /// leave first, so the pill closes on an empty stage. Fading them on the same
-    /// curve as the width is what made the earlier version read as a swap.
+    /// They cannot simply share `morph`: at the halfway point the box is half open
+    /// and the text would be at half opacity, showing through a circle far too small
+    /// to hold it. So it is the same curve, run at roughly half the length, with no
+    /// delay in either direction — one motion that resolves early rather than a
+    /// second motion that starts late.
+    ///
+    /// It used to carry an 0.08s delay on the way open. Together with `morph` and
+    /// with `controls`' own 0.28s insertion that made three different start and end
+    /// times for one gesture, which is what read as mechanical.
     private var contentFade: Animation {
-        reduceMotion
-            ? .easeInOut(duration: 0.2)
-            : .easeOut(duration: 0.14).delay(isCompact ? 0 : 0.08)
+        reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.24)
     }
 
     /// Whether the pill still does its little hover lift.
@@ -331,10 +360,9 @@ struct FloatingBarView: View {
         // out twice — only the clip and one offset move.
         HStack(spacing: 10) {
             phaseRing
-                // The ring is the only thing on screen when compact, so it rides to
-                // the middle of the box and back. Purely visual: `offset` does not
-                // disturb the layout the clip is revealing.
-                .offset(x: isCompact ? Self.ringTravel : 0)
+                // Grows to own the circle. Visual only — a frame change here would
+                // re-run the layout the clip is revealing.
+                .scaleEffect(isCompact ? Self.compactRingScale : 1)
 
             Group {
                 readout
@@ -347,11 +375,17 @@ struct FloatingBarView: View {
         .padding(.leading, Self.leadingPadding)
         .padding(.trailing, 10)
         .frame(width: FloatingBar.size.width, height: FloatingBar.size.height)
-        // Centre-aligned, so the box grows symmetrically about the compact circle.
-        // That is what puts the cursor in the middle of the open pill: the ring it
-        // was pointing at is the centre the pill expands around, so the pointer ends
-        // up over the readout rather than on whichever control swept past it.
-        .frame(width: pillWidth, height: FloatingBar.size.height, alignment: .center)
+        // The box is centred on screen — `.position` below pins it to the panel's
+        // midpoint — so both its edges travel outward equally and the pointer that
+        // opened it ends up in the middle of what opened.
+        //
+        // The *content* rides the leading edge rather than being centred in the box.
+        // That is the difference between one motion and two: centred content left
+        // only the ring free to slide, so a symmetric box had a single element
+        // tracking leftward across it, and the eye read the whole thing as opening
+        // to the left. Pinned to the edge, ring and readout and controls all travel
+        // together as one block that the opening carries with it.
+        .frame(width: pillWidth, height: FloatingBar.size.height, alignment: .leading)
         // The wash goes on *before* the clip rather than carrying a clip of its own.
         //
         // It still ends up cut to the pill — one `clipShape` below now takes the
@@ -415,9 +449,9 @@ struct FloatingBarView: View {
                 // pulsed a coloured shadow, which at this size read as a smudge.
                 .opacity(controller.isRunning ? (pulse ? 1.0 : 0.55) : 0.75)
         }
-        // Fixed in both forms. The ring not changing size is half of why the morph
-        // reads as one object: the only thing that moves is the box around it.
-        .frame(width: 28, height: 28)
+        // The layout size is fixed in both forms; the compact growth is a scale on
+        // top, applied at the call site so nothing here re-lays out.
+        .frame(width: Self.ringSize, height: Self.ringSize)
         .animation(.smooth(duration: 0.4), value: controller.phase)
         .onAppear {
             withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: true)) {

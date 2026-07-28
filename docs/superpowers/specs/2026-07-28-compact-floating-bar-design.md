@@ -32,11 +32,27 @@ expanded rect strictly contains the compact one, so collapse can only fire once
 the cursor is outside a region it was already outside — expand/collapse cannot
 oscillate. This is a property worth preserving if the geometry is ever retuned.
 
-Hover is debounced by 0.35s on the way **out** only, never on the way in. The
-delay exists for dragging: `isMovableByWindowBackground` drags begin with a hit
-test, and a hover drop mid-drag would otherwise collapse the pill out from under
-the user's grip. It also absorbs a cursor clipping the corner of the bar on its
-way somewhere else.
+**Both edges are debounced** — 110ms in, 120ms out — and a pending edge is
+cancelled by its opposite.
+
+The cancellation is the point, not the delay. A cursor flicked across the bar
+produces an enter and a leave inside the window; they annihilate, and nothing
+animates at all. Without it a flick drove a full open and close back to back, and
+the secondary controls — which animate by insertion, not by a spring — restart
+rather than reverse, so a flick looked broken. A deliberate hover outlives the
+window and lands normally. Both values sit under the ~150ms that reads as a wait:
+the delay exists to reject accidents, not to pace the interaction.
+
+The exit was briefly 350ms, to stop a window drag collapsing the pill under the
+user's grip. That fear was unfounded — a background drag moves the window *with*
+the cursor, so hover never drops, and AppKit owns the drag session either way —
+and what it bought was a third of a second of dead air on every leave. It read as
+the bar being stuck, and it compounded: `controls` keys its `if hovering` off the
+same debounced flag, so the secondary buttons did not begin leaving for 350ms and
+then took 280ms to go.
+
+Because a flick never sets `hovering` at all, it also cannot acknowledge a phase
+change. Acknowledgement means a settled hover followed by a settled leave.
 
 ### Phase changes — the acknowledgement model
 
@@ -135,9 +151,27 @@ the character only ever performs against the expanded pill.
 
 One layout, always at full width, with the box clipping it:
 
-- `phaseRing` is a fixed 28pt in both forms. It rides `ringTravel` — the derived
-  distance between its resting centre and the pill's — to sit in the middle of the
-  circle, and back. That is an `offset`, so it never disturbs the layout underneath.
+- The box is centred on screen and grows from its middle, but the **content is
+  pinned to the box's leading edge**, so ring, readout and controls travel as one
+  block that the opening carries with it.
+
+  Centring the content instead left the ring as the only element free to move, and
+  it had to be offset ~93pt to reach the middle of the circle. A symmetric box with
+  a single element tracking leftward across it reads as opening *to the left*, not
+  from the middle — two motions where there should be one. Pinning to the edge also
+  deletes the offset outright: at 9pt padding plus a 28pt ring the ring's centre is
+  at 23, exactly half the 46pt circle, so it lands centred for free.
+
+- `phaseRing` is laid out at a fixed 28pt in both forms and scales to 36pt to fill
+  the compact circle. A `scaleEffect`, so it never disturbs the layout underneath.
+
+  The scale is not decoration. Without it there are two circles rather than one:
+  the glass disc, which is really the pill closed down to 46pt, and a 28pt ring
+  floating at 61% of its width. On opening, the disc becomes the whole pill while
+  the ring stays the size it was — so the object the eye is tracking has nothing to
+  grow into, and the change reads as two interfaces swapping even though the view
+  tree is identical throughout. At 36pt the ring owns the circle and shrinks back
+  into its slot, which is what ties the two states into one object.
 - The readout and controls are **always mounted**, at their expanded positions.
   Only their opacity changes.
 - The outer frame animates 236 -> 46 wide, centre-aligned, and `clipShape` turns

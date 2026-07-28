@@ -99,6 +99,7 @@ struct BarPresentationPolicyTests {
 struct BarPresentationModelTests {
 
     private static let fast = BarPresentationModel.Timings(
+        hoverEnter: .milliseconds(20),
         hoverExit: .milliseconds(20),
         acknowledgementBackstop: .milliseconds(300)
     )
@@ -116,10 +117,13 @@ struct BarPresentationModelTests {
         #expect(makeModel().mode == .compact)
     }
 
-    @Test("Hovering expands with no delay at all")
-    func hoverExpandsImmediately() {
+    @Test("Hovering expands once the cursor has settled, not before")
+    func hoverExpandsOnceSettled() async {
         let model = makeModel()
         model.setHovering(true)
+        #expect(model.mode == .compact)
+
+        await model.settle()
         #expect(model.mode == .expanded)
     }
 
@@ -127,6 +131,8 @@ struct BarPresentationModelTests {
     func hoverOutIsDebounced() async {
         let model = makeModel()
         model.setHovering(true)
+        await model.settle()
+
         model.setHovering(false)
         #expect(model.mode == .expanded)
 
@@ -134,10 +140,24 @@ struct BarPresentationModelTests {
         #expect(model.mode == .compact)
     }
 
-    @Test("Re-entering inside the delay cancels the pending collapse")
-    func hoverInCancelsPendingCollapse() async {
+    /// The whole reason both edges are debounced.
+    @Test("A cursor flicked across the bar never opens it at all")
+    func flickThroughIsIgnored() async {
         let model = makeModel()
         model.setHovering(true)
+        model.setHovering(false)
+
+        await model.settle()
+        #expect(model.mode == .compact)
+    }
+
+    /// The mirror: a flick *out* of an open bar must not close it.
+    @Test("A cursor that leaves and returns never closes it")
+    func flickOutIsIgnored() async {
+        let model = makeModel()
+        model.setHovering(true)
+        await model.settle()
+
         model.setHovering(false)
         model.setHovering(true)
 
@@ -158,10 +178,28 @@ struct BarPresentationModelTests {
         model.beginPhaseChange()
 
         model.setHovering(true)
+        await model.settle()
         model.setHovering(false)
 
         await model.settle()
         #expect(model.mode == .compact)
+    }
+
+    /// A flick is not attention, so it cannot stand in for having looked.
+    ///
+    /// Asserts the flag rather than the mode, and does not `settle()`: a flick
+    /// schedules nothing, so there is nothing to wait for, and waiting would run the
+    /// backstop out and collapse the bar for an entirely different reason.
+    @Test("A flick across the bar does not acknowledge a phase change")
+    func flickDoesNotAcknowledge() {
+        let model = makeModel()
+        model.beginPhaseChange()
+
+        model.setHovering(true)
+        model.setHovering(false)
+
+        #expect(model.policy.awaitingAcknowledgement)
+        #expect(model.mode == .expanded)
     }
 
     @Test("Hovering without leaving is not an acknowledgement")
@@ -190,6 +228,7 @@ struct BarPresentationModelTests {
         let model = makeModel()
         model.beginPhaseChange()
         model.setHovering(true)
+        await model.settle()
         model.setHovering(false)
 
         await model.settle()
