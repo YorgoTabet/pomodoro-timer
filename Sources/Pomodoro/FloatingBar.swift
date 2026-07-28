@@ -277,16 +277,18 @@ struct FloatingBarView: View {
     /// Under Reduce Motion the box does not travel — it swaps, and only the contents
     /// cross-fade.
     ///
-    /// A spring rather than a timing curve, and a slower one than this started out.
-    /// Springs are the reason a flick that reverses mid-flight does not stutter: they
-    /// carry their velocity through the reversal instead of restarting from zero, so
-    /// an interrupted open turns into a close rather than snapping and replaying.
-    /// The damping is just under critical, which gives the settle its weight without
-    /// letting the pill visibly bounce.
+    /// A spring rather than a timing curve: springs carry velocity through a
+    /// reversal, so a flick that turns around mid-open becomes a close instead of
+    /// snapping and replaying from the far end.
+    ///
+    /// Critically damped, though — `.smooth` is a spring with no bounce at all.
+    /// An earlier 0.88 damping was chosen for weight and was a mistake here: the
+    /// content is pinned to the box's leading edge and travels 95pt across a
+    /// collapse, so even a small overshoot carried the ring past the centre of the
+    /// circle and drew it back. On a short move that reads as bounce; on a long one
+    /// it reads as the ring snapping into place.
     private var morph: Animation {
-        reduceMotion
-            ? .linear(duration: 0.01)
-            : .spring(response: 0.58, dampingFraction: 0.88)
+        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: 0.55)
     }
 
     /// The readout and controls fade on the morph's own curve, just quicker.
