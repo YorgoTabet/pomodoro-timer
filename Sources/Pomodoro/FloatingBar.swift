@@ -272,8 +272,17 @@ struct FloatingBarView: View {
     private var contentFade: Animation {
         reduceMotion
             ? .easeInOut(duration: 0.2)
-            : .easeOut(duration: 0.16).delay(isCompact ? 0 : 0.11)
+            : .easeOut(duration: 0.14).delay(isCompact ? 0 : 0.08)
     }
+
+    /// Whether the pill still does its little hover lift.
+    ///
+    /// Off once compact mode is on, because there the opening *is* the response to
+    /// the pointer. Leaving it in put a 0.22s scale and opacity on the same glass
+    /// surface as a 0.3s width change: two curves of different lengths, one of them
+    /// forcing the glass to resample every frame, finishing at different moments.
+    /// That was most of the roughness.
+    private var hoverFlourish: Bool { !presentation.policy.compactEnabled }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -343,22 +352,24 @@ struct FloatingBarView: View {
         // was pointing at is the centre the pill expands around, so the pointer ends
         // up over the readout rather than on whichever control swept past it.
         .frame(width: pillWidth, height: FloatingBar.size.height, alignment: .center)
-        // The content is wider than the box for the whole of the morph; this is what
-        // turns the width change into a reveal.
-        .clipShape(shape)
-        // Order matters: the wash is clipped to the pill shape *before* the glass
-        // goes over it. Backgrounding an unclipped gradient is what left a dark
-        // rectangle hanging off the right-hand side.
+        // The wash goes on *before* the clip rather than carrying a clip of its own.
+        //
+        // It still ends up cut to the pill — one `clipShape` below now takes the
+        // content and the wash together. That is one fewer animated path per frame:
+        // this shape has a continuous corner radius interpolating 23 -> 15, and it
+        // was being rebuilt three times a frame (here, the clip, and the glass).
         .background {
             Theme.backdrop(for: controller.phase)
                 .opacity(controller.isRunning ? 0.85 : 0.45)
-                .clipShape(shape)
                 .animation(.smooth(duration: 0.5), value: controller.phase)
                 .animation(.smooth(duration: 0.3), value: controller.isRunning)
         }
+        // The content is wider than the box for the whole of the morph; this is what
+        // turns the width change into a reveal.
+        .clipShape(shape)
         .glassPanel(in: shape)
-        .opacity(hovering ? 1 : 0.92)
-        .scaleEffect(hovering ? 1.0 : 0.99, anchor: .center)
+        .opacity(hoverFlourish && !hovering ? 0.92 : 1)
+        .scaleEffect(hoverFlourish && !hovering ? 0.99 : 1.0, anchor: .center)
         .onHover { presentation.setHovering($0) }
         .animation(.smooth(duration: 0.22), value: hovering)
         .animation(morph, value: isCompact)
