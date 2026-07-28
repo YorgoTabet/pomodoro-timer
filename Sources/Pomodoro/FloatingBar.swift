@@ -69,7 +69,7 @@ final class FloatingBar: NSPanel {
     /// the gap. A spring has no exact duration, so this is its settling time rounded
     /// up: erring long is safe, since it only means the target stays large a moment
     /// past the animation rather than shrinking out from under a click.
-    static let morphDuration: Double = 0.65
+    static let morphDuration: Double = 0.85
 
     /// Drives the character; owned here so the panel can hand it the same instance
     /// the SwiftUI tree observes.
@@ -274,8 +274,17 @@ struct FloatingBarView: View {
     /// collapse, so even a small overshoot carried the ring past the centre of the
     /// circle and drew it back. On a short move that reads as bounce; on a long one
     /// it reads as the ring snapping into place.
+    /// Long, deliberately — the length *is* the debounce.
+    ///
+    /// There is no hover timer any more. A cursor that only brushes the bar reverses
+    /// long before this settles, and because a spring re-targets from its current
+    /// position and velocity rather than restarting, the reversal reads as the bar
+    /// breathing once instead of as an open and a close. That is the trade iOS makes
+    /// everywhere: answer the pointer instantly, and let a slow curve make an
+    /// accidental answer cost nothing. A timer cannot do both, because the delay that
+    /// rejects an accident is the same delay that ignores an intention.
     private var morph: Animation {
-        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: 0.55)
+        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: 0.75)
     }
 
     /// The readout and controls fade on the morph's own curve, just quicker.
@@ -476,28 +485,35 @@ struct FloatingBarView: View {
     /// they read as emerging from the primary control rather than shrinking into a
     /// dot beside it.
     ///
-    /// Inserted and removed rather than parked at zero opacity, deliberately.
+    /// The secondary actions slide out from underneath the play/pause button and
+    /// tuck back under it on exit — `zIndex` keeps them behind it the whole way, so
+    /// they read as emerging from the primary control rather than shrinking into a
+    /// dot beside it.
     ///
-    /// Mounting them permanently and hiding them with `.opacity(0)` does not work:
-    /// `glassGroup` is a `GlassEffectContainer`, and it harvests the shapes tagged by
-    /// `glassMorphID` and draws them itself, so an opacity applied outside the glass
-    /// effect never reaches them. What you get is the reset and skip glyphs stacked
-    /// on top of the play button and its tint disc reduced to a ring.
+    /// Always mounted and moved by an offset, never inserted and removed. That is
+    /// what makes the whole bar interruptible: a transition runs on identity change
+    /// and has no velocity, so reversing one halfway restarts it from the far end
+    /// instead of turning it around. With no debounce left to keep a flicked cursor
+    /// away from them, they had to become transforms like everything else.
     ///
-    /// Insertion is also what the container is *for* — `glassMorphID` exists so these
-    /// morph out of their neighbours instead of popping. Working with that costs a
-    /// transition that cannot reverse mid-flight, which is what the hover debounce is
-    /// there to keep a flicked cursor from ever reaching.
+    /// Which is why there is no `glassGroup` here any more. A `GlassEffectContainer`
+    /// harvests the shapes tagged for it and draws them itself, so an `.opacity`
+    /// applied outside the glass effect never reaches them — hiding these while
+    /// grouped left both glyphs stacked on the play button with its tint disc reduced
+    /// to a ring. The container existed to make insertion look good, and there is no
+    /// insertion any more; the cost is two glass circles that no longer blend into
+    /// their neighbour.
     private var controls: some View {
         HStack(spacing: 5) {
-            if hovering {
-                control("arrow.counterclockwise", label: "Reset", id: "reset") { controller.reset() }
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                    .zIndex(0)
-                control("forward.end.fill", label: "Skip", id: "skip") { controller.skip() }
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                    .zIndex(1)
+            secondary("arrow.counterclockwise", label: "Reset", id: "reset", slots: 2) {
+                controller.reset()
             }
+            .zIndex(0)
+
+            secondary("forward.end.fill", label: "Skip", id: "skip", slots: 1) {
+                controller.skip()
+            }
+            .zIndex(1)
 
             control(
                 controller.isRunning ? "pause.fill" : "play.fill",
@@ -508,10 +524,33 @@ struct FloatingBarView: View {
             ) { controller.toggle() }
             .zIndex(2)
         }
-        .glassGroup(spacing: 5)
         // The same spring as the box, so hover drives one motion rather than two of
         // different lengths.
         .animation(morph, value: hovering)
+    }
+
+    /// One slot along the control row: a 26pt button plus the 5pt gap.
+    ///
+    /// Tucking by exact multiples of this parks a secondary control under the primary
+    /// one rather than merely near it, which is what sells them as emerging from
+    /// underneath it.
+    private static let controlSlot: CGFloat = 31
+
+    /// A secondary action, parked under the play button until the pointer arrives.
+    private func secondary(
+        _ symbol: String,
+        label: String,
+        id: String,
+        slots: CGFloat,
+        action: @escaping () -> Void
+    ) -> some View {
+        control(symbol, label: label, id: id, action: action)
+            .offset(x: hovering ? 0 : Self.controlSlot * slots)
+            .opacity(hovering ? 1 : 0)
+            // Invisible is not absent: parked under the play button at zero opacity
+            // these would still take the click, and VoiceOver would still offer them.
+            .allowsHitTesting(hovering)
+            .accessibilityHidden(!hovering)
     }
 
 

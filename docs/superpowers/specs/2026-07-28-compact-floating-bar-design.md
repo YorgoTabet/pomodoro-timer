@@ -37,32 +37,27 @@ expanded rect strictly contains the compact one, so collapse can only fire once
 the cursor is outside a region it was already outside — expand/collapse cannot
 oscillate. This is a property worth preserving if the geometry is ever retuned.
 
-**Both edges are debounced, asymmetrically** — 90ms in, 50ms out — and a pending
-edge is cancelled by its opposite.
+**There is no hover debounce.** Entering and leaving both apply the instant they
+arrive.
 
-The cancellation is the point, not the delay. A cursor flicked across the bar
-produces an enter and a leave inside the same window; they annihilate, and nothing
-animates at all. A deliberate hover outlives the window and lands normally.
+Absorbing a cursor that only brushes the bar is the *animation's* job, not a
+timer's. The morph is a long, critically damped spring, so a flick barely gets
+underway before the reversal re-targets it, and a spring re-targets from its
+current position and velocity rather than restarting — the reversal reads as the
+bar breathing once, not as an open followed by a close. That is the trade iOS makes
+everywhere, and it is *why* those animations are as long as they are.
 
-Asymmetric because the two edges are not felt alike. Waiting to *arrive* is nearly
-invisible — the pointer is still travelling. Waiting to *leave* is felt at once,
-because the pointer has gone and the bar is visibly lagging behind it.
+A debounce cannot do that job without also costing responsiveness, because the two
+are the same number: every millisecond that rejects an accidental pass is a
+millisecond of ignoring a deliberate one. This one went 350 -> 110/120 -> 90/50 ->
+gone, getting better at each step, which is its own argument.
 
-The enter debounce is load-bearing rather than cosmetic. The secondary controls
-animate by insertion (see below), and a transition cannot reverse in flight: a
-flick that reaches them restarts them from the other end, which looks broken
-however well the rest of the pill is tuned. 90ms keeps flicks from reaching them.
+It only works if *everything* is interruptible — see the controls, below, which had
+to stop being inserted and removed before the debounce could go.
 
-The exit was briefly 350ms, to stop a window drag collapsing the pill under the
-user's grip. That fear was unfounded — a background drag moves the window *with*
-the cursor, so hover never drops, and AppKit owns the drag session either way —
-and what it bought was a third of a second of dead air on every leave. It read as
-the bar being stuck, and it compounded: `controls` keys its `if hovering` off the
-same debounced flag, so the secondary buttons did not begin leaving for 350ms and
-then took 280ms to go.
-
-Because a flick never sets `hovering` at all, it also cannot acknowledge a phase
-change. Acknowledgement means a settled hover followed by a settled leave.
+One consequence: brushing the bar now counts as having looked at it, so it can
+acknowledge a phase change. That is a fair reading of a cursor crossing the thing,
+and the 30s backstop is the real guarantee anyway.
 
 ### Phase changes — the acknowledgement model
 
@@ -200,64 +195,26 @@ position rather than arriving at it.
 `glassPanel(in:)` takes the same constant `Shape` as the clip, so the glass is
 configured once rather than reconfigured per frame.
 
-### The one thing that cannot reverse
+### Everything is a transform
 
-`controls` inserts and removes the Reset and Skip buttons rather than parking them
-at zero opacity. That was tried and does not work: `glassGroup` is a
-`GlassEffectContainer`, and it harvests the shapes tagged by `glassMorphID` and
-draws them itself, so an `.opacity()` applied outside the glass effect never
-reaches them. The result is both glyphs stacked on the play button with its tint
-disc reduced to a ring.
+`controls` mounts Reset and Skip permanently and tucks them under the play button
+with an `offset`, rather than inserting and removing them.
 
-Insertion is also what the container is *for* — `glassMorphID` exists so these
-morph out of their neighbours instead of popping. The cost is one transition in an
-otherwise fully interruptible interaction, and the enter debounce is what keeps a
-flicked cursor from ever triggering it.
+This is what lets the hover debounce go. A `.transition` runs on identity change
+and has no velocity: reverse one halfway and it does not turn around, it restarts
+from the far end. One non-interruptible element is enough to make a flick look
+broken however well everything around it is tuned.
 
-### Hit testing has to become stateful
+There is deliberately **no `glassGroup`** here any more. A `GlassEffectContainer`
+harvests the shapes tagged by `glassMorphID` and draws them itself, so an
+`.opacity` applied outside the glass effect never reaches them — an earlier attempt
+at this left both glyphs stacked on the play button with its tint disc reduced to a
+ring. The container existed to make insertion look good, and there is no insertion
+any more. The cost is two glass circles that no longer blend into their neighbour.
 
-`FloatingBarHostingView.hitTest` currently rejects anything outside a hard-coded
-236x46 rect. Left alone, a collapsed bar would swallow clicks across a region
-where nothing is drawn; narrowed to the collapsed rect unconditionally, the expanded
-controls would be unclickable.
-
-It reads its rect from a small shared `BarGeometry` reference instead. The rule
-that keeps it safe through a transition:
-
-> Widen the hit rect **immediately** when expansion begins. Narrow it **only
-> after** the collapse animation completes.
-
-Always the larger of the two while anything is in motion, so no click can fall
-into a gap between the visual and the target.
-
-### Phase-change sequencing
-
-`AppDelegate.handlePhaseChange` expands first and cues the character second:
-
-```swift
-notifier.announce(finished: finished, next: next)
-floatingBar?.presentation.beginPhaseChange()
-// Only when it was actually compact. Otherwise perform immediately, so the
-// timing is unchanged for anyone with the feature off.
-if wasCompact { try? await Task.sleep(for: .seconds(0.3)) }
-performCharacter(CharacterCue.cue(finished: finished, next: next))
-```
-
-This is what lets `CharacterStage.pillFrame` and `FloatingBar.pillScreenFrameFlipped`
-stay constants. The character never observes compact geometry, so the stage's
-placement, its mask, and `StageEdge.resolve`'s edge arithmetic need no changes at
-all.
-
-### The stuck-hover guard
-
-When the pill collapses it moves out from under a stationary cursor. The view
-moved, the mouse did not, and AppKit does not reliably deliver `mouseExited` for
-that — a well-known tracking-area failure. After a collapse animation completes,
-re-check `NSEvent.mouseLocation` against the compact frame and correct the hover
-flag if it disagrees.
-
-The mirror case is a cursor already parked on the bar when the timer starts, where
-`onHover` may never fire true. The same check on entering compact mode covers it.
+Hidden is not absent: the tucked buttons carry `allowsHitTesting(false)` and
+`accessibilityHidden(true)`, or they would take clicks from under the play button
+and still be offered to VoiceOver.
 
 ## Settings
 

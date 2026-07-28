@@ -5,7 +5,7 @@ import Observation
 public enum BarMode: Equatable, Sendable {
     /// The full pill: ring, countdown, phase label, and the hover controls.
     case expanded
-    /// A bare progress ring. The one thing worth glancing at mid-session.
+    /// The same bar without its controls: ring, countdown and phase label.
     case compact
 }
 
@@ -18,8 +18,8 @@ public struct BarPresentationPolicy: Equatable, Sendable {
 
     public var compactEnabled: Bool
     public var isRunning: Bool
-    /// Already debounced by `BarPresentationModel`. Raw hover changes must not be
-    /// written here — a cursor clipping the bar's corner would collapse it twice.
+    /// Applied raw, with no debounce. The morph is slow and interruptible enough
+    /// to absorb a cursor that only brushes past — see `setHovering`.
     public var hovering: Bool
     public var voiceOverRunning: Bool
     /// Set by every phase change, cleared once the user has looked at the bar or
@@ -58,9 +58,10 @@ public struct BarPresentationPolicy: Equatable, Sendable {
 
 /// Drives `BarPresentationPolicy` in real time.
 ///
-/// The struct holds the decision; this holds the clock. Two timers: a short one
-/// that delays collapsing after the cursor leaves, and a long one that gives up
-/// waiting for the user to notice a phase change.
+/// The struct holds the decision; this holds the clock. One timer, now: the long
+/// one that gives up waiting for the user to notice a phase change. Hover goes
+/// straight through — see `setHovering` for why it no longer needs a timer of
+/// its own.
 @Observable
 @MainActor
 public final class BarPresentationModel {
@@ -68,53 +69,14 @@ public final class BarPresentationModel {
     /// Injected so the lifecycle tests run in a second rather than in half a
     /// minute of real waiting.
     public struct Timings: Sendable {
-        /// How long the cursor must settle on the bar before it opens.
-        ///
-        /// This is what makes a cursor flicked across the bar cost nothing at all:
-        /// the enter is cancelled by the leave before either lands, so no animation
-        /// ever starts. Without it a flick fires a full open and close back to back,
-        /// and the secondary controls — which animate by insertion, not by a spring —
-        /// restart rather than reverse.
-        ///
-        /// Both edges are deliberately under the ~150ms that reads as a wait. The
-        /// delay is there to reject accidents, not to pace the interaction.
-        public var hoverEnter: Duration
-        /// The mirror on the way out, so brushing off an edge for a frame does not
-        /// close the bar.
-        ///
-        /// This was 350ms, to protect a window drag from collapsing under the grip.
-        /// That fear was unfounded: a background drag moves the window *with* the
-        /// cursor, so hover never drops, and AppKit owns the drag session either way.
-        /// What it bought instead was a third of a second of dead air on every leave,
-        /// which read as the bar being stuck.
-        public var hoverExit: Duration
         /// How long an unacknowledged phase change holds the bar open.
         public var acknowledgementBackstop: Duration
 
-        public init(hoverEnter: Duration, hoverExit: Duration, acknowledgementBackstop: Duration) {
-            self.hoverEnter = hoverEnter
-            self.hoverExit = hoverExit
+        public init(acknowledgementBackstop: Duration) {
             self.acknowledgementBackstop = acknowledgementBackstop
         }
 
-        /// Deliberately asymmetric, because the two edges are not felt alike.
-        ///
-        /// Waiting to *arrive* is nearly invisible — the pointer is still travelling,
-        /// and 90ms is inside the window a flick across the bar occupies, so an
-        /// accidental pass cancels itself before anything moves. That matters more
-        /// than it should: the secondary controls animate by insertion, which cannot
-        /// reverse in flight, so a flick that reaches them looks broken however well
-        /// the rest of the pill is tuned.
-        ///
-        /// Waiting to *leave* is felt immediately, because the pointer has already
-        /// gone and the bar is visibly lagging behind it. 50ms is enough to ride out
-        /// a boundary jitter and short enough to read as instant. The 350ms this
-        /// started at was the single worst thing about the interaction.
-        public static let standard = Timings(
-            hoverEnter: .milliseconds(90),
-            hoverExit: .milliseconds(50),
-            acknowledgementBackstop: .seconds(30)
-        )
+        public static let standard = Timings(acknowledgementBackstop: .seconds(30))
     }
 
     public private(set) var policy = BarPresentationPolicy()
@@ -122,7 +84,6 @@ public final class BarPresentationModel {
     public var mode: BarMode { policy.mode }
 
     @ObservationIgnored private let timings: Timings
-    @ObservationIgnored private var hoverTask: Task<Void, Never>?
     @ObservationIgnored private var backstopTask: Task<Void, Never>?
     /// Guards against a stray hover-false clearing an acknowledgement nobody saw:
     /// the rule is enter *then* leave, not leave alone.
@@ -146,33 +107,32 @@ public final class BarPresentationModel {
         policy.voiceOverRunning = running
     }
 
-    /// Both edges are debounced, and a pending one is cancelled by its opposite.
+    /// Applied the instant it arrives. There is no hover debounce.
     ///
-    /// That cancellation is the point, not the delay. A cursor flicked across the
-    /// bar produces an enter and a leave inside the window, they annihilate, and
-    /// nothing animates at all — where before it drove a full open and close back to
-    /// back. A deliberate hover outlives the window and lands normally.
+    /// There used to be, to keep a cursor flicked across the bar from driving a full
+    /// open and close. The animation absorbs that far better than a timer did: the
+    /// morph is a slow, critically damped spring, so a flick barely gets underway
+    /// before the reversal re-targets it, and the spring carries its velocity into
+    /// the return rather than restarting. What it looks like is the bar breathing
+    /// once, which is what happens on iOS and is *why* those animations are long.
+    ///
+    /// A debounce cannot do that job without also costing responsiveness, because
+    /// the two are the same number: every millisecond that rejects an accidental
+    /// pass is a millisecond of the bar ignoring a deliberate one.
+    ///
+    /// This does mean brushing the bar counts as having looked at it, so it can
+    /// acknowledge a phase change. That is a fair reading of a cursor crossing the
+    /// thing, and the 30s backstop is the real guarantee anyway.
     public func setHovering(_ hovering: Bool) {
-        hoverTask?.cancel()
-        hoverTask = nil
-
-        // Already where it is being asked to go, so whatever was pending was a
-        // flick — cancelled above, and there is nothing left to schedule.
         guard hovering != policy.hovering else { return }
 
-        let delay = hovering ? timings.hoverEnter : timings.hoverExit
-        hoverTask = Task { [weak self] in
-            try? await Task.sleep(for: delay)
-            guard !Task.isCancelled, let self else { return }
-
-            if hovering {
-                sawHoverSincePhaseChange = true
-            } else if sawHoverSincePhaseChange {
-                // Having entered and left is the acknowledgement.
-                clearAcknowledgement()
-            }
-            policy.hovering = hovering
+        if hovering {
+            sawHoverSincePhaseChange = true
+        } else if sawHoverSincePhaseChange {
+            // Having entered and left is the acknowledgement.
+            clearAcknowledgement()
         }
+        policy.hovering = hovering
     }
 
     /// A phase elapsed: show the full bar and hold it until it has been seen.
@@ -195,16 +155,15 @@ public final class BarPresentationModel {
         policy.awaitingAcknowledgement = false
     }
 
-    /// Waits for any pending timer to finish, so a test can assert on the settled
-    /// state instead of racing a wall clock.
+    /// Waits for the acknowledgement backstop to finish, so a test can assert on the
+    /// settled state instead of racing a wall clock.
     ///
-    /// Sleeping for "long enough" is not good enough here: these timers resume on
-    /// the main actor, and the render tests hold it for whole seconds at a time, so
-    /// a margin that passes alone fails in the full suite. Nothing in the app calls
-    /// this — cancelled timers are nil by the time they are cancelled, so there is
-    /// never anything to await but live work.
+    /// Sleeping for "long enough" is not good enough here: the timer resumes on the
+    /// main actor, and the render tests hold it for whole seconds at a time, so a
+    /// margin that passes alone fails in the full suite. Nothing in the app calls
+    /// this — a cancelled backstop is nil by then, so there is never anything to
+    /// await but live work.
     func settle() async {
-        await hoverTask?.value
         await backstopTask?.value
     }
 }

@@ -89,18 +89,19 @@ struct BarPresentationPolicyTests {
 
 /// The timers around the policy.
 ///
-/// Timings are injected so this suite runs in milliseconds instead of the half
-/// minute the real backstop takes, and every wait goes through `settle()` rather
-/// than a wall clock. That is not fastidiousness: these timers resume on the main
-/// actor, the render tests hold it for seconds at a stretch, and margins generous
-/// enough to pass this suite alone still failed it in the full run.
+/// Most of this is now synchronous: hover is applied raw, so only the
+/// acknowledgement backstop involves a clock at all.
+///
+/// That one is injected so the suite runs in milliseconds instead of half a minute,
+/// and waited on through `settle()` rather than a wall clock. Not fastidiousness:
+/// the timer resumes on the main actor, the render tests hold it for seconds at a
+/// stretch, and margins generous enough to pass this suite alone failed in the
+/// full run.
 @Suite("Bar presentation model")
 @MainActor
 struct BarPresentationModelTests {
 
     private static let fast = BarPresentationModel.Timings(
-        hoverEnter: .milliseconds(20),
-        hoverExit: .milliseconds(20),
         acknowledgementBackstop: .milliseconds(300)
     )
 
@@ -117,52 +118,38 @@ struct BarPresentationModelTests {
         #expect(makeModel().mode == .compact)
     }
 
-    @Test("Hovering expands once the cursor has settled, not before")
-    func hoverExpandsOnceSettled() async {
+    /// Hover is applied raw — there is no debounce left to wait out.
+    ///
+    /// Absorbing a cursor that only brushes the bar is the animation's job now: the
+    /// morph is a long, critically damped spring, and a reversal re-targets it from
+    /// its current position and velocity rather than restarting. None of that is
+    /// visible from here, which is the point — the model got simpler because the
+    /// problem moved somewhere better suited to it.
+    @Test("Hovering expands immediately")
+    func hoverExpandsImmediately() {
         let model = makeModel()
         model.setHovering(true)
-        #expect(model.mode == .compact)
-
-        await model.settle()
         #expect(model.mode == .expanded)
     }
 
-    @Test("Leaving the bar collapses it, but not instantly")
-    func hoverOutIsDebounced() async {
+    @Test("Leaving collapses immediately")
+    func hoverOutCollapsesImmediately() {
         let model = makeModel()
         model.setHovering(true)
-        await model.settle()
-
         model.setHovering(false)
-        #expect(model.mode == .expanded)
-
-        await model.settle()
         #expect(model.mode == .compact)
     }
 
-    /// The whole reason both edges are debounced.
-    @Test("A cursor flicked across the bar never opens it at all")
-    func flickThroughIsIgnored() async {
+    @Test("Repeating the hover state it is already in changes nothing")
+    func redundantHoverIsInert() {
         let model = makeModel()
         model.setHovering(true)
-        model.setHovering(false)
-
-        await model.settle()
-        #expect(model.mode == .compact)
-    }
-
-    /// The mirror: a flick *out* of an open bar must not close it.
-    @Test("A cursor that leaves and returns never closes it")
-    func flickOutIsIgnored() async {
-        let model = makeModel()
         model.setHovering(true)
-        await model.settle()
-
-        model.setHovering(false)
-        model.setHovering(true)
-
-        await model.settle()
         #expect(model.mode == .expanded)
+
+        model.setHovering(false)
+        model.setHovering(false)
+        #expect(model.mode == .compact)
     }
 
     @Test("A phase change holds the bar open with the cursor nowhere near it")
@@ -173,29 +160,26 @@ struct BarPresentationModelTests {
     }
 
     @Test("Entering and leaving the bar acknowledges the phase change")
-    func hoverThenLeaveAcknowledges() async {
+    func hoverThenLeaveAcknowledges() {
         let model = makeModel()
         model.beginPhaseChange()
 
         model.setHovering(true)
-        await model.settle()
         model.setHovering(false)
 
-        await model.settle()
+        #expect(!model.policy.awaitingAcknowledgement)
         #expect(model.mode == .compact)
     }
 
-    /// A flick is not attention, so it cannot stand in for having looked.
+    /// Leaving without ever having arrived is not an acknowledgement.
     ///
-    /// Asserts the flag rather than the mode, and does not `settle()`: a flick
-    /// schedules nothing, so there is nothing to wait for, and waiting would run the
-    /// backstop out and collapse the bar for an entirely different reason.
-    @Test("A flick across the bar does not acknowledge a phase change")
-    func flickDoesNotAcknowledge() {
+    /// Asserts the flag rather than the mode, and does not `settle()`, because
+    /// waiting would run the backstop out and clear it for a different reason.
+    @Test("A stray leave with no matching enter acknowledges nothing")
+    func leaveWithoutEnterDoesNotAcknowledge() {
         let model = makeModel()
         model.beginPhaseChange()
 
-        model.setHovering(true)
         model.setHovering(false)
 
         #expect(model.policy.awaitingAcknowledgement)
@@ -228,10 +212,7 @@ struct BarPresentationModelTests {
         let model = makeModel()
         model.beginPhaseChange()
         model.setHovering(true)
-        await model.settle()
         model.setHovering(false)
-
-        await model.settle()
         #expect(model.mode == .compact)
 
         // A fresh hold, not one inherited from the acknowledgement just given.
