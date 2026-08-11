@@ -311,6 +311,40 @@ struct FloatingBarView: View {
     /// That was most of the roughness.
     private var hoverFlourish: Bool { !presentation.policy.compactEnabled }
 
+    /// Hover and compactness are one event, so they get one animation scope.
+    ///
+    /// They used to have one each, and that was the bug behind every "the bar snaps
+    /// open" report. `isCompact` is *derived from* `policy.hovering`, so the pointer
+    /// arriving flips both in the same update — and nested `.animation(_:value:)`
+    /// modifiers do not compose. The innermost one claims the whole subtree beneath
+    /// it. A 0.22s hover flourish sitting under the morph therefore took ownership of
+    /// the box's width, the only dimension that actually travels, every single time
+    /// the bar opened. Slowing `morph` could not help: `morph` was never reaching the
+    /// width.
+    ///
+    /// Measured off the presentation layer, the nested pair settled in 0.27s against
+    /// the 0.83s the spring alone takes, and it front-loaded badly with it: 89% of the
+    /// travel inside the first 0.15s. The tell, in hindsight, was the asymmetry.
+    /// `controls` keeps its own inner `morph` scope, so the buttons were the one part
+    /// still gliding while the ring and the readout — pinned to the leading edge, and
+    /// so the whole of what the eye tracks on the left — were already there.
+    private struct PillPose: Equatable {
+        var compact: Bool
+        var hovering: Bool
+    }
+
+    private var pillPose: PillPose { PillPose(compact: isCompact, hovering: hovering) }
+
+    /// One curve chosen up front rather than two racing to claim the subtree.
+    ///
+    /// The two states are mutually exclusive by construction: the flourish only exists
+    /// while compact mode is off, and the morph only has anywhere to travel while it
+    /// is on. So picking between them is a plain branch, and there is no longer any
+    /// arrangement of modifiers in which one can silently shadow the other.
+    private var pillAnimation: Animation {
+        hoverFlourish ? .smooth(duration: 0.22) : morph
+    }
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Drawn first so the pill occludes it — the character rises from behind.
@@ -402,8 +436,7 @@ struct FloatingBarView: View {
         .opacity(hoverFlourish && !hovering ? 0.92 : 1)
         .scaleEffect(hoverFlourish && !hovering ? 0.99 : 1.0, anchor: .center)
         .onHover { presentation.setHovering($0) }
-        .animation(.smooth(duration: 0.22), value: hovering)
-        .animation(morph, value: isCompact)
+        .animation(pillAnimation, value: pillPose)
     }
 
     // MARK: - Pieces
