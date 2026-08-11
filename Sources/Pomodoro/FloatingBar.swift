@@ -469,7 +469,28 @@ struct FloatingBarView: View {
                 )
                 .rotationEffect(.degrees(-90))
                 .opacity(controller.progress > 0.005 ? 1 : 0)
-                .animation(.smooth(duration: 0.6), value: controller.progress)
+                // Deliberately *not* animated on `progress`.
+                //
+                // `trim` is the one thing here that Core Animation cannot interpolate
+                // for us: every frame of a trim change rebuilds the stroked path on
+                // the CPU, and because that path sits inside the pill's modifier
+                // chain, each rebuild drags the whole bar through another layout pass.
+                // A 0.6s curve on a value that ticks once a second therefore kept the
+                // render loop hot for 60% of every second, sustained for the entire
+                // length of a session. It is not separable from the readout's own
+                // animation, so the cost is quoted once, on that one.
+                //
+                // What it bought was nothing anyone can see. On a 25-minute focus the
+                // ring advances 1/1500th of its circumference per tick: 0.06pt of arc
+                // on a 28pt dial, well under one pixel. The animation was smoothing a
+                // step that is already smaller than the smallest thing the display can
+                // draw.
+                //
+                // The jumps that *are* visible — a phase ending, a skip — all change
+                // `phase` in the same update, and the `.animation(_:value:)` keyed on
+                // it just below still carries the ring back to zero. Only a reset
+                // inside the current phase snaps now, which is what a reset should do.
+                .animation(nil, value: controller.progress)
 
             Image(systemName: Theme.symbol(for: controller.phase))
                 .font(.system(size: 10, weight: .semibold))
@@ -496,10 +517,41 @@ struct FloatingBarView: View {
             Text(controller.displayTime)
                 .font(.system(size: 18, weight: .medium, design: .rounded))
                 .monospacedDigit()
-                // Digits roll rather than cut, which is what keeps a monospaced
-                // countdown from looking like a flickering LED.
+                // The roll is left in place but no longer triggered, because it was
+                // the single most expensive thing the app did.
+                //
+                // Animating it runs a full SwiftUI render pass every frame for the
+                // length of the transition, and the pass — not the text — is what
+                // costs: the pill's modifier chain is deep enough that re-resolving
+                // its layout dominates every frame regardless of what changed. On a
+                // tick every second that held the render loop open more or less
+                // continuously.
+                //
+                // The important part is that this animation and the ring's are not
+                // additive, so neither can be fixed alone. Cumulative CPU over a 40s
+                // window, release build, `animeGirl`, compact bar (see
+                // `Scripts/`-style bench in the notes — timer started via an
+                // env-gated hook, because `top` is far too noisy to compare these):
+                //
+                //     both animated ............. 15.3%
+                //     ring silenced only ........ 10.0%
+                //     digits silenced only ...... 10.5%
+                //     both silenced ..............1.1%
+                //
+                // Either one on its own is enough to hold the loop open, and each
+                // removal alone buys about a third of the cost. Only silencing both
+                // collapses it, by better than 10x.
+                //
+                // Nothing cheaper was available for the digits. The cost is flat
+                // across curves and durations — `.smooth(0.28)`, `.easeOut(0.20)`
+                // and `.easeOut(0.12)` all landed within noise of each other —
+                // because `.numericText` runs its own transition and the modifier
+                // here only decides whether it runs at all.
+                //
+                // Keeping `contentTransition` means restoring the effect is a
+                // one-line change back to `.smooth(duration: 0.28)`, at that price.
                 .contentTransition(.numericText(countsDown: true))
-                .animation(.smooth(duration: 0.28), value: controller.remainingSeconds)
+                .animation(nil, value: controller.remainingSeconds)
                 .foregroundStyle(controller.isRunning ? .primary : .secondary)
                 .fixedSize()
 

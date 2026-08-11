@@ -81,7 +81,13 @@ public struct TimerDial<TimeLabel: View>: View {
                     .transition(.blurReplace)
             }
         }
-        .animation(.smooth(duration: 0.6), value: progress)
+        // Not animated on `progress`, for the reason spelled out on the floating
+        // bar's ring: a trim is rebuilt on the CPU every frame it moves, and the
+        // per-tick movement here is a fraction of a point on a dial this size. The
+        // curve cost a render pass a frame for 0.6s out of every second and bought
+        // no motion the eye can resolve. Phase changes, which move the ring a
+        // visible distance, still animate on the line below.
+        .animation(nil, value: progress)
         .animation(.smooth(duration: 0.45), value: phase)
         .onAppear {
             guard isRunning else { return }
