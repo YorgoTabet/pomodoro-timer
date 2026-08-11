@@ -94,12 +94,19 @@ public struct AnimeGirlView: View {
     public static let canvas = AnimeGirlArt.canvas
 
     let pose: AnimeGirlPose
+    /// Defaults to the shipped figure. Pass `AnimeGirlArt.build(other)` to draw
+    /// a different set of proportions — this is the seam RigStudio's variant
+    /// sheet uses, and the reason `build` is a pure function.
+    let layers: [AnimeGirlArt.Layer]
 
-    public init(pose: AnimeGirlPose) { self.pose = pose }
+    public init(pose: AnimeGirlPose, layers: [AnimeGirlArt.Layer] = AnimeGirlArt.layers) {
+        self.pose = pose
+        self.layers = layers
+    }
 
     public var body: some View {
         RigView(
-            layers: AnimeGirlArt.layers,
+            layers: layers,
             pose: pose,
             outline: AnimeGirlArt.Ink.outline,
             rotation: { $0.rotation(of: $1) },

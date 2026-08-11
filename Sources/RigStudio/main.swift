@@ -11,6 +11,16 @@ if let flag = CommandLine.arguments.firstIndex(of: "--filmstrip") {
     exit(0)
 }
 
+// `--proportions <dir>` sweeps each of the anime girl's proportion dials across
+// its useful range, so a dial can be judged by eye instead of from its number.
+if let flag = CommandLine.arguments.firstIndex(of: "--proportions") {
+    let directory = CommandLine.arguments.count > flag + 1
+        ? CommandLine.arguments[flag + 1]
+        : FileManager.default.currentDirectoryPath
+    ProportionSheet.render(into: directory)
+    exit(0)
+}
+
 if CommandLine.arguments.contains("--audit") {
     MotionAudit.run()
     exit(0)
