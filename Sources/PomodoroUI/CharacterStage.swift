@@ -116,7 +116,7 @@ public struct CharacterStage: View {
         } else {
             switch cue {
             case .focusStart: animeGirlAnimator { AnimeGirlPerformance.fistPump }
-            case .breakStart: animeGirlAnimator { AnimeGirlPerformance.happySway }
+            case .breakStart: animeGirlAnimator { AnimeGirlPerformance.perchWave }
             case .longBreak: animeGirlAnimator { AnimeGirlPerformance.twirl }
             }
         }

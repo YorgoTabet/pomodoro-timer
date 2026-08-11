@@ -59,7 +59,7 @@ public extension AnimeGirlPerformance {
     static func timeline(for cue: CharacterCue) -> KeyframeTimeline<AnimeGirlPose> {
         switch cue {
         case .focusStart: KeyframeTimeline(initialValue: AnimeGirlPose()) { fistPump }
-        case .breakStart: KeyframeTimeline(initialValue: AnimeGirlPose()) { happySway }
+        case .breakStart: KeyframeTimeline(initialValue: AnimeGirlPose()) { perchWave }
         case .longBreak: KeyframeTimeline(initialValue: AnimeGirlPose()) { twirl }
         }
     }
