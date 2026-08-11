@@ -105,13 +105,13 @@ public enum AnimeGirlArt {
             case .armL_fore: CGPoint(x: 81, y: 112)
             case .armR_fore: CGPoint(x: 119, y: 112)
             // Base of the skull, so a head turn pivots on the neck.
-            case .head: CGPoint(x: 100, y: 60)
-            case .eyes: CGPoint(x: 100, y: 44)
-            case .ahoge: CGPoint(x: 97, y: 19)
-            case .tailL_base: CGPoint(x: 86, y: 33)
-            case .tailL_tip: CGPoint(x: 77.5, y: 96)
-            case .tailR_base: CGPoint(x: 114, y: 33)
-            case .tailR_tip: CGPoint(x: 122.5, y: 96)
+            case .head: CGPoint(x: 100, y: 61)
+            case .eyes: CGPoint(x: 100, y: 45.8)
+            case .ahoge: CGPoint(x: 97, y: 17)
+            case .tailL_base: CGPoint(x: 86, y: 32)
+            case .tailL_tip: CGPoint(x: 78.5, y: 96)
+            case .tailR_base: CGPoint(x: 114, y: 32)
+            case .tailR_tip: CGPoint(x: 121.5, y: 96)
             }
         }
     }
@@ -122,16 +122,17 @@ public enum AnimeGirlArt {
     /// the skirt; bare torso behind the crop top; arms in front of the top but
     /// behind the head; hair ties on the finished crown; sparkles last.
     public static let layers: [Layer] = [
-        .init(1, "backHair", .head, Ink.hairShadow, stroke: 3.0, "M 86.0 40.0 Q 82.5 60.0 83.0 88.0 Q 83.5 110.0 86.0 128.0 Q 92.5 132.0 100.0 130.0 Q 107.5 132.0 114.0 128.0 Q 116.5 110.0 117.0 88.0 Q 117.5 60.0 114.0 40.0 Q 100.0 30.0 86.0 40.0 Z"),
-        // Ropes, not balloons. The whole hair silhouette is now 1.28 shoulder
-        // widths (was 1.56) — an oversized hair mass reads as an oversized head,
-        // which was doing as much of the "child" work as the face itself.
-        .init(2, "tailL_base", .tailL_base, Ink.hair, stroke: 3.0, "M 87.0 30.0 Q 80.0 34.0 77.0 48.0 Q 74.0 64.0 74.5 82.0 Q 74.8 91.0 76.0 96.5 L 83.0 96.0 Q 83.5 78.0 84.0 60.0 Q 84.5 42.0 87.0 30.0 Z"),
-        .init(3, "tailL_tip", .tailL_tip, Ink.hair, stroke: 3.0, "M 73.5 96.0 Q 73.5 91.5 77.5 91.5 Q 81.5 91.5 81.5 96.0 Q 82.0 116.0 80.0 136.0 Q 78.5 150.0 75.0 160.0 Q 71.0 150.0 70.5 132.0 Q 70.0 112.0 73.5 96.0 Z"),
-        .init(6, "tailShineL", .tailL_base, Ink.hairShine, stroke: nil, "M 79.0 46.0 Q 76.5 62.0 77.0 82.0 L 79.0 82.0 Q 79.0 62.0 81.0 46.0 Z"),
-        .init(4, "tailR_base", .tailR_base, Ink.hair, stroke: 3.0, "M 113.0 30.0 Q 120.0 34.0 123.0 48.0 Q 126.0 64.0 125.5 82.0 Q 125.2 91.0 124.0 96.5 L 117.0 96.0 Q 116.5 78.0 116.0 60.0 Q 115.5 42.0 113.0 30.0 Z"),
-        .init(5, "tailR_tip", .tailR_tip, Ink.hair, stroke: 3.0, "M 126.5 96.0 Q 126.5 91.5 122.5 91.5 Q 118.5 91.5 118.5 96.0 Q 118.0 116.0 120.0 136.0 Q 121.5 150.0 125.0 160.0 Q 129.0 150.0 129.5 132.0 Q 130.0 112.0 126.5 96.0 Z"),
-        .init(7, "tailShineR", .tailR_base, Ink.hairShine, stroke: nil, "M 121.0 46.0 Q 123.5 62.0 123.0 82.0 L 121.0 82.0 Q 121.0 62.0 119.0 46.0 Z"),
+        .init(1, "backHair", .head, Ink.hairShadow, stroke: 3.0, "M 87.0 40.0 Q 83.5 60.0 84.0 86.0 Q 84.5 108.0 87.0 126.0 Q 93.0 131.0 100.0 129.0 Q 107.0 131.0 113.0 126.0 Q 115.5 108.0 116.0 86.0 Q 116.5 60.0 113.0 40.0 Q 100.0 30.0 87.0 40.0 Z"),
+        // Tails sweep out from the root, carry their weight low, and taper to a
+        // point. The previous pass made them the right *width* but drew them as
+        // parallel straight tubes, which read as curtains hung beside her head —
+        // correct measurement, no drawing.
+        .init(2, "tailL_base", .tailL_base, Ink.hair, stroke: 3.0, "M 88.0 28.0 Q 79.0 33.0 75.0 48.0 Q 71.5 63.0 72.0 82.0 Q 72.3 91.0 73.5 96.5 L 84.0 96.0 Q 84.5 76.0 85.0 58.0 Q 85.5 41.0 88.0 28.0 Z"),
+        .init(3, "tailL_tip", .tailL_tip, Ink.hair, stroke: 3.0, "M 73.5 96.0 Q 73.5 90.5 78.5 90.5 Q 83.5 90.5 83.5 96.0 Q 84.5 118.0 81.5 140.0 Q 79.0 156.0 74.0 166.0 Q 69.5 154.0 69.5 133.0 Q 69.5 112.0 73.5 96.0 Z"),
+        .init(6, "tailShineL", .tailL_base, Ink.hairShine, stroke: nil, "M 78.0 44.0 Q 74.5 60.0 75.0 80.0 L 78.0 80.0 Q 78.0 60.0 80.5 44.0 Z"),
+        .init(4, "tailR_base", .tailR_base, Ink.hair, stroke: 3.0, "M 112.0 28.0 Q 121.0 33.0 125.0 48.0 Q 128.5 63.0 128.0 82.0 Q 127.7 91.0 126.5 96.5 L 116.0 96.0 Q 115.5 76.0 115.0 58.0 Q 114.5 41.0 112.0 28.0 Z"),
+        .init(5, "tailR_tip", .tailR_tip, Ink.hair, stroke: 3.0, "M 126.5 96.0 Q 126.5 90.5 121.5 90.5 Q 116.5 90.5 116.5 96.0 Q 115.5 118.0 118.5 140.0 Q 121.0 156.0 126.0 166.0 Q 130.5 154.0 130.5 133.0 Q 130.5 112.0 126.5 96.0 Z"),
+        .init(7, "tailShineR", .tailR_base, Ink.hairShine, stroke: nil, "M 122.0 44.0 Q 125.5 60.0 125.0 80.0 L 122.0 80.0 Q 122.0 60.0 119.5 44.0 Z"),
         // Thighs taper 10 → 8.3; the hip break at 136 is what buys the adult leg
         // fraction (0.48 of total height, up from 0.42).
         .init(8, "thighL", .legL, Ink.skin, stroke: 3.0, "M 87.5 134.0 L 97.5 134.0 L 96.8 176.0 L 88.5 176.0 Z"),
@@ -159,48 +160,54 @@ public enum AnimeGirlArt {
         .init(24, "armR_skin", .armR, Ink.skin, stroke: 3.0, "M 114.5 76.0 Q 120.2 78.0 121.9 86.0 Q 123.0 94.0 122.5 112.0 L 115.0 112.0 Q 114.6 96.0 113.6 84.0 Q 113.1 78.5 114.5 76.0 Z"),
         .init(57, "foreSleeveR", .armR_fore, Ink.navy, stroke: 3.0, "M 123.0 112.0 Q 123.0 106.8 119.0 106.8 Q 115.0 106.8 115.0 112.0 L 115.3 134.0 Q 114.2 139.0 115.8 141.0 L 122.2 141.0 Q 123.8 139.0 122.7 134.0 Z"),
         .init(25, "handR", .armR_fore, Ink.skin, stroke: 1.8, "M 122.0 140.0 Q 123.2 145.8 121.7 150.5 Q 119.0 152.6 116.1 150.5 Q 114.6 145.8 115.8 140.0 Q 119.0 138.2 122.0 140.0 Z"),
-        // A longer neck than the chibi draft, but not a stalk — 10 wide, not 7.6.
-        .init(26, "neck", .torso, Ink.skin, stroke: nil, "M 95.6 58.0 L 94.8 75.0 L 105.2 75.0 L 104.4 58.0 Z"),
-        // Face 27 × 36.3 (w:h 0.74) with a real jaw taper to a 7-unit chin.
-        .init(27, "headBase", .head, Ink.skin, stroke: 3.0, "M 86.5 44.0 Q 86.5 27.5 100.0 26.5 Q 113.5 27.5 113.5 44.0 Q 113.5 52.0 110.2 56.5 Q 106.2 61.5 100.0 62.8 Q 93.8 61.5 89.8 56.5 Q 86.5 52.0 86.5 44.0 Z"),
-        .init(28, "blush", .head, Ink.blush, stroke: nil, "M 88.0 52.5 Q 90.5 51.2 93.0 52.5 Q 90.5 53.6 88.0 52.5 Z M 107.0 52.5 Q 109.5 51.2 112.0 52.5 Q 109.5 53.6 107.0 52.5 Z"),
-        .init(59, "nose", .head, Ink.clear, stroke: 1.2, "M 99.6 52.6 Q 100.7 53.2 100.2 54.3"),
-        .init(29, "mouthDefault", .head, Ink.clear, stroke: 1.6, "M 97.3 57.3 Q 100.0 58.8 102.7 57.3"),
-        .init(30, "mouthHappy", .head, Ink.mouthDeep, stroke: 1.6, "M 96.6 56.6 L 103.4 56.6 Q 102.3 60.0 100.0 60.0 Q 97.7 60.0 96.6 56.6 Z", restOpacity: 0),
-        .init(31, "mouthDetermined", .head, Ink.white, stroke: 1.6, "M 97.0 56.9 L 103.0 56.9 Q 102.3 58.8 100.0 58.8 Q 97.7 58.8 97.0 56.9 Z", restOpacity: 0),
-        // Almond eyes, 5.7 tall on a 36.3 face (0.16) — down from the moe 0.21,
-        // and set on the skull midline where an adult's sit.
-        .init(32, "eyeWhiteL", .head, Ink.white, stroke: 1.2, "M 88.0 44.6 Q 89.0 41.3 92.4 41.2 Q 96.0 41.4 96.9 44.3 Q 95.2 46.9 92.3 46.9 Q 89.1 46.9 88.0 44.6 Z"),
-        .init(33, "eyeWhiteR", .head, Ink.white, stroke: 1.2, "M 112.0 44.6 Q 111.0 41.3 107.6 41.2 Q 104.0 41.4 103.1 44.3 Q 104.8 46.9 107.7 46.9 Q 110.9 46.9 112.0 44.6 Z"),
-        .init(34, "irisL", .eyes, Ink.iris, stroke: nil, "M 90.3 44.2 Q 90.3 41.6 92.3 41.6 Q 94.3 41.6 94.3 44.4 Q 94.3 46.9 92.3 46.9 Q 90.3 46.9 90.3 44.2 Z"),
-        .init(35, "irisR", .eyes, Ink.iris, stroke: nil, "M 105.7 44.2 Q 105.7 41.6 107.7 41.6 Q 109.7 41.6 109.7 44.4 Q 109.7 46.9 107.7 46.9 Q 105.7 46.9 105.7 44.2 Z"),
-        .init(36, "pupilL", .eyes, Ink.ink, stroke: nil, "M 91.5 44.3 Q 91.5 42.7 92.3 42.7 Q 93.1 42.7 93.1 44.5 Q 93.1 46.2 92.3 46.2 Q 91.5 46.2 91.5 44.3 Z"),
-        .init(37, "pupilR", .eyes, Ink.ink, stroke: nil, "M 106.9 44.3 Q 106.9 42.7 107.7 42.7 Q 108.5 42.7 108.5 44.5 Q 108.5 46.2 107.7 46.2 Q 106.9 46.2 106.9 44.3 Z"),
-        .init(38, "hiBigL", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(91.4, 42.8, 0.75)),
-        .init(39, "hiBigR", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(106.8, 42.8, 0.75)),
-        .init(40, "hiSmallL", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(93.5, 45.9, 0.45)),
-        .init(41, "hiSmallR", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(108.9, 45.9, 0.45)),
-        // Heavier upper lid with an outer flick — adult eye makeup reads older
-        // than the big round lash cluster it replaces.
-        .init(42, "lashL", .head, Ink.ink, stroke: nil, "M 86.6 43.4 Q 87.4 40.4 92.3 40.2 Q 96.5 40.2 97.4 43.4 L 96.4 43.9 Q 95.2 41.6 92.3 41.8 Q 89.4 42.0 88.4 44.8 Z"),
-        .init(43, "lashR", .head, Ink.ink, stroke: nil, "M 113.4 43.4 Q 112.6 40.4 107.7 40.2 Q 103.5 40.2 102.6 43.4 L 103.6 43.9 Q 104.8 41.6 107.7 41.8 Q 110.6 42.0 111.6 44.8 Z"),
-        .init(44, "hairCrown", .head, Ink.hair, stroke: 3.0, "M 84.0 45.0 Q 81.0 27.0 93.0 21.0 Q 106.5 16.5 115.5 24.5 Q 119.0 31.5 117.5 45.0 Q 115.0 35.0 111.0 31.0 Q 100.0 26.0 89.0 31.5 Q 85.5 35.5 84.0 45.0 Z"),
-        // Wide enough that the 2.2 stroke leaves fill visible. At 4 units with a
-        // 3.0 stroke these rendered as solid black bars down her cheeks.
-        .init(45, "sideLockL", .head, Ink.hair, stroke: 2.2, "M 86.5 36.0 Q 82.0 50.0 82.8 63.0 Q 83.4 71.0 86.0 75.0 Q 90.0 67.0 89.5 55.0 Q 89.0 45.0 89.5 37.0 Z"),
-        .init(46, "sideLockR", .head, Ink.hair, stroke: 2.2, "M 113.5 36.0 Q 118.0 50.0 117.2 63.0 Q 116.6 71.0 114.0 75.0 Q 110.0 67.0 110.5 55.0 Q 111.0 45.0 110.5 37.0 Z"),
-        // Side-swept, parted left of centre and clearing the brow line — an
-        // exposed forehead ages a face up; blunt bangs to the eyes read young.
-        .init(47, "bangs", .head, Ink.hair, stroke: 3.0, "M 84.0 44.0 Q 81.0 26.5 93.5 20.5 Q 107.0 16.0 115.8 24.0 Q 119.2 31.0 117.5 44.0 Q 116.3 36.0 113.0 32.0 Q 108.5 33.8 105.0 32.2 Q 101.0 30.2 99.5 27.5 Q 96.0 31.8 92.0 32.8 Q 88.0 33.5 86.6 37.4 Q 85.3 40.0 85.0 44.0 Z"),
-        .init(48, "hairShine", .head, Ink.hairShine, stroke: nil, "M 89.0 28.0 Q 98.5 22.0 108.5 24.5 Q 112.5 26.0 114.5 29.0 Q 104.0 25.0 92.0 30.5 Q 90.0 29.5 89.0 28.0 Z"),
-        .init(49, "browsDefault", .head, Ink.clear, stroke: 1.5, "M 87.5 37.6 Q 91.5 35.9 95.5 37.2 M 104.5 37.2 Q 108.5 35.9 112.5 37.6"),
-        .init(50, "browsDetermined", .head, Ink.clear, stroke: 1.5, "M 88.0 35.8 Q 92.0 36.6 95.6 38.6 M 104.4 38.6 Q 108.0 36.6 112.0 35.8", restOpacity: 0),
-        .init(51, "closedEyesHappy", .head, Ink.clear, stroke: 1.8, "M 88.0 45.6 Q 92.3 41.8 96.6 45.6 M 103.4 45.6 Q 107.7 41.8 112.0 45.6", restOpacity: 0),
+        .init(26, "neck", .torso, Ink.skin, stroke: nil, "M 95.6 60.0 L 94.8 76.0 L 105.2 76.0 L 104.4 60.0 Z"),
+        // Face 28 × 37.5 (w:h 0.75). The jaw curves into a soft chin rather than
+        // the spike the previous pass drew — 0.74 measured fine and looked gaunt.
+        .init(27, "headBase", .head, Ink.skin, stroke: 3.0, "M 86.0 43.5 Q 86.0 27.0 100.0 26.0 Q 114.0 27.0 114.0 43.5 Q 114.0 52.0 110.5 57.5 Q 106.5 62.5 100.0 63.5 Q 93.5 62.5 89.5 57.5 Q 86.0 52.0 86.0 43.5 Z"),
+        .init(28, "blush", .head, Ink.blush, stroke: nil, "M 88.0 53.5 Q 90.8 52.1 93.6 53.5 Q 90.8 54.8 88.0 53.5 Z M 106.4 53.5 Q 109.2 52.1 112.0 53.5 Q 109.2 54.8 106.4 53.5 Z"),
+        .init(59, "nose", .head, Ink.clear, stroke: 1.2, "M 99.5 54.0 Q 100.8 54.7 100.2 56.0"),
+        .init(29, "mouthDefault", .head, Ink.clear, stroke: 1.6, "M 97.2 58.6 Q 100.0 60.2 102.8 58.6"),
+        .init(30, "mouthHappy", .head, Ink.mouthDeep, stroke: 1.6, "M 96.4 57.8 L 103.6 57.8 Q 102.4 61.4 100.0 61.4 Q 97.6 61.4 96.4 57.8 Z", restOpacity: 0),
+        .init(31, "mouthDetermined", .head, Ink.white, stroke: 1.6, "M 96.9 58.1 L 103.1 58.1 Q 102.4 60.1 100.0 60.1 Q 97.6 60.1 96.9 58.1 Z", restOpacity: 0),
+        // 7.3 tall on a 37.5 face — 0.195. The 0.16 of the last pass was an
+        // overcorrection: small eyes on a long face read gaunt, not adult. Adult
+        // anime leads sit near 0.20; what ages a face is the jaw and the lid
+        // line, not shrinking the eye.
+        .init(32, "eyeWhiteL", .head, Ink.white, stroke: 1.2, "M 87.6 45.8 Q 88.2 42.4 92.2 42.2 Q 96.4 42.4 97.0 45.6 Q 96.4 49.4 92.3 49.5 Q 88.2 49.4 87.6 45.8 Z"),
+        .init(33, "eyeWhiteR", .head, Ink.white, stroke: 1.2, "M 112.4 45.8 Q 111.8 42.4 107.8 42.2 Q 103.6 42.4 103.0 45.6 Q 103.6 49.4 107.7 49.5 Q 111.8 49.4 112.4 45.8 Z"),
+        .init(34, "irisL", .eyes, Ink.iris, stroke: nil, "M 89.6 45.8 Q 89.6 42.5 92.3 42.5 Q 95.0 42.5 95.0 46.0 Q 95.0 49.3 92.3 49.3 Q 89.6 49.3 89.6 45.8 Z"),
+        .init(35, "irisR", .eyes, Ink.iris, stroke: nil, "M 105.0 45.8 Q 105.0 42.5 107.7 42.5 Q 110.4 42.5 110.4 46.0 Q 110.4 49.3 107.7 49.3 Q 105.0 49.3 105.0 45.8 Z"),
+        .init(36, "pupilL", .eyes, Ink.ink, stroke: nil, "M 91.1 45.9 Q 91.1 43.9 92.3 43.9 Q 93.5 43.9 93.5 46.1 Q 93.5 48.2 92.3 48.2 Q 91.1 48.2 91.1 45.9 Z"),
+        .init(37, "pupilR", .eyes, Ink.ink, stroke: nil, "M 106.5 45.9 Q 106.5 43.9 107.7 43.9 Q 108.9 43.9 108.9 46.1 Q 108.9 48.2 107.7 48.2 Q 106.5 48.2 106.5 45.9 Z"),
+        .init(38, "hiBigL", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(90.9, 43.9, 1.1)),
+        .init(39, "hiBigR", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(106.3, 43.9, 1.1)),
+        .init(40, "hiSmallL", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(93.8, 48.4, 0.6)),
+        .init(41, "hiSmallR", .eyes, Ink.white, stroke: nil, path: VectorPath.circle(109.2, 48.4, 0.6)),
+        // Heavy upper lid with an outer flick — this is what does the aging work.
+        .init(42, "lashL", .head, Ink.ink, stroke: nil, "M 86.3 44.6 Q 87.0 41.0 92.2 40.7 Q 96.8 40.8 97.6 44.4 L 96.5 45.0 Q 95.4 42.4 92.2 42.6 Q 89.0 42.8 88.0 46.0 Z"),
+        .init(43, "lashR", .head, Ink.ink, stroke: nil, "M 113.7 44.6 Q 113.0 41.0 107.8 40.7 Q 103.2 40.8 102.4 44.4 L 103.5 45.0 Q 104.6 42.4 107.8 42.6 Q 111.0 42.8 112.0 46.0 Z"),
+        // A domed crown with real volume. The old one arced from 84.5 to 19.5
+        // through flat control points and rendered as a bowl-cut cap.
+        .init(44, "hairCrown", .head, Ink.hair, stroke: 3.0, "M 83.5 46.0 Q 79.5 28.0 90.5 20.0 Q 100.0 14.0 110.5 19.0 Q 120.0 24.5 118.0 46.0 Q 116.5 36.0 112.5 31.0 Q 100.0 25.0 88.0 31.0 Q 84.5 36.0 83.5 46.0 Z"),
+        // Short, swept, tapering to a point at the jaw — framing the face rather
+        // than hanging past it like a drape and splitting the face in three.
+        .init(45, "sideLockL", .head, Ink.hair, stroke: 2.2, "M 86.0 34.0 Q 81.5 46.0 82.2 58.0 Q 82.8 67.0 85.5 72.0 Q 88.8 64.0 88.4 52.0 Q 88.2 43.0 88.8 35.5 Z"),
+        .init(46, "sideLockR", .head, Ink.hair, stroke: 2.2, "M 114.0 34.0 Q 118.5 46.0 117.8 58.0 Q 117.2 67.0 114.5 72.0 Q 111.2 64.0 111.6 52.0 Q 111.8 43.0 111.2 35.5 Z"),
+        // One smooth swept curve. Cutting the hem into four lock tips rendered as
+        // a sawtooth band across her forehead — at this scale a 3pt stroke turns
+        // every interior point into a spike, so the fringe gets its shape from
+        // the sweep, not from notches. Clears the brows: an exposed forehead ages
+        // a face up, blunt bangs to the eyes read young.
+        .init(47, "bangs", .head, Ink.hair, stroke: 3.0, "M 83.5 45.0 Q 79.5 27.0 91.0 19.5 Q 101.0 13.5 111.0 18.5 Q 120.0 24.0 118.0 45.0 Q 116.0 32.0 111.0 28.5 Q 100.0 36.0 90.0 29.5 Q 85.5 33.0 83.5 45.0 Z"),
+        .init(48, "hairShine", .head, Ink.hairShine, stroke: nil, "M 88.0 26.0 Q 98.0 19.5 108.5 22.5 Q 113.0 24.5 115.0 27.5 Q 104.0 22.5 91.5 28.5 Q 89.0 27.5 88.0 26.0 Z"),
+        .init(49, "browsDefault", .head, Ink.clear, stroke: 1.5, "M 87.5 38.4 Q 91.5 36.4 95.8 37.8 M 104.2 37.8 Q 108.5 36.4 112.5 38.4"),
+        .init(50, "browsDetermined", .head, Ink.clear, stroke: 1.5, "M 88.0 36.4 Q 92.0 37.2 95.9 39.4 M 104.1 39.4 Q 108.0 37.2 112.0 36.4", restOpacity: 0),
+        .init(51, "closedEyesHappy", .head, Ink.clear, stroke: 1.8, "M 87.6 47.4 Q 92.3 42.8 97.0 47.4 M 103.0 47.4 Q 107.7 42.8 112.4 47.4", restOpacity: 0),
         // Small and subtle. A tall bouncing ahoge is a genki-kid signal; it still
         // has to exist because the performances drive it as the emotional lag.
-        .init(52, "ahoge", .ahoge, Ink.clear, stroke: 2.2, "M 97.0 19.0 C 94.8 13.5 98.8 9.5 103.4 11.0 C 106.6 12.0 104.6 16.0 100.8 14.6"),
-        .init(60, "tieHairL", .tailL_base, Ink.teal, stroke: 1.6, path: VectorPath.circle(86.0, 33.0, 2.6)),
-        .init(61, "tieHairR", .tailR_base, Ink.teal, stroke: 1.6, path: VectorPath.circle(114.0, 33.0, 2.6)),
+        .init(52, "ahoge", .ahoge, Ink.clear, stroke: 2.2, "M 97.0 17.0 C 94.8 11.5 98.8 7.5 103.4 9.0 C 106.6 10.0 104.6 14.0 100.8 12.6"),
+        .init(60, "tieHairL", .tailL_base, Ink.teal, stroke: 1.6, path: VectorPath.circle(86.0, 32.0, 2.6)),
+        .init(61, "tieHairR", .tailR_base, Ink.teal, stroke: 1.6, path: VectorPath.circle(114.0, 32.0, 2.6)),
         // All three start upper-left/upper-right so the twirl's 90° orbit about
         // (100, 80) — cubic overshoot included — never sweeps across the body.
         .init(53, "sparkleA", .sparkles, Ink.white, stroke: nil, "M 42.0 30.0 L 44.2 35.8 L 50.0 38.0 L 44.2 40.2 L 42.0 46.0 L 39.8 40.2 L 34.0 38.0 L 39.8 35.8 Z", restOpacity: 0),
