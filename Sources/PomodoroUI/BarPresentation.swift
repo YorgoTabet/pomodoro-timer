@@ -2,10 +2,17 @@ import Foundation
 import Observation
 
 /// Which of the floating bar's two forms is on screen.
+///
+/// This is the bar's only presentation output, and deliberately so. The view used to
+/// take the box width from here and the visibility of reset and skip from the raw hover
+/// flag, which let the two disagree: every rule below except `hovering` opened the box
+/// while leaving the controls parked, so the pill grew by a third and put nothing in it.
+/// Reset and skip now follow the form, which is also what finally makes the VoiceOver
+/// rule mean what it says.
 public enum BarMode: Equatable, Sendable {
-    /// The full pill: ring, countdown, phase label, and the hover controls.
+    /// The full pill: ring, countdown, phase label, play/pause, and reset and skip.
     case expanded
-    /// The same bar without its controls: ring, countdown and phase label.
+    /// The same bar cut off after play/pause: ring, countdown, phase label, play/pause.
     case compact
 }
 

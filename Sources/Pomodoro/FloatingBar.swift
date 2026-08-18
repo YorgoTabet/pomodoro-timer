@@ -16,13 +16,64 @@ import SwiftUI
 @MainActor
 final class FloatingBar: NSPanel {
 
+    /// Every horizontal measurement in the pill, in one place and derived from each
+    /// other rather than each written down.
+    ///
+    /// They were separate constants with the totals worked out in prose comments, and
+    /// the prose had already drifted from the numbers. The reason to compute instead
+    /// is that three of these values have to agree exactly or the design breaks in a
+    /// way that is easy to miss: the row must come to `width` with no slack, so
+    /// nothing shifts when the box opens; `compactWidth` must fall one trailing inset
+    /// past the play button, or the collapsed pill either cuts through it or leaves a
+    /// gap where the skip button used to be; and `tuck` must park a secondary control
+    /// squarely *under* the play button rather than merely near it, which is what
+    /// sells it as emerging from underneath.
+    enum Metrics {
+        static let height: CGFloat = 46
+
+        static let leading: CGFloat = 11
+        static let trailing: CGFloat = 10
+
+        static let ring: CGFloat = 28
+        static let ringGap: CGFloat = 9
+        static let readout: CGFloat = 74
+        static let readoutGap: CGFloat = 12
+
+        /// The play/pause button, larger than the rest because it is the one control
+        /// that is always there.
+        static let primary: CGFloat = 28
+        static let secondary: CGFloat = 26
+        static let controlGap: CGFloat = 6
+
+        /// The play button's leading edge, measured from the pill's own.
+        static let primaryX = leading + ring + ringGap + readout + readoutGap
+
+        /// The leading edge of the nth secondary control, counting outward from the
+        /// play button.
+        static func secondaryX(_ index: Int) -> CGFloat {
+            primaryX + primary + controlGap + CGFloat(index) * (secondary + controlGap)
+        }
+
+        /// How far back the nth secondary control sits when parked, so its leading
+        /// edge lands on the play button's.
+        static func tuck(_ index: Int) -> CGFloat { primaryX - secondaryX(index) }
+
+        /// Two secondary controls and the trailing inset past them.
+        static let width = secondaryX(1) + secondary + trailing
+
+        /// The collapsed form ends one trailing inset past the play button, which
+        /// leaves it with exactly the air it has in the open pill — so the short bar
+        /// is a real end to the layout rather than a crop through it.
+        static let compactWidth = primaryX + primary + trailing
+    }
+
     /// Sized to hold the hover-revealed controls without reflowing.
     ///
-    /// This has to fit the *widest* state: 12 + glyph 18 + 10 + readout 72 + gap +
-    /// three 26–28pt controls with 5pt gaps + 8. Undersize it and the content
-    /// silently overflows the frame, leaving the glass covering only part of the
-    /// pill while the buttons sit on bare window.
-    static let size = NSSize(width: 236, height: 46)
+    /// This has to fit the *widest* state. Undersize it and the content silently
+    /// overflows the frame, leaving the glass covering only part of the pill while
+    /// the buttons sit on bare window — so it is computed from the row rather than
+    /// written down beside it.
+    static let size = NSSize(width: Metrics.width, height: Metrics.height)
 
     /// Transparent room on every side, for the character to emerge into and for the
     /// pill's 15% reaction to grow into without being clipped by its own window.
@@ -37,25 +88,24 @@ final class FloatingBar: NSPanel {
         CGRect(x: margin, y: margin, width: size.width, height: size.height)
     }
 
-    /// The collapsed form: the ring and the countdown, without the actions.
+    /// The collapsed form: the ring, the countdown, and play/pause.
     ///
-    /// A timer that will not tell you the time is a progress bar. What actually
-    /// pulls the eye is the *actions* appearing and disappearing, and — arguably —
-    /// the seconds; the choice here is to keep both the ring and the readout and
-    /// drop only the controls.
-    ///
-    /// Width is the leading padding, the ring, the gap, the readout, and the
-    /// trailing padding: 11 + 28 + 10 + 74 + 10. Cutting exactly there leaves the
-    /// readout with the same 10pt of air it has in the open pill, so the collapsed
-    /// bar is a real end to the layout rather than a crop through it.
+    /// It used to stop after the countdown, and that was the one real mistake in the
+    /// compact bar. Pausing is the only thing anybody does to a running timer, and
+    /// putting it behind the hover morph meant every pause cost a reach, then a wait
+    /// for a button to arrive under a cursor that was already there. The button is now
+    /// in both forms, in the same place in both, so the morph no longer gates anything
+    /// anyone needs — it reveals reset and skip, which are genuinely occasional.
     ///
     /// Height is the pill's own, which keeps this rect symmetric about the panel's
     /// vertical centre — what lets `hitTest` ignore whether its view is flipped.
-    static let compactSize = NSSize(width: 133, height: 46)
+    static let compactSize = NSSize(width: Metrics.compactWidth, height: Metrics.height)
 
+    /// Both forms share their leading edge, so the collapse withdraws the trailing
+    /// edge and moves nothing else.
     static var compactFrame: CGRect {
         CGRect(
-            x: pillFrame.midX - compactSize.width / 2,
+            x: pillFrame.minX,
             y: pillFrame.midY - compactSize.height / 2,
             width: compactSize.width,
             height: compactSize.height
@@ -69,7 +119,7 @@ final class FloatingBar: NSPanel {
     /// the gap. A spring has no exact duration, so this is its settling time rounded
     /// up: erring long is safe, since it only means the target stays large a moment
     /// past the animation rather than shrinking out from under a click.
-    static let morphDuration: Double = 0.85
+    static let morphDuration: Double = 0.55
 
     /// Drives the character; owned here so the panel can hand it the same instance
     /// the SwiftUI tree observes.
@@ -90,7 +140,14 @@ final class FloatingBar: NSPanel {
         )
 
         isFloatingPanel = true
-        level = .floating
+        // Above the menu bar, not merely above other apps.
+        //
+        // `.floating` is level 3 and the menu bar is 24, so a pill dragged to the top
+        // of the screen used to slide *behind* the menu bar and vanish. Since the
+        // whole point of this window is that it is always visible, the top strip has
+        // to be usable like any other part of the screen. Open menus are level 101 and
+        // still draw over it, so pulling down a menu is unaffected.
+        level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         backgroundColor = .clear
         isOpaque = false
@@ -142,6 +199,54 @@ final class FloatingBar: NSPanel {
         }
     }
 
+    /// Let the pill go anywhere on any display, and clamp the *pill* rather than the
+    /// panel.
+    ///
+    /// AppKit's default keeps a dragged window inside `visibleFrame`, which is the
+    /// screen minus the menu bar and the Dock — that is what stopped the bar reaching
+    /// the top edge, and no amount of raising the window level would have helped,
+    /// because the frame was never being allowed up there in the first place.
+    ///
+    /// Two things make the replacement behave. It constrains the pill's rect, not the
+    /// panel's: the panel carries a transparent `margin` on every side for the
+    /// character to emerge into, so clamping the panel would leave the pill stranded
+    /// `margin` points short of every edge with nothing visible in the gap. And it asks
+    /// whether the pill touches *any* display rather than the one AppKit hands us, so a
+    /// drag toward a second screen isn't clamped back onto the first — only a pill that
+    /// has left every screen entirely gets pulled back, onto the nearest one.
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        let pill = NSRect(
+            x: frameRect.minX + Self.margin,
+            y: frameRect.minY + Self.margin,
+            width: Self.size.width,
+            height: Self.size.height
+        )
+
+        // Already somewhere on a display: nothing to correct, including the top strip
+        // and the two thirds of the pill that may be hanging off the side.
+        if NSScreen.screens.contains(where: { !$0.frame.intersection(pill).isEmpty }) {
+            return frameRect
+        }
+
+        // Fully off every display. Come back to the *nearest* one — measured centre to
+        // centre — rather than to whichever screen happens to be first in the list,
+        // which on a stacked two-display setup would drag a pill flicked off the top
+        // of the upper screen all the way down to the primary.
+        func distance(_ screen: NSScreen) -> CGFloat {
+            let c = CGPoint(x: screen.frame.midX, y: screen.frame.midY)
+            return hypot(c.x - pill.midX, c.y - pill.midY)
+        }
+        let nearest = NSScreen.screens.min { distance($0) < distance($1) }
+        guard let bounds = (nearest ?? screen ?? self.screen ?? NSScreen.main)?.frame else {
+            return frameRect
+        }
+
+        // Fully off every screen — put it back, still by the pill's own edges.
+        let x = min(max(pill.minX, bounds.minX), bounds.maxX - pill.width)
+        let y = min(max(pill.minY, bounds.minY), bounds.maxY - pill.height)
+        return frameRect.offsetBy(dx: x - pill.minX, dy: y - pill.minY)
+    }
+
     private func setPillOrigin(_ point: NSPoint) {
         setFrameOrigin(NSPoint(x: point.x - Self.margin, y: point.y - Self.margin))
     }
@@ -172,8 +277,8 @@ final class FloatingBar: NSPanel {
 
     /// Re-derive hover from where the cursor actually is.
     ///
-    /// When the pill collapses it moves out from under a stationary cursor. The view
-    /// moved, the mouse did not, and AppKit does not reliably deliver `mouseExited`
+    /// When the pill collapses its trailing edge withdraws past a stationary cursor.
+    /// The view moved, the mouse did not, and AppKit does not reliably deliver `mouseExited`
     /// for that — so SwiftUI's `onHover` can be left stuck true with the cursor
     /// nowhere near the ring. The mirror case is a cursor already parked on the bar
     /// when the timer starts, where it can be left stuck false.
@@ -222,19 +327,26 @@ struct FloatingBarView: View {
     let onCollapsed: () -> Void
 
     @State private var pulse = false
-    @Namespace private var glass
+
+    /// Read from the environment rather than from `NSWorkspace`, which is what it used
+    /// to be. `accessibilityDisplayShouldReduceMotion` is a plain property with no
+    /// publisher behind it as far as SwiftUI is concerned, so the view kept whichever
+    /// value happened to be true when it was first evaluated: turning Reduce Motion on
+    /// did nothing until the app was relaunched. The environment key is the same
+    /// setting, observed properly.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var tint: Color { Theme.tint(for: controller.phase) }
 
-    /// Debounced, so the controls linger a moment after the cursor leaves rather
-    /// than snapping away from under a hand that is still moving.
+    /// The raw pointer state, and the only thing left that uses it directly is the
+    /// hover flourish. Everything else keys on the *form* the bar is in — see
+    /// `controlsRevealed`. The comment here used to say this was debounced; it has not
+    /// been for some time, and the morph absorbs a brushing cursor instead.
     private var hovering: Bool { presentation.policy.hovering }
 
     private var isCompact: Bool { presentation.mode == .compact }
 
-    private var reduceMotion: Bool {
-        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-    }
+    private typealias M = FloatingBar.Metrics
 
     /// Constant, and that is the point.
     ///
@@ -247,13 +359,6 @@ struct FloatingBarView: View {
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: 15, style: .continuous)
     }
-
-    /// Leading inset, chosen so the ring lands dead centre of the compact circle
-    /// once it has travelled: 9 + 28/2 == 23 == 46/2.
-    private static let leadingPadding: CGFloat = 11
-
-    /// The ring's diameter, the same in both forms.
-    private static let ringSize: CGFloat = 28
 
     /// The only dimension that travels. Height is shared by both forms, so one
     /// animating number and one offset carry the whole change.
@@ -268,38 +373,37 @@ struct FloatingBarView: View {
     /// reversal, so a flick that turns around mid-open becomes a close instead of
     /// snapping and replaying from the far end.
     ///
-    /// Critically damped, though — `.smooth` is a spring with no bounce at all.
-    /// An earlier 0.88 damping was chosen for weight and was a mistake here: the
-    /// content is pinned to the box's leading edge and travels 95pt across a
-    /// collapse, so even a small overshoot carried the ring past the centre of the
-    /// circle and drew it back. On a short move that reads as bounce; on a long one
-    /// it reads as the ring snapping into place.
-    /// Long, deliberately — the length *is* the debounce.
+    /// Critically damped — `.smooth` is a spring with no bounce at all. Overshoot
+    /// belongs on motion the user's own gesture threw; this is a reveal answering a
+    /// pointer that has already arrived and stopped, and a box that springs past its
+    /// width and comes back reads as slop.
     ///
-    /// There is no hover timer any more. A cursor that only brushes the bar reverses
-    /// long before this settles, and because a spring re-targets from its current
-    /// position and velocity rather than restarting, the reversal reads as the bar
-    /// breathing once instead of as an open and a close. That is the trade iOS makes
-    /// everywhere: answer the pointer instantly, and let a slow curve make an
-    /// accidental answer cost nothing. A timer cannot do both, because the delay that
-    /// rejects an accident is the same delay that ignores an intention.
+    /// 0.42s, where it used to be 0.75s. The long version was justified as being its
+    /// own debounce — a cursor that only brushes the bar reverses long before the
+    /// spring settles, and because a spring re-targets from its current position and
+    /// velocity rather than restarting, the reversal reads as the bar breathing once
+    /// instead of as an open and a close. All of that is still true at 0.42s: a
+    /// crossing cursor is on the bar for well under a tenth of a second and gets
+    /// nowhere near the far end. What 0.75s also bought was three quarters of a second
+    /// between reaching for a control and being able to press it, and that is Apple's
+    /// own figure for a reposition (0.4s, critically damped) being ignored by roughly
+    /// double.
     private var morph: Animation {
-        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: 0.75)
+        reduceMotion ? .linear(duration: 0.01) : .smooth(duration: 0.42)
     }
 
-    /// The readout and controls fade on the morph's own curve, just quicker.
+    /// What the secondary controls ride out on: the box's own spring, unchanged.
     ///
-    /// They cannot simply share `morph`: at the halfway point the box is half open
-    /// and the text would be at half opacity, showing through a circle far too small
-    /// to hold it. So it is the same curve, run at roughly half the length, with no
-    /// delay in either direction — one motion that resolves early rather than a
-    /// second motion that starts late.
+    /// There used to be three lengths in this one gesture — 0.75s on the box, 0.32s on
+    /// a content fade, and a 0.28s insertion inside the control row — and three start
+    /// and end times for a single pointer event is exactly what reads as mechanical.
+    /// The controls travel *with* the edge that reveals them, so they share its curve
+    /// and there is one motion.
     ///
-    /// It used to carry an 0.08s delay on the way open. Together with `morph` and
-    /// with `controls`' own 0.28s insertion that made three different start and end
-    /// times for one gesture, which is what read as mechanical.
-    private var contentFade: Animation {
-        reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.32)
+    /// Reduce Motion is the one case that still needs two, because there the box does
+    /// not travel at all: a cross-fade is what is left to carry the change.
+    private var reveal: Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : morph
     }
 
     /// Whether the pill still does its little hover lift.
@@ -326,8 +430,14 @@ struct FloatingBarView: View {
     /// the 0.83s the spring alone takes, and it front-loaded badly with it: 89% of the
     /// travel inside the first 0.15s. The tell, in hindsight, was the asymmetry.
     /// `controls` keeps its own inner `morph` scope, so the buttons were the one part
-    /// still gliding while the ring and the readout — pinned to the leading edge, and
-    /// so the whole of what the eye tracks on the left — were already there.
+    /// still gliding while the ring and the readout — pinned to the leading edge back
+    /// then, and so the whole of what the eye tracks on the left — were already there.
+    ///
+    /// Both halves of that are settled now. The one remaining nested scope is the
+    /// secondary controls', and it carries the same spring as this one, so which of them
+    /// claims the subtree no longer changes anything. And the ring and the readout do
+    /// not travel at all: they are on the fixed leading edge, not pinned to a moving
+    /// one, so there is nothing left for a stray curve to front-load.
     private struct PillPose: Equatable {
         var compact: Bool
         var hovering: Bool
@@ -390,33 +500,59 @@ struct FloatingBarView: View {
         // attempt read as a replacement: SwiftUI re-ran the layout, so everything
         // arrived at once in a box that was still moving. Nothing here is ever laid
         // out twice — only the clip and one offset move.
-        HStack(spacing: 10) {
-            phaseRing
-            readout
-
-            Spacer(minLength: 4)
-
-            // The only thing the collapse actually hides. It is already outside the
-            // clip by then; the fade is for the moment in between, when the box is
-            // wide enough to show it but the bar is on its way to not having it.
-            controls
-                .opacity(isCompact ? 0 : 1)
-                .animation(contentFade, value: isCompact)
-        }
-        .padding(.leading, Self.leadingPadding)
-        .padding(.trailing, 10)
-        .frame(width: FloatingBar.size.width, height: FloatingBar.size.height)
-        // The box is centred on screen — `.position` below pins it to the panel's
-        // midpoint — so both its edges travel outward equally and the pointer that
-        // opened it ends up in the middle of what opened.
         //
-        // The *content* rides the leading edge rather than being centred in the box.
-        // That is the difference between one motion and two: centred content left
-        // only the ring free to slide, so a symmetric box had a single element
-        // tracking leftward across it, and the eye read the whole thing as opening
-        // to the left. Pinned to the edge, ring and readout and controls all travel
-        // together as one block that the opening carries with it.
-        .frame(width: pillWidth, height: FloatingBar.size.height, alignment: .leading)
+        // Spacing is per-item rather than one `spacing:` on the stack, and there is no
+        // `Spacer`, because the row has to add up to `Metrics.width` exactly. Any slack
+        // at all would be distributed by the layout, and then the position of every
+        // control would depend on the box width instead of being fixed by it.
+        HStack(spacing: 0) {
+            phaseRing
+
+            readout
+                .padding(.leading, M.ringGap)
+
+            // Present in both forms, and in the same place in both. Drawn last in
+            // z-order so the secondaries pass underneath it rather than over.
+            primaryControl
+                .padding(.leading, M.readoutGap)
+                .zIndex(2)
+
+            // The only thing the collapse hides. Outside the clip once it has parked,
+            // so the opacity is for the moment in between — when the box is still wide
+            // enough to show them but the bar is on its way to not having them.
+            Group {
+                secondaryControl("forward.end.fill", label: "Skip", index: 0) {
+                    controller.skip()
+                }
+                .zIndex(1)
+
+                secondaryControl("arrow.counterclockwise", label: "Reset", index: 1) {
+                    controller.reset()
+                }
+                .zIndex(0)
+            }
+            .padding(.leading, M.controlGap)
+            // Its own scope, deliberately, and the only nested one left. The outer
+            // animation on the pill governs the box; this governs what comes out of
+            // it. They are the same spring, so the nesting no longer decides anything
+            // — see `reveal`.
+            .animation(reveal, value: isCompact)
+        }
+        .padding(.leading, M.leading)
+        .padding(.trailing, M.trailing)
+        .frame(width: M.width, height: M.height)
+        // Both forms share their leading edge, and that is the whole point of this
+        // arrangement: the ring, the countdown and the play button do not move at all
+        // across a morph. Only the trailing edge travels, and only reset and skip
+        // travel with it.
+        //
+        // It used to be centred, with the content pinned to the box's leading edge —
+        // so the box grew both ways by half and dragged the entire contents sideways
+        // with it. Every element the eye was already tracking slid 51pt on a collapse,
+        // including the play button, for no reason other than that the box was
+        // symmetric. Nothing about a reveal requires the thing already revealed to
+        // move.
+        .frame(width: pillWidth, height: M.height, alignment: .leading)
         // The wash goes on *before* the clip rather than carrying a clip of its own.
         //
         // It still ends up cut to the pill — one `clipShape` below now takes the
@@ -433,6 +569,15 @@ struct FloatingBarView: View {
         // turns the width change into a reveal.
         .clipShape(shape)
         .glassPanel(in: shape)
+        // Holds the leading edge still while the box narrows around its own centre.
+        //
+        // An offset rather than moving `.position`, which is where this belongs on
+        // paper: `.position` is a layout modifier, so animating it re-runs layout for
+        // the whole subtree every frame, and this file has already been round that
+        // loop once with the ring's `trim`. An offset is a render-time transform, and
+        // it interpolates on the same curve as the width it is derived from, so the
+        // two stay exactly in step and the edge does not wobble.
+        .offset(x: (pillWidth - M.width) / 2)
         .opacity(hoverFlourish && !hovering ? 0.92 : 1)
         .scaleEffect(hoverFlourish && !hovering ? 0.99 : 1.0, anchor: .center)
         .onHover { presentation.setHovering($0) }
@@ -502,14 +647,41 @@ struct FloatingBarView: View {
         }
         // The layout size is fixed in both forms; the compact growth is a scale on
         // top, applied at the call site so nothing here re-lays out.
-        .frame(width: Self.ringSize, height: Self.ringSize)
+        .frame(width: M.ring, height: M.ring)
         .animation(.smooth(duration: 0.4), value: controller.phase)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 1.9).repeatForever(autoreverses: true)) {
-                pulse = true
-            }
-        }
+        .onAppear(perform: reconcileBreathing)
+        .onChange(of: reduceMotion) { _, _ in reconcileBreathing() }
         .accessibilityLabel("\(controller.phase.title), \(controller.displayTime) remaining")
+    }
+
+    /// Starts or stops the glyph's breath, and is the reason it is 1.4s rather than
+    /// the 1.9s it was.
+    ///
+    /// Two things were wrong. It ran under Reduce Motion, which a `repeatForever` on a
+    /// window that sits over everything all day is the worst possible thing to do —
+    /// this is the one animation with no end, so it is the one the setting most exists
+    /// for. And at 1.9s per half cycle it oscillated once every 3.8 seconds, which is
+    /// inside the band Apple explicitly warns off (around one cycle per five seconds,
+    /// the range that reads as pulsing rather than as breathing and is a genuine
+    /// trigger for motion sensitivity). Shortening it moves away from that band;
+    /// lengthening it would have moved in.
+    ///
+    /// Restarting on the setting changing rather than only on appear, because the pill
+    /// is never torn down: it is created once at launch and lives until the app quits,
+    /// so an `onAppear`-only check would be answering a question the user asked months
+    /// ago.
+    private func reconcileBreathing() {
+        guard !reduceMotion else {
+            // No animation on the way out either — under Reduce Motion the glyph should
+            // simply be at rest, not ease its way there.
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { pulse = false }
+            return
+        }
+        withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+            pulse = true
+        }
     }
 
     private var readout: some View {
@@ -552,6 +724,13 @@ struct FloatingBarView: View {
                 // one-line change back to `.smooth(duration: 0.28)`, at that price.
                 .contentTransition(.numericText(countsDown: true))
                 .animation(nil, value: controller.remainingSeconds)
+                // Tracking is a function of size, not a constant, and monospaced digits
+                // are set on a fixed advance that is generous by design — it has to fit
+                // the widest glyph in the face. At 18pt that reads loose against the
+                // 8pt label underneath it, which needs the opposite correction and gets
+                // it. Small enough not to touch the alignment of the digits, since the
+                // advance itself is unchanged.
+                .tracking(-0.3)
                 .foregroundStyle(controller.isRunning ? .primary : .secondary)
                 .fixedSize()
 
@@ -565,89 +744,75 @@ struct FloatingBarView: View {
         .padding(.bottom, 3)
     }
 
-    /// The secondary actions slide out from underneath the play/pause button and
-    /// tuck back under it on exit — `zIndex` keeps them behind it the whole way, so
-    /// they read as emerging from the primary control rather than shrinking into a
-    /// dot beside it.
-    ///
-    /// The secondary actions slide out from underneath the play/pause button and
-    /// tuck back under it on exit — `zIndex` keeps them behind it the whole way, so
-    /// they read as emerging from the primary control rather than shrinking into a
-    /// dot beside it.
-    ///
-    /// Always mounted and moved by an offset, never inserted and removed. That is
-    /// what makes the whole bar interruptible: a transition runs on identity change
-    /// and has no velocity, so reversing one halfway restarts it from the far end
-    /// instead of turning it around. With no debounce left to keep a flicked cursor
-    /// away from them, they had to become transforms like everything else.
-    ///
-    /// Which is why there is no `glassGroup` here any more. A `GlassEffectContainer`
-    /// harvests the shapes tagged for it and draws them itself, so an `.opacity`
-    /// applied outside the glass effect never reaches them — hiding these while
-    /// grouped left both glyphs stacked on the play button with its tint disc reduced
-    /// to a ring. The container existed to make insertion look good, and there is no
-    /// insertion any more; the cost is two glass circles that no longer blend into
-    /// their neighbour.
-    private var controls: some View {
-        HStack(spacing: 5) {
-            secondary("arrow.counterclockwise", label: "Reset", id: "reset", slots: 2) {
-                controller.reset()
-            }
-            .zIndex(0)
-
-            secondary("forward.end.fill", label: "Skip", id: "skip", slots: 1) {
-                controller.skip()
-            }
-            .zIndex(1)
-
-            control(
-                controller.isRunning ? "pause.fill" : "play.fill",
-                label: controller.isRunning ? "Pause" : "Start",
-                id: "toggle",
-                tint: tint,
-                size: 28
-            ) { controller.toggle() }
-            .zIndex(2)
-        }
-        // The same spring as the box, so hover drives one motion rather than two of
-        // different lengths.
-        .animation(morph, value: hovering)
+    /// Play/pause. The one control that is in both forms.
+    private var primaryControl: some View {
+        control(
+            controller.isRunning ? "pause.fill" : "play.fill",
+            label: controller.isRunning ? "Pause" : "Start",
+            tint: tint,
+            size: M.primary
+        ) { controller.toggle() }
     }
-
-    /// One slot along the control row: a 26pt button plus the 5pt gap.
-    ///
-    /// Tucking by exact multiples of this parks a secondary control under the primary
-    /// one rather than merely near it, which is what sells them as emerging from
-    /// underneath it.
-    private static let controlSlot: CGFloat = 31
 
     /// A secondary action, parked under the play button until the pointer arrives.
-    private func secondary(
+    ///
+    /// It slides out from underneath the play button and tucks back under it on exit —
+    /// `zIndex` at the call site keeps it behind the whole way, so it reads as emerging
+    /// from the primary control rather than as growing out of nothing beside it. It now
+    /// travels the same direction the box opens, which it did not before: the tuck used
+    /// to push these *outward* past the play button, so on a collapse the box withdrew
+    /// leftward while its contents fled right.
+    ///
+    /// Always mounted and moved by an offset, never inserted and removed. That is what
+    /// makes the whole bar interruptible: a transition runs on identity change and has
+    /// no velocity, so reversing one halfway restarts it from the far end instead of
+    /// turning it around. With no hover debounce left to keep a flicked cursor away
+    /// from them, they had to become transforms like everything else.
+    ///
+    /// Which is also why there is no `glassGroup` here. A `GlassEffectContainer`
+    /// harvests the shapes tagged for it and draws them itself, so an `.opacity`
+    /// applied outside the glass effect never reaches them — hiding these while grouped
+    /// left both glyphs stacked on the play button with its tint disc reduced to a
+    /// ring. The container existed to make insertion look good, and there is no
+    /// insertion any more.
+    /// Out whenever the box is open, and only then — keyed on the form the bar is in
+    /// rather than on the pointer.
+    ///
+    /// These are the same thing most of the time, because hover is what usually opens
+    /// the box. They come apart in the three cases where something *else* holds it
+    /// open: a stopped timer, a phase change nobody has looked at yet, and VoiceOver.
+    /// Keyed on the pointer, those three produced an open box with the controls still
+    /// parked — 74pt of empty glass past the play button, which is the whole trailing
+    /// third of the pill reading as an unfinished layout. Keyed on the form, the box is
+    /// wide exactly when there is something in the width, and the gap cannot occur.
+    ///
+    /// It also closes a hole the policy only looked like it had covered. VoiceOver
+    /// vetoes the compact form so that "the controls stay reachable" — but reachable is
+    /// hit testing and accessibility, and both of those were keyed on hover, so with
+    /// VoiceOver running and the cursor elsewhere the bar opened and then hid reset and
+    /// skip from the screen reader it had opened for.
+    private var controlsRevealed: Bool { !isCompact }
+
+    private func secondaryControl(
         _ symbol: String,
         label: String,
-        id: String,
-        slots: CGFloat,
+        index: Int,
         action: @escaping () -> Void
     ) -> some View {
-        control(symbol, label: label, id: id, action: action)
-            .offset(x: hovering ? 0 : Self.controlSlot * slots)
-            .opacity(hovering ? 1 : 0)
+        control(symbol, label: label, size: M.secondary, action: action)
+            .offset(x: controlsRevealed ? 0 : M.tuck(index))
+            .opacity(controlsRevealed ? 1 : 0)
             // Invisible is not absent: parked under the play button at zero opacity
             // these would still take the click, and VoiceOver would still offer them.
-            .allowsHitTesting(hovering)
-            .accessibilityHidden(!hovering)
+            .allowsHitTesting(controlsRevealed)
+            .accessibilityHidden(!controlsRevealed)
     }
 
-
-    /// Secondary actions get a glass circle; the primary one gets a solid tinted
-    /// disc. Glass on glass is nearly invisible — the play button was reading as a
-    /// bare triangle floating on the pill, with nothing to say it was a target.
     private func control(
         _ symbol: String,
         label: String,
-        id: String,
         tint: Color? = nil,
-        size: CGFloat = 26,
+        size: CGFloat,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -658,12 +823,24 @@ struct FloatingBarView: View {
                 .modifier(ControlSurface(tint: tint, size: size))
         }
         .buttonStyle(AdaptiveGlassButtonStyle())
-        .glassMorphID(id, in: glass)
         .accessibilityLabel(label)
     }
 }
 
 /// The circular surface behind a pill control.
+///
+/// The primary one gets a solid tinted disc, because glass on glass is nearly
+/// invisible — the play button was reading as a bare triangle floating on the pill,
+/// with nothing to say it was a target.
+///
+/// The secondaries had the same problem and a worse fix: they were glass circles on the
+/// pill's own glass, which is the one material combination that is actually ruled out
+/// rather than merely unwise. Two translucent layers each sampling what is behind them
+/// leaves neither with an edge, so a stack of them reads as a smudge on the pill
+/// instead of as two buttons — and it was costing a second and third glass rasterisation
+/// on a surface that already has one. They are opaque wells now: a faint fill and a
+/// hairline, which is what a recessed control looks like on a material rather than what
+/// a second pane of glass looks like on top of one.
 private struct ControlSurface: ViewModifier {
     let tint: Color?
     let size: CGFloat
@@ -685,7 +862,20 @@ private struct ControlSurface: ViewModifier {
                 }
                 .contentShape(Circle())
         } else {
-            content.glassControl(size: size)
+            content
+                .frame(width: size, height: size)
+                .background {
+                    Circle()
+                        .fill(.primary.opacity(0.07))
+                        .overlay {
+                            // A bright hairline rather than a border: it is the light
+                            // the pill's own top edge catches, continued around a
+                            // smaller shape, which is what puts these on the material
+                            // instead of in front of it.
+                            Circle().stroke(.primary.opacity(0.10), lineWidth: 0.5)
+                        }
+                }
+                .contentShape(Circle())
         }
     }
 }
@@ -711,8 +901,9 @@ final class FloatingBarHostingView<Content: View>: NSHostingView<Content> {
         // Falls back to the full pill rather than to nothing: a missing geometry must
         // degrade to the old behaviour, not to a bar that ignores every click.
         //
-        // Both forms are centred in the panel with equal margins, so their rects are
-        // the same whether the view is flipped or not.
+        // Both forms are the pill's full height and centred vertically in the panel, so
+        // their rects are the same whether the view is flipped or not. Only their width
+        // differs, and x is unaffected either way.
         let target = geometry?.hitFrame ?? FloatingBar.pillFrame
         guard target.contains(local) else { return nil }
         return super.hitTest(point)
