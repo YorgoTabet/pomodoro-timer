@@ -120,13 +120,28 @@ public extension View {
 }
 
 /// The Liquid Glass button style, degrading to a plain bordered button.
+///
+/// The press is a scale *and* a dim, not a dim alone. Dimming on its own says the
+/// control noticed; giving under the finger says it is a physical thing being pressed,
+/// and it is the difference between a button that acknowledges a click and one that
+/// feels connected to it. 0.94 is roughly 1.6pt on a 26pt control — small, but well
+/// above the point where a change stops being visible.
+///
+/// It fires on press rather than on release, which `ButtonStyle` gives for free and is
+/// the whole reason to use one: feedback that waits for the mouse-up arrives after the
+/// user has already stopped asking a question.
 public struct AdaptiveGlassButtonStyle: ButtonStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .opacity(configuration.isPressed ? 0.55 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.94 : 1, anchor: .center)
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            // A stronger ease-out than the built-in, which is weak enough that a
+            // 130ms move reads as linear. Nothing here eases *in*: the moment the
+            // user is watching is the first frame after the click, and starting slow
+            // spends it.
+            .animation(.timingCurve(0.23, 1, 0.32, 1, duration: 0.13), value: configuration.isPressed)
     }
 }
 
