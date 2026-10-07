@@ -217,9 +217,9 @@ public enum NinjaPerformance {
         KeyframeTrack(\.shuriken) {
             LinearKeyframe(0, duration: 0.7)
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(1130, duration: 0.519)   // spins three turns in flight
+            LinearKeyframe(800, duration: 0.25)   // spins two turns in flight, gone by 0.95s
             LinearKeyframe(0, duration: 0.001)   // reset while invisible
-            Hold.moving(0, duration: 0.979, drift: 2)
+            Hold.moving(0, duration: 1.248, drift: 2)
         }
         KeyframeTrack(\.shurikenOpacity) {
             LinearKeyframe(1, duration: 0.7)
@@ -229,20 +229,19 @@ public enum NinjaPerformance {
         KeyframeTrack(\.shurikenFlyOpacity) {
             LinearKeyframe(0, duration: 0.7)
             LinearKeyframe(1, duration: 0.001)
-            LinearKeyframe(1, duration: 0.399)
-            LinearKeyframe(0, duration: 0.12)
-            LinearKeyframe(0, duration: 0.98)
+            LinearKeyframe(1, duration: 0.179)
+            LinearKeyframe(0, duration: 0.07)   // fades as it leaves the frame
+            LinearKeyframe(0, duration: 1.25)
         }
         KeyframeTrack(\.shurikenFlyX) {
             LinearKeyframe(-59.8, duration: 0.7)
-            CubicKeyframe(-139.8, duration: 0.5, startVelocity: -380, endVelocity: 0)   // leaves the hand fast and slows, 80 units
-            LinearKeyframe(-139.8, duration: 1)
+            LinearKeyframe(-169.8, duration: 0.25)   // constant speed, 110 units in 0.25s, no slowing
+            LinearKeyframe(-169.8, duration: 1.25)
         }
         KeyframeTrack(\.shurikenFlyY) {
             LinearKeyframe(-58.5, duration: 0.7)
-            CubicKeyframe(-92.5, duration: 0.22, startVelocity: -260, endVelocity: 0)   // arcs up
-            CubicKeyframe(-82.5, duration: 0.28, startVelocity: 0)   // and starts to fall
-            LinearKeyframe(-82.5, duration: 1)
+            LinearKeyframe(-104.5, duration: 0.25)   // straight line up and away at constant speed
+            LinearKeyframe(-104.5, duration: 1.25)
         }
         KeyframeTrack(\.ninjato) {
             LinearKeyframe(0, duration: 0.001)
@@ -649,12 +648,13 @@ public enum NinjaPerformance {
     static var backflipBody: some Keyframes<NinjaPose> {
         KeyframeTrack(\.emergence) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.549)
-            CubicKeyframe(-72, duration: 0.4, endVelocity: 0)   // launch
-            CubicKeyframe(0, duration: 0.4, startVelocity: 0)   // lands
+            LinearKeyframe(0, duration: 0.679)
+            CubicKeyframe(-96, duration: 0.33, endVelocity: 0)   // launch, eases out going up
+            CubicKeyframe(0, duration: 0.34, startVelocity: 0)   // eases in coming down
             LinearKeyframe(0, duration: 1.64)
             LinearKeyframe(200, duration: 0.01)
         }
+
         KeyframeTrack(\.figureOpacity) {
             LinearKeyframe(0, duration: 0.001)
             LinearKeyframe(0, duration: 0.099)
@@ -668,9 +668,10 @@ public enum NinjaPerformance {
             LinearKeyframe(0.9, duration: 0.119)
             CubicKeyframe(1.03, duration: 0.18)
             CubicKeyframe(1, duration: 0.1)
+            LinearKeyframe(1, duration: 0.10)
             CubicKeyframe(1.05, duration: 0.12)   // crouch
             CubicKeyframe(0.95, duration: 0.12)   // stretch off the ground
-            CubicKeyframe(1, duration: 0.66)
+            CubicKeyframe(1, duration: 0.56)
             CubicKeyframe(1.08, duration: 0.08)   // landing squash
             SpringKeyframe(1, duration: 0.24, spring: .init(response: 0.3, dampingRatio: 0.5))
             Hold.moving(1, duration: 0.6, drift: 0.006)
@@ -682,9 +683,10 @@ public enum NinjaPerformance {
             LinearKeyframe(0.9, duration: 0.119)
             CubicKeyframe(1.03, duration: 0.18)
             CubicKeyframe(1, duration: 0.1)
+            LinearKeyframe(1, duration: 0.10)
             CubicKeyframe(0.9, duration: 0.12)   // deep crouch
             CubicKeyframe(1.1, duration: 0.12)   // stretch off the ground
-            CubicKeyframe(1, duration: 0.66)
+            CubicKeyframe(1, duration: 0.56)
             CubicKeyframe(0.88, duration: 0.08)   // landing squash
             SpringKeyframe(1, duration: 0.24, spring: .init(response: 0.3, dampingRatio: 0.5))
             Hold.moving(1, duration: 0.6, drift: 0.006)
@@ -693,25 +695,26 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.figureRotation) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.579)
-            CubicKeyframe(360, duration: 0.7, startVelocity: 0, endVelocity: 0)   // one eased backflip
-            Hold.moving(360, duration: 1.72, drift: 1)
+            LinearKeyframe(0, duration: 0.679)
+            CubicKeyframe(360, duration: 0.54, startVelocity: 0, endVelocity: 0)   // inverted at the apex (0.95s), done by 1.22s
+            Hold.moving(360, duration: 1.78, drift: 1)
         }
         KeyframeTrack(\.footPlant) {
             LinearKeyframe(1, duration: 0.001)
-            LinearKeyframe(1, duration: 0.579)
-            LinearKeyframe(0, duration: 0.08)   // feet leave the floor
-            LinearKeyframe(0, duration: 0.64)
+            LinearKeyframe(1, duration: 0.689)
+            LinearKeyframe(0, duration: 0.06)   // feet leave the floor
+            LinearKeyframe(0, duration: 0.55)
             LinearKeyframe(1, duration: 0.08)   // and meet it again
             LinearKeyframe(1, duration: 1.62)
         }
+
         KeyframeTrack(\.torso) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.399)
-            CubicKeyframe(-12, duration: 0.12)   // leans in to load
+            LinearKeyframe(0, duration: 0.459)
+            CubicKeyframe(-12, duration: 0.16)   // leans in to load
             CubicKeyframe(10, duration: 0.12)   // arches into the launch
-            CubicKeyframe(4, duration: 0.31)
-            CubicKeyframe(-6, duration: 0.35)
+            CubicKeyframe(4, duration: 0.26)
+            CubicKeyframe(-6, duration: 0.30)
             CubicKeyframe(-13, duration: 0.1)   // folds into the landing
             CubicKeyframe(-2, duration: 0.22)
             CubicKeyframe(-14, duration: 0.2)   // bows
@@ -721,9 +724,9 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.001)
-            CubicKeyframe(-4, duration: 0.519, startVelocity: 0)
+            CubicKeyframe(-4, duration: 0.619, startVelocity: 0)
             CubicKeyframe(6, duration: 0.12)
-            CubicKeyframe(-4, duration: 0.66)
+            CubicKeyframe(-4, duration: 0.56)
             CubicKeyframe(-6, duration: 0.1)
             CubicKeyframe(0, duration: 0.22)
             CubicKeyframe(-8, duration: 0.2)   // head follows the bow
@@ -733,11 +736,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.throwArmUpper) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.299)
-            CubicKeyframe(-34, duration: 0.22)   // arms swing back
-            CubicKeyframe(120, duration: 0.14)   // and up
-            CubicKeyframe(40, duration: 0.2)   // tuck
-            LinearKeyframe(40, duration: 0.22)
+            LinearKeyframe(0, duration: 0.419)
+            CubicKeyframe(-34, duration: 0.20)   // arms swing back
+            CubicKeyframe(120, duration: 0.12)   // and up
+            CubicKeyframe(40, duration: 0.18)   // tuck
+            LinearKeyframe(40, duration: 0.14)
             CubicKeyframe(70, duration: 0.2)
             CubicKeyframe(24, duration: 0.12)   // one hand reaches down
             CubicKeyframe(-10, duration: 0.24)
@@ -748,11 +751,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.throwForearm) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.299)
-            CubicKeyframe(-30, duration: 0.22)
-            CubicKeyframe(10, duration: 0.14)
-            CubicKeyframe(-70, duration: 0.2)
-            LinearKeyframe(-70, duration: 0.22)
+            LinearKeyframe(0, duration: 0.419)
+            CubicKeyframe(-30, duration: 0.20)
+            CubicKeyframe(10, duration: 0.12)
+            CubicKeyframe(-70, duration: 0.18)
+            LinearKeyframe(-70, duration: 0.14)
             CubicKeyframe(0, duration: 0.2)
             CubicKeyframe(18, duration: 0.12)
             CubicKeyframe(-5, duration: 0.24)
@@ -763,11 +766,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.offArmUpper) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.299)
-            CubicKeyframe(-38, duration: 0.22)
-            CubicKeyframe(-120, duration: 0.14)
-            CubicKeyframe(-30, duration: 0.2)
-            LinearKeyframe(-30, duration: 0.22)
+            LinearKeyframe(0, duration: 0.419)
+            CubicKeyframe(-38, duration: 0.20)
+            CubicKeyframe(-120, duration: 0.12)
+            CubicKeyframe(-30, duration: 0.18)
+            LinearKeyframe(-30, duration: 0.14)
             CubicKeyframe(-62, duration: 0.2)
             CubicKeyframe(-22, duration: 0.12)
             CubicKeyframe(6, duration: 0.24)
@@ -778,11 +781,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.offForearm) {
             LinearKeyframe(10, duration: 0.001)
-            LinearKeyframe(10, duration: 0.299)
-            CubicKeyframe(20, duration: 0.22)
-            CubicKeyframe(-20, duration: 0.14)
-            CubicKeyframe(75, duration: 0.2)
-            LinearKeyframe(75, duration: 0.22)
+            LinearKeyframe(10, duration: 0.419)
+            CubicKeyframe(20, duration: 0.20)
+            CubicKeyframe(-20, duration: 0.12)
+            CubicKeyframe(75, duration: 0.18)
+            LinearKeyframe(75, duration: 0.14)
             CubicKeyframe(10, duration: 0.2)
             CubicKeyframe(30, duration: 0.12)
             CubicKeyframe(12, duration: 0.24)
@@ -793,11 +796,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.legFrontThigh) {
             LinearKeyframe(2, duration: 0.001)
-            LinearKeyframe(2, duration: 0.299)
-            CubicKeyframe(38, duration: 0.22)   // deep crouch
-            CubicKeyframe(-4, duration: 0.12)   // drives up
+            LinearKeyframe(2, duration: 0.419)
+            CubicKeyframe(38, duration: 0.20)   // deep crouch, 0.42 to 0.62s
+            CubicKeyframe(-4, duration: 0.10)   // drives up
             CubicKeyframe(85, duration: 0.18)   // tucks
-            LinearKeyframe(85, duration: 0.26)
+            LinearKeyframe(85, duration: 0.18)
             CubicKeyframe(30, duration: 0.2)   // opens for the floor
             CubicKeyframe(52, duration: 0.12)   // landing crouch
             CubicKeyframe(2, duration: 0.3)   // stands
@@ -805,11 +808,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.legFrontShin) {
             LinearKeyframe(-4, duration: 0.001)
-            LinearKeyframe(-4, duration: 0.299)
-            CubicKeyframe(-70, duration: 0.22)
-            CubicKeyframe(10, duration: 0.12)
+            LinearKeyframe(-4, duration: 0.419)
+            CubicKeyframe(-70, duration: 0.20)
+            CubicKeyframe(10, duration: 0.10)
             CubicKeyframe(-96, duration: 0.18)
-            LinearKeyframe(-96, duration: 0.26)
+            LinearKeyframe(-96, duration: 0.18)
             CubicKeyframe(-48, duration: 0.2)
             CubicKeyframe(-95, duration: 0.12)
             CubicKeyframe(-4, duration: 0.3)
@@ -817,11 +820,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.legBackThigh) {
             LinearKeyframe(0, duration: 0.001)
-            LinearKeyframe(0, duration: 0.299)
-            CubicKeyframe(26, duration: 0.22)
-            CubicKeyframe(-4, duration: 0.12)
-            CubicKeyframe(80, duration: 0.2)
-            LinearKeyframe(80, duration: 0.24)
+            LinearKeyframe(0, duration: 0.419)
+            CubicKeyframe(26, duration: 0.20)
+            CubicKeyframe(-4, duration: 0.10)
+            CubicKeyframe(80, duration: 0.18)
+            LinearKeyframe(80, duration: 0.16)
             CubicKeyframe(24, duration: 0.2)
             CubicKeyframe(34, duration: 0.12)
             CubicKeyframe(0, duration: 0.3)
@@ -829,11 +832,11 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.legBackShin) {
             LinearKeyframe(-2, duration: 0.001)
-            LinearKeyframe(-2, duration: 0.299)
-            CubicKeyframe(-81.4, duration: 0.22)
-            CubicKeyframe(-2, duration: 0.12)
-            CubicKeyframe(-115, duration: 0.2)
-            LinearKeyframe(-115, duration: 0.24)
+            LinearKeyframe(-2, duration: 0.419)
+            CubicKeyframe(-81.4, duration: 0.20)
+            CubicKeyframe(-2, duration: 0.10)
+            CubicKeyframe(-115, duration: 0.18)
+            LinearKeyframe(-115, duration: 0.16)
             CubicKeyframe(-50, duration: 0.2)
             CubicKeyframe(-104.6, duration: 0.12)
             CubicKeyframe(-8, duration: 0.3)
@@ -881,30 +884,30 @@ public enum NinjaPerformance {
         }
         KeyframeTrack(\.ribbonNear) {
             LinearKeyframe(-20, duration: 0.001)
-            SpringKeyframe(0, duration: 0.299, spring: .init(response: 0.5, dampingRatio: 0.4), startVelocity: 0)
-            CubicKeyframe(-25, duration: 0.25)
+            SpringKeyframe(0, duration: 0.399, spring: .init(response: 0.5, dampingRatio: 0.4), startVelocity: 0)
+            CubicKeyframe(-25, duration: 0.30)
             CubicKeyframe(58, duration: 0.25)   // stream behind the spin
             CubicKeyframe(-30, duration: 0.35)
             SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.42, dampingRatio: 0.3))
-            Hold.moving(0, duration: 1.45, drift: 1.5)
+            Hold.moving(0, duration: 1.30, drift: 1.5)
         }
         KeyframeTrack(\.ribbonFar) {
             LinearKeyframe(-14, duration: 0.001)
-            SpringKeyframe(0, duration: 0.339, spring: .init(response: 0.52, dampingRatio: 0.4), startVelocity: 0)
-            CubicKeyframe(-18, duration: 0.24)
+            SpringKeyframe(0, duration: 0.419, spring: .init(response: 0.52, dampingRatio: 0.4), startVelocity: 0)
+            CubicKeyframe(-18, duration: 0.30)
             CubicKeyframe(48, duration: 0.26)
             CubicKeyframe(-24, duration: 0.36)
             SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.46, dampingRatio: 0.28))
-            Hold.moving(0, duration: 1.4, drift: 1.5)
+            Hold.moving(0, duration: 1.26, drift: 1.5)
         }
         KeyframeTrack(\.sashTail) {
             LinearKeyframe(-10, duration: 0.001)
-            CubicKeyframe(0, duration: 0.299, startVelocity: 0)
-            CubicKeyframe(-14, duration: 0.28)
+            CubicKeyframe(0, duration: 0.399, startVelocity: 0)
+            CubicKeyframe(-14, duration: 0.33)
             CubicKeyframe(42, duration: 0.26)
             CubicKeyframe(-18, duration: 0.36)
             SpringKeyframe(0, duration: 0.42, spring: .init(response: 0.52, dampingRatio: 0.32))
-            Hold.moving(0, duration: 1.38, drift: 1.2)
+            Hold.moving(0, duration: 1.23, drift: 1.2)
         }
     }
 
