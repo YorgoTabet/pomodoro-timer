@@ -1,49 +1,116 @@
+<div align="center">
+
+<img src="docs/images/icon.png" width="112" alt="Pomodoro app icon">
+
 # Pomodoro
 
-A menu bar pomodoro timer for macOS, with a floating glass bar and a small cast of
-characters who turn up when a session ends.
+**A menu bar pomodoro timer for macOS, with a floating glass bar<br>and a small cast of characters who show up when a session ends.**
 
-No Dock icon, no window to manage. The countdown lives in the menu bar; a floating
-pill sits wherever you drop it and can shrink to a ring while you work.
+[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111111?style=flat-square&logo=apple&logoColor=white)](#requirements)
+[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?style=flat-square&logo=swift&logoColor=white)](https://www.swift.org)
+[![SwiftUI](https://img.shields.io/badge/SwiftUI-native-0A84FF?style=flat-square)](https://developer.apple.com/xcode/swiftui/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-3DA639?style=flat-square)](LICENSE)
 
-## What it does
+[Install](#install) · [Features](#features) · [The cast](#the-cast) · [Build from source](#build-from-source) · [RigStudio](#rigstudio)
 
-- **The cycle.** Focus, short break, long break, with the long break arriving every
-  *n* pomodoros. Every duration and the cycle length are adjustable (1–240 minutes).
-  Breaks and the next focus session can each auto-start, independently.
-- **The menu bar.** A live countdown with start/pause, skip and reset, plus keyboard
-  equivalents.
-- **The floating bar.** A draggable pill showing a progress ring, the countdown and
-  the phase, with play/pause always available and reset and skip on hover. It can
-  collapse to a compact form while a timer runs and expand again when you approach
-  it or when the phase changes.
-- **Characters.** A samurai, a ninja, a rabbit-suit guy, an anime girl and a general.
-  One pops out from behind the bar when the phase changes, does a short animated
-  move, and leaves. Purely decorative — the notification and chime do the real work.
-- **Music.** Pauses Music.app or Spotify when focus ends and resumes when it starts
-  again. It never guesses: playback is only started when a player can be seen sitting
-  paused, or when this app is the one that paused it.
-- **Alerts.** A notification banner and a system chime at each transition, with
-  separate sounds for focus and break, and a volume control.
-- **A desktop widget.** Small and medium sizes, with start/pause and skip
-  buttons wired through App Intents.
-- **Stats.** Completed pomodoros and focus time per day, kept in a local JSON file.
-  Nothing leaves your machine.
+<br>
 
-## Requirements
+<img src="docs/images/hero.png" width="760" alt="The floating Pomodoro bar with the samurai raising his sword">
+
+</div>
+
+<br>
+
+No Dock icon and no window to manage. The countdown lives in the menu bar, and a floating pill sits wherever you drop it. When a phase changes, a character pops out from behind the pill, does one short move, and goes back.
+
+## Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### ⏱&nbsp; The cycle
+Focus, short break and long break, with the long break every *n* pomodoros. Every duration (1 to 240 minutes) and the cycle length can be changed. Breaks and the next focus session can each start on their own.
+
+</td>
+<td width="50%" valign="top">
+
+### 🫧&nbsp; The floating bar
+A draggable glass pill with a progress ring, the countdown and the phase. Play and pause are always there, with reset and skip on hover. It can shrink while a timer runs and opens again when you come near it.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🎭&nbsp; Five characters
+A samurai, a ninja, a man in a rabbit suit, a general and Power. Each has its own move for focus start, break start and long break. They are decoration; the notification and the chime do the real work.
+
+</td>
+<td valign="top">
+
+### 🎵&nbsp; Music that follows focus
+Pauses Music or Spotify when focus ends and resumes it when focus starts again. It never guesses: it only presses play on a player it can see paused, or one it paused itself.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🔔&nbsp; Alerts
+A notification banner and a system chime at each change, with separate sounds for focus and break and a volume control.
+
+</td>
+<td valign="top">
+
+### 📊&nbsp; Widget and stats
+A desktop widget in small and medium sizes, with start, pause and skip buttons through App Intents. Daily pomodoros and focus time are kept in a local JSON file. Nothing leaves your Mac.
+
+</td>
+</tr>
+</table>
+
+## The cast
+
+Each character has three moves. Here is one move from each, recorded from the real app.
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/images/samurai-longBreak.gif" alt="Samurai victory cry"><br><b>Samurai</b><br><sub>Victory cry on a long break</sub></td>
+<td align="center" width="33%"><img src="docs/images/ninja-focusStart.gif" alt="Ninja throwing a shuriken"><br><b>Ninja</b><br><sub>Appears, throws, vanishes</sub></td>
+<td align="center" width="33%"><img src="docs/images/rabbit-longBreak.gif" alt="Rabbit suit guy spinning"><br><b>Rabbit Suit Guy</b><br><sub>Mascot mode, for once</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/images/general-focusStart.gif" alt="The General inspecting"><br><b>The General</b><br><sub>Inspection before focus</sub></td>
+<td align="center"><img src="docs/images/power-longBreak.gif" alt="Power laughing in her signature pose"><br><b>Power</b><br><sub>Hey hey hey!</sub></td>
+<td align="center" valign="middle"><sub>Pick one, or none,<br>in Settings.</sub></td>
+</tr>
+</table>
+
+| Character | Focus starts | Break starts | Long break |
+| --- | --- | --- | --- |
+| **Samurai** | One clean cut | Rests on his blade and dozes | Jumps with the blade raised |
+| **Ninja** | Smoke in, shuriken, smoke out | Naps on the edge of the bar | Backflip and a bow |
+| **Rabbit Suit Guy** | A very reluctant salute | One hop of mandatory fun | Commits to a spin and a ta-da |
+| **The General** | Taps his stick, points, salutes | At ease, peeks over his shades | Two-step parade and a raised stick |
+| **Power** | "Grovel, human!" | A huge yawn, then a nap on the bar | Her signature laughing pose |
+
+## Install
+
+### Requirements
 
 - macOS 14 or later
-- A Swift 6 toolchain (Xcode 16 or later)
+- Xcode 16 or later (for the Swift 6 toolchain)
 
-## Build and install
+### Build and install
 
 ```bash
+git clone https://github.com/YorgoTabet/pomodoro-timer.git
+cd pomodoro-timer
 ./Scripts/build.sh
 ```
 
-This builds the app and the widget in release mode, assembles them into
-`Pomodoro.app`, generates the icon, signs the bundle, and copies it to
-`/Applications` (or `~/Applications` if the first is not writable).
+This builds the app and the widget in release mode, puts them together as `Pomodoro.app`, draws the icon, signs the bundle, and copies it to `/Applications` (or `~/Applications` if the first is not writable). Open it from Launchpad or Spotlight, and look for the timer in your menu bar.
 
 To build the bundle without installing it:
 
@@ -51,14 +118,12 @@ To build the bundle without installing it:
 ./Scripts/build.sh --no-install
 ```
 
-### A note on signing
+<details>
+<summary><b>Permissions keep resetting after a rebuild?</b> Read this about signing.</summary>
 
-The build script looks for a real code signing certificate and falls back to an
-ad-hoc signature if it can't find one. Ad-hoc builds run fine, but macOS ties the
-permissions you grant — Accessibility, Notifications, Automation — to the app's
-signature, and an ad-hoc signature changes on every build. The practical effect is
-that media keys, notifications and Music control silently stop working after each
-rebuild until you re-grant them.
+<br>
+
+The build script looks for a real code signing certificate and falls back to an ad-hoc signature if it can't find one. Ad-hoc builds run fine, but macOS ties the permissions you grant (Accessibility, Notifications, Automation) to the app's signature, and an ad-hoc signature changes on every build. So media keys, notifications and Music control quietly stop working after each rebuild until you grant them again.
 
 If you have a certificate, point the script at it:
 
@@ -66,54 +131,58 @@ If you have a certificate, point the script at it:
 CODESIGN_IDENTITY="Apple Development: you@example.com (XXXXXXXXXX)" ./Scripts/build.sh
 ```
 
-The app is deliberately not sandboxed. Controlling Music and Spotify over AppleScript
-and posting media keys are both blocked inside the sandbox.
+The app is not sandboxed on purpose. Controlling Music and Spotify over AppleScript and sending media keys are both blocked inside the sandbox.
 
-## Run from source
+</details>
+
+### First run
+
+1. Click the timer in the menu bar and press **Start**.
+2. Allow notifications when macOS asks.
+3. Drag the floating bar wherever you like. It remembers the spot.
+4. Open **Settings** from the menu to set durations, sounds, music control and your character.
+
+## Build from source
 
 ```bash
-swift run Pomodoro
+swift run Pomodoro    # run without installing
+swift test            # run the tests
 ```
 
-Useful for iterating on the UI. Notification banners are disabled outside a real
-`.app` bundle — the API traps otherwise — so you get the chime and nothing else.
-
-## Tests
-
-```bash
-swift test
-```
+`swift run` is handy for working on the UI. Notification banners are off outside a real `.app` bundle (the API crashes otherwise), so you get the chime and nothing else.
 
 ## RigStudio
 
-The characters are drawn from vector paths and animated by a small joint rig. Judging
-that by reading keyframes doesn't work, so the animation gets its own workbench, built
-as a separate executable that never ships inside the app:
+The characters are drawn from vector paths and moved by a small joint rig. Judging that by reading keyframes doesn't work, so the animation has its own workbench. It is a separate program and never ships inside the app.
 
 ```bash
 swift run RigStudio
 ```
 
-It also runs headless:
+It plays every move with a scrubbable timeline, onion skin, joint pivots and live angles. It also runs without a window:
 
 | Command | What it does |
 | --- | --- |
-| `swift run RigStudio --filmstrip <dir>` | Renders a contact sheet per performance, so a move can be inspected frame by frame without a display |
-| `swift run RigStudio --proportions <dir>` | Sweeps each of the anime girl's proportion dials across its range, so a value can be judged by eye instead of from its number |
-| `swift run RigStudio --audit` | Reports joints a performance never moves, and joints that sit mathematically still for over 0.9s mid-performance — a held pose is fine, a frozen one reads as a paused video |
+| `swift run RigStudio --filmstrip <dir>` | Renders a contact sheet per character, so a move can be checked frame by frame |
+| `swift run RigStudio --proportions <dir>` | Sweeps Power's proportion dials across their range, so a value is judged by eye |
+| `swift run RigStudio --audit` | Lists joints a move never uses, and joints that freeze for over 0.9s in the middle of a move |
 
-## Layout
+## Project layout
 
 | Target | What lives there |
 | --- | --- |
-| `PomodoroCore` | The cycle rules, settings, stats, and the shared store the widget reads. No AppKit, no timers, no I/O beyond its own files |
-| `PomodoroUI` | SwiftUI shared by the app and the widget, so the floating bar and the desktop widget can't drift apart visually. Character art, the rig and the performances live here |
-| `Pomodoro` | The app itself: menu bar, floating bar, settings, notifications, music control |
-| `PomodoroWidget` | The widget extension. Built as an ordinary executable and hand-assembled into the bundle, since SwiftPM has no notion of an app extension |
-| `RigStudio` | The animation workbench described above |
+| `PomodoroCore` | The cycle rules, settings, stats and the shared store the widget reads. No AppKit and no timers |
+| `PomodoroUI` | SwiftUI shared by the app and the widget, plus the character art, the rig and the moves |
+| `Pomodoro` | The app: menu bar, floating bar, settings, notifications, music control |
+| `PomodoroWidget` | The widget extension, built as a plain executable and put into the bundle by hand, since SwiftPM has no app extensions |
+| `RigStudio` | The animation workbench |
 
 Design notes and specs are in [`docs/`](docs/).
 
+## Credits
+
+Power is a character from *Chainsaw Man* by Tatsuki Fujimoto. Her version here is fan art, is not affiliated with or endorsed by the rights holders, and is not covered by this project's license. The other characters are original.
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
