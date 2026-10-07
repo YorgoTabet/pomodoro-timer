@@ -141,21 +141,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let edge = StageEdge.resolve(
             preferred: CharacterPlan.preferredEdge(for: cue, character: settings.character),
             pill: bar.pillScreenFrameFlipped,
-            screen: flippedScreenFrame(),
+            screen: flippedScreenFrame(of: bar.screen ?? NSScreen.main),
             needed: CharacterStage.margin
         )
         bar.stage.perform(cue, character: settings.character, edge: edge)
     }
 
-    /// The main screen's visible area in top-left coordinates, matching the space
-    /// `StageEdge` reasons in.
-    private func flippedScreenFrame() -> CGRect {
-        guard let screen = NSScreen.main else { return .zero }
-        let full = screen.frame
+    /// The visible area of the screen the pill is on, in top-left coordinates,
+    /// matching the space `StageEdge` reasons in.
+    ///
+    /// It has to be the pill's own screen: measuring against `NSScreen.main` put
+    /// a pill on a second display "above the top" of the main one, so every
+    /// character was sent below the bar. Flipped against the primary display's
+    /// height, the same reference `pillScreenFrameFlipped` uses.
+    private func flippedScreenFrame(of screen: NSScreen?) -> CGRect {
+        guard let screen else { return .zero }
+        let primaryHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
         let visible = screen.visibleFrame
         return CGRect(
             x: visible.minX,
-            y: full.height - visible.maxY,
+            y: primaryHeight - visible.maxY,
             width: visible.width,
             height: visible.height
         )

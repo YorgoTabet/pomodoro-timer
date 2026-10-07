@@ -256,8 +256,12 @@ final class FloatingBar: NSPanel {
     }
 
     /// The pill's rect on screen, in top-left coordinates, for edge resolution.
+    ///
+    /// Flipped against the primary display (the one at the global origin), not
+    /// `NSScreen.main`: with two displays `main` is whichever has focus, and the
+    /// screen frame this is compared with must be flipped against the same height.
     var pillScreenFrameFlipped: CGRect {
-        let screenHeight = NSScreen.main?.frame.height ?? 0
+        let screenHeight = NSScreen.screens.first?.frame.height ?? 0
         return CGRect(
             x: pillOrigin.x,
             y: screenHeight - pillOrigin.y - Self.size.height,
