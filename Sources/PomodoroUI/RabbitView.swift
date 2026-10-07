@@ -17,13 +17,18 @@ public struct RabbitPose: Equatable, Sendable {
     public var figureScaleY: Double = 1
     /// Hops are on `figure` so they do not fight the emergence offset on `root`.
     public var figureLift: Double = 0
+    /// A turn about the vertical axis, in degrees. The figure is squeezed to
+    /// cos(angle) of its width, so 360 is one full turn and back to facing front.
+    public var figureSpin: Double = 0
 
     public var torso: Double = 0
     public var legs: Double = 0
     public var tail: Double = 0
     public var armL: Double = 0
     public var armR: Double = 0
-    /// Elbows. Positive bends the paw forward, away from the body.
+    /// Elbows. They fold one way only, 0 to 140 degrees, and never past straight.
+    /// The left forearm folds with a positive angle, the right one with a negative
+    /// angle, so on a raised arm the forearm always folds toward the head.
     public var armL_fore: Double = 0
     public var armR_fore: Double = 0
     public var zipperPull: Double = 0
@@ -40,6 +45,7 @@ public struct RabbitPose: Equatable, Sendable {
     /// The human's entire emotional range.
     public var blinkOpacity: Double = 0
     public var sighOpacity: Double = 0
+    public var smileOpacity: Double = 0
 
     public init() {}
 
@@ -69,7 +75,8 @@ public struct RabbitPose: Equatable, Sendable {
         case "alt_sigh": sighOpacity
         // The default eyes and mouth yield to their alternates.
         case "eyes_flat", "eyeDotL", "eyeDotR": 1 - blinkOpacity
-        case "mouth_flat": 1 - sighOpacity
+        case "alt_smile": smileOpacity
+        case "mouth_flat": 1 - max(sighOpacity, smileOpacity)
         default: layer.restOpacity
         }
     }
@@ -110,13 +117,13 @@ struct RabbitPartExtras: ViewModifier {
         switch part {
         case .figure:
             content
-                .scaleEffect(y: pose.figureScaleY, anchor: .bottom)
+                .scaleEffect(x: cos(pose.figureSpin * .pi / 180), y: pose.figureScaleY, anchor: .bottom)
                 .offset(y: pose.figureLift)
         case .torso:
             content.offset(x: pose.torsoSway)
         case .legs:
             // Anchored at the soles of the feet so a squash plants them.
-            content.scaleEffect(y: pose.legsScaleY, anchor: UnitPoint(x: 0.5, y: 253.5 / RabbitArt.canvas.height))
+            content.scaleEffect(y: pose.legsScaleY, anchor: UnitPoint(x: 0.5, y: 248.5 / RabbitArt.canvas.height))
         default:
             content
         }
