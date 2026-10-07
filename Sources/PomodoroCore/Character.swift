@@ -22,7 +22,7 @@ public enum PomodoroCharacter: String, Codable, Sendable, CaseIterable, Identifi
         case .samurai: "Samurai"
         case .ninja: "Ninja"
         case .rabbit: "Rabbit Suit Guy"
-        case .animeGirl: "Anime Girl"
+        case .animeGirl: "Power"
         case .general: "The General"
         }
     }

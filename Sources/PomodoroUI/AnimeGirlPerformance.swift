@@ -58,7 +58,7 @@ public enum AnimeGirlPerformance {
             CubicKeyframe(0, duration: 0.25)
             LinearKeyframe(0, duration: 0.70)
         }
-        KeyframeTrack(\.determinedOpacity) {
+        KeyframeTrack(\.shoutOpacity) {
             LinearKeyframe(0, duration: 0.30)
             LinearKeyframe(1, duration: 0.12)
             LinearKeyframe(1, duration: 1.73)
@@ -228,7 +228,7 @@ public enum AnimeGirlPerformance {
             CubicKeyframe(0.97, duration: 0.10)       // exit dip
             CubicKeyframe(1.0, duration: 0.30)
         }
-        KeyframeTrack(\.happyOpacity) {
+        KeyframeTrack(\.laughOpacity) {
             LinearKeyframe(0, duration: 0.45)
             LinearKeyframe(1, duration: 0.12)
             LinearKeyframe(1, duration: 1.86)
@@ -375,7 +375,7 @@ public enum AnimeGirlPerformance {
             CubicKeyframe(-3, duration: 0.10)         // small rise before the drop
             CubicKeyframe(200, duration: 0.40)
         }
-        KeyframeTrack(\.happyOpacity) {
+        KeyframeTrack(\.laughOpacity) {
             LinearKeyframe(0, duration: 0.30)
             LinearKeyframe(1, duration: 0.12)
             LinearKeyframe(1, duration: 2.40)

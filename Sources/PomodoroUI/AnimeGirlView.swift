@@ -2,7 +2,7 @@ import CoreGraphics
 import PomodoroCore
 import SwiftUI
 
-/// The animatable state of the anime girl's rig.
+/// The animatable state of Power's rig (the type keeps its old name).
 public struct AnimeGirlPose: Equatable, Sendable {
 
     /// Design units behind the pill edge. 200 hidden, 0 risen, negative overshoot.
@@ -36,11 +36,30 @@ public struct AnimeGirlPose: Equatable, Sendable {
     public var tailR_base: Double = 0
     public var tailR_tip: Double = 0
 
-    /// Expression cross-fades. Default is a soft smile with open eyes.
-    public var happyOpacity: Double = 0
-    public var determinedOpacity: Double = 0
+    /// Knees. Rotate the lower leg about the knee; in this front view that
+    /// swings the shin sideways (wide stance, knock-kneed squash).
+    public var shinL: Double = 0
+    public var shinR: Double = 0
 
-    /// 0 = open hand, 1 = clenched fist (right hand only).
+    /// Face sets, each 0…1. With all of them at 0 she wears her default: an open,
+    /// fanged grin with open cross-pupil eyes. Fade one up to replace it.
+    /// - shout: mouth wide with teeth top and bottom, angry brows.
+    /// - smug: half-lidded eyes, closed smirk with one fang over the lip.
+    /// - yawn: eyes squeezed into > <, tall open mouth with fangs, raised brows.
+    /// - laugh: eyes closed in upward arcs, wide open mouth, raised brows.
+    /// - doze: eyes closed and relaxed, small closed smile.
+    public var shoutOpacity: Double = 0
+    public var smugOpacity: Double = 0
+    public var yawnOpacity: Double = 0
+    public var laughOpacity: Double = 0
+    public var dozeOpacity: Double = 0
+
+    /// Hands, each 0…1 over the relaxed open hand. Claw is fingers spread and
+    /// hooked; fist is clenched. If both are up on one hand, fist wins.
+    public var clawL: Double = 0
+    public var clawR: Double = 0
+    public var fistL: Double = 0
+    /// The right hand's fist.
     public var fist: Double = 0
 
     public var sparkleOpacity: Double = 0
@@ -60,6 +79,8 @@ public struct AnimeGirlPose: Equatable, Sendable {
         case .armR: armR
         case .armL_fore: armL_fore
         case .armR_fore: armR_fore
+        case .shinL: shinL
+        case .shinR: shinR
         case .head: head
         case .ahoge: ahoge
         case .tailL_base: tailL_base
@@ -72,28 +93,99 @@ public struct AnimeGirlPose: Equatable, Sendable {
     }
 
     func opacity(of layer: AnimeGirlArt.Layer) -> Double {
-        // The default face yields to whichever alternate is fading in.
-        let alternate = max(happyOpacity, determinedOpacity)
-        // Explicit `return`: the `let` above makes this a multi-statement body, so
-        // the switch is not an implicit return.
-        return switch layer.name {
-        case "mouthDefault", "browsDefault": 1 - alternate
-        case "mouthHappy", "closedEyesHappy": happyOpacity
-        case "mouthDetermined", "browsDetermined": determinedOpacity
-        // Happy closes her eyes, so the whole open-eye cluster fades with it;
-        // determined keeps them open.
-        case "eyeWhiteL", "eyeWhiteR", "irisL", "irisR", "pupilL", "pupilR",
-             "hiBigL", "hiBigR", "hiSmallL", "hiSmallR", "lashL", "lashR":
-            1 - happyOpacity
-        case "handR": 1 - fist
-        case "fistR", "fistCreasesR": fist
-        case "sparkleA", "sparkleB", "sparkleC": sparkleOpacity
-        default: layer.restOpacity
+        switch AnimeGirlLayerRole.of(layer.name) {
+        case let .face(set): faceOpacity(set)
+        case let .brow(shape): browOpacity(shape)
+        case let .hand(kind, left): handOpacity(kind, left: left)
+        case .sparkle: sparkleOpacity
+        case .plain: layer.restOpacity
+        }
+    }
+
+    private func faceOpacity(_ set: AnimeGirlLayerRole.FaceSet) -> Double {
+        let shout = clamp(shoutOpacity), smug = clamp(smugOpacity)
+        let yawn = clamp(yawnOpacity), laugh = clamp(laughOpacity), doze = clamp(dozeOpacity)
+        // Every alternate covers the default grin; only the ones that close her
+        // eyes cover the open-eye cluster.
+        return switch set {
+        case .grin: 1 - max(shout, smug, yawn, laugh, doze)
+        case .open: 1 - max(yawn, laugh, doze)
+        case .shout: shout
+        case .smug: smug
+        case .yawn: yawn
+        case .laugh: laugh
+        case .doze: doze
+        }
+    }
+
+    /// Brows have three shapes shared between the face sets: angry for the
+    /// shout, raised for the laugh and the yawn, default otherwise.
+    private func browOpacity(_ shape: AnimeGirlLayerRole.BrowShape) -> Double {
+        let angry = clamp(shoutOpacity)
+        let raised = clamp(max(laughOpacity, yawnOpacity))
+        return switch shape {
+        case .angry: angry
+        case .raised: raised * (1 - angry)
+        case .normal: 1 - max(angry, raised)
+        }
+    }
+
+    private func handOpacity(_ kind: AnimeGirlLayerRole.HandKind, left: Bool) -> Double {
+        let claw = clamp(left ? clawL : clawR)
+        let fist = clamp(left ? fistL : self.fist)
+        return switch kind {
+        case .fist: fist
+        case .claw: claw * (1 - fist)
+        case .open: 1 - max(claw, fist)
+        }
+    }
+
+    private func clamp(_ value: Double) -> Double { min(max(value, 0), 1) }
+}
+
+/// What a layer's name says it is, parsed once per name and cached, so the
+/// per-frame opacity lookup is a dictionary hit rather than string splitting.
+///
+/// Names follow `AnimeGirlParts`: `face.<set>.<piece>`, `face.brows.<shape>`,
+/// `hand.<kind>.<L|R>[.<piece>]`.
+enum AnimeGirlLayerRole: Equatable, Sendable {
+    enum FaceSet: String, Sendable { case grin, open, shout, smug, yawn, laugh, doze }
+    enum BrowShape: String, Sendable { case normal = "default", angry, raised }
+    enum HandKind: String, Sendable { case open, claw, fist }
+
+    case face(FaceSet)
+    case brow(BrowShape)
+    case hand(HandKind, left: Bool)
+    case sparkle
+    case plain
+
+    private static let cache: [String: AnimeGirlLayerRole] = Dictionary(
+        AnimeGirlArt.layers.map { ($0.name, parse($0.name)) },
+        uniquingKeysWith: { first, _ in first }
+    )
+
+    static func of(_ name: String) -> AnimeGirlLayerRole {
+        cache[name] ?? parse(name)
+    }
+
+    static func parse(_ name: String) -> AnimeGirlLayerRole {
+        let bits = name.split(separator: ".").map(String.init)
+        switch bits.first {
+        case "face" where bits.count >= 3 && bits[1] == "brows":
+            return BrowShape(rawValue: bits[2]).map(AnimeGirlLayerRole.brow) ?? .plain
+        case "face" where bits.count >= 2:
+            return FaceSet(rawValue: bits[1]).map(AnimeGirlLayerRole.face) ?? .plain
+        case "hand" where bits.count >= 3:
+            guard let kind = HandKind(rawValue: bits[1]) else { return .plain }
+            return .hand(kind, left: bits[2] == "L")
+        default:
+            return name.hasPrefix("sparkle") ? .sparkle : .plain
         }
     }
 }
 
-/// The anime schoolgirl, drawn from `AnimeGirlArt`'s path data.
+
+/// Power, drawn from `AnimeGirlArt`'s path data.
 public struct AnimeGirlView: View {
 
     public static let canvas = AnimeGirlArt.canvas

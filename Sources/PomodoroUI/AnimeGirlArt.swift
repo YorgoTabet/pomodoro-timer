@@ -1,23 +1,22 @@
 import CoreGraphics
 import SwiftUI
 
-/// The anime girl: palette, skeleton, and the assembled layer table.
+/// Power (the character still called `AnimeGirl` in code): palette, skeleton,
+/// and the assembled layer table.
 ///
 /// The shapes themselves live in `AnimeGirlParts`, generated from the named
 /// numbers in `AnimeGirlProportions`. This file only says what she is made of,
-/// in what order it draws, and where the joints are — all three derived from the
-/// same `shape` value, so moving a landmark moves its pivot with it. That was
-/// the bug waiting to happen in the old hand-authored table: pivots were
-/// literals that had to be remembered separately from the art.
+/// in what order it draws, and where the joints are, all three derived from the
+/// same `shape` value, so moving a landmark moves its pivot with it.
 ///
 /// Geometry contracts the rest of the app relies on:
-/// - The occluding edge is y=196. Masked cues show her from the crown to the
-///   knee; only the unmasked cues reveal the boots' feet at `sole`.
+/// - The occluding edge is y=196. Masked cues show her from the horns to just
+///   below the knee; only the unmasked cues reveal the sneakers at `sole`.
 /// - Arms draw *behind* the head, so any gesture aimed "beside the head" must
-///   clear the skull — see the -155° cap in `fistPump`.
-/// - Layer names in the expression cluster (mouths, brows, eye parts, sparkles)
-///   are matched by string in `AnimeGirlPose.opacity(of:)` — rename them there
-///   too or the cross-fades silently stop.
+///   clear the skull.
+/// - Expression and hand layers are matched by name in
+///   `AnimeGirlPose.opacity(of:)`: rename them there too or the cross-fades
+///   silently stop.
 public enum AnimeGirlArt {
 
     public static let canvas = CGSize(width: 200, height: 260)
@@ -27,27 +26,32 @@ public enum AnimeGirlArt {
     public static let shape = AnimeGirlProportions.standard
 
     public enum Ink {
-        public static let outline = Color(hex: 0x2B2333)
-        public static let ink = Color(hex: 0x2B2333)
-        public static let hair = Color(hex: 0xB49AE8)
-        public static let hairShadow = Color(hex: 0x8E74C4)
-        public static let hairShine = Color(hex: 0xE2D4F8)
-        /// Skirt blue and its pleat shadow.
-        public static let blue = Color(hex: 0x3F6ED8)
-        public static let blueDeep = Color(hex: 0x2B4DA6)
-        /// Boots and detached sleeves.
-        public static let navy = Color(hex: 0x3C4C80)
-        /// The vocaloid nod: tie, hem stripe, boot trim, hair ties.
-        public static let teal = Color(hex: 0x3BBFC9)
-        /// Form shading on the white top — light enough to read as fold, not dirt.
-        public static let cloth = Color(hex: 0xE4DFEE)
+        public static let outline = Color(hex: 0x2B2128)
+        public static let ink = Color(hex: 0x1E1418)
+        /// Strawberry blonde, with one hard cel shadow.
+        public static let hair = Color(hex: 0xF2C28B)
+        public static let hairShadow = Color(hex: 0xD99A62)
+        public static let hairShine = Color(hex: 0xFBE2BD)
+        public static let horn = Color(hex: 0xD9473A)
+        public static let hornShade = Color(hex: 0xA8302A)
+        /// The suit jacket and its shade.
+        public static let navy = Color(hex: 0x2F4A7A)
+        public static let navyDeep = Color(hex: 0x22375C)
+        public static let shirt = Color(hex: 0xEFE9D6)
+        public static let shirtShade = Color(hex: 0xD8CFB4)
+        public static let tie = Color(hex: 0x1E1E22)
+        public static let slacks = Color(hex: 0x25262B)
+        public static let slacksRoll = Color(hex: 0x34353C)
+        public static let belt = Color(hex: 0x141418)
         public static let skin = Color(hex: 0xFFE3D0)
-        public static let skinShade = Color(hex: 0xF2C9B4)
-        public static let blush = Color(hex: 0xF4B9C6)
-        public static let iris = Color(hex: 0x5C4699)
+        public static let skinShade = Color(hex: 0xF0C5AE)
+        /// Iris: yellow-orange ring, red core, near-black cross on top.
+        public static let irisOuter = Color(hex: 0xF7B731)
+        public static let irisInner = Color(hex: 0xE0452E)
+        public static let pupil = Color(hex: 0x1A0E12)
         public static let white = Color.white
-        /// Open-mouth interior for the happy expression.
-        public static let mouthDeep = Color(hex: 0x8E3A50)
+        public static let mouthDeep = Color(hex: 0x6E1C2A)
+        public static let tongue = Color(hex: 0xE0707A)
 
         public static let clear = Color.clear
     }
@@ -58,6 +62,10 @@ public enum AnimeGirlArt {
         case root, sparkles, figure, hips, legL, legR, torso
         case armL, armR, head, eyes, ahoge
         case armL_fore, armR_fore
+        /// Knees. The front view has no true fold, so these swing the lower leg
+        /// sideways: a wide stance with flat feet, or a knock-kneed squash.
+        case shinL, shinR
+        /// The two long back hair masses, base and follow-through tip.
         case tailL_base, tailL_tip, tailR_base, tailR_tip
 
         public var parent: Part? {
@@ -69,6 +77,8 @@ public enum AnimeGirlArt {
             case .armL, .armR, .head: .torso
             case .armL_fore: .armL
             case .armR_fore: .armR
+            case .shinL: .legL
+            case .shinR: .legR
             case .eyes, .ahoge, .tailL_base, .tailR_base: .head
             case .tailL_tip: .tailL_base
             case .tailR_tip: .tailR_base
@@ -91,9 +101,12 @@ public enum AnimeGirlArt {
             case .hips: CGPoint(x: mid, y: p.waist + 3)
             case .legL: CGPoint(x: AnimeGirlParts.Limbs.legCentre(p), y: p.hip + 2)
             case .legR: CGPoint(x: mid * 2 - AnimeGirlParts.Limbs.legCentre(p), y: p.hip + 2)
+            case .shinL: CGPoint(x: AnimeGirlParts.Limbs.legCentre(p), y: p.knee)
+            case .shinR: CGPoint(x: mid * 2 - AnimeGirlParts.Limbs.legCentre(p), y: p.knee)
             case .torso: CGPoint(x: mid, y: p.waist)
-            case .armL: CGPoint(x: AnimeGirlParts.Limbs.shoulder(p).x, y: p.shoulder + 4)
-            case .armR: CGPoint(x: mid * 2 - AnimeGirlParts.Limbs.shoulder(p).x, y: p.shoulder + 4)
+            case .armL: CGPoint(x: AnimeGirlParts.Limbs.shoulder(p).x,
+                                y: AnimeGirlParts.Limbs.shoulder(p).y)
+            case .armR: flip(AnimeGirlParts.Limbs.shoulder(p))
             case .armL_fore: CGPoint(x: AnimeGirlParts.Limbs.shoulder(p).x, y: p.elbow)
             case .armR_fore: CGPoint(x: mid * 2 - AnimeGirlParts.Limbs.shoulder(p).x, y: p.elbow)
             case .head: CGPoint(x: mid, y: p.chin - 2.5)
@@ -112,9 +125,10 @@ public enum AnimeGirlArt {
 
     public typealias Layer = RigLayer<Part>
 
-    /// Back to front: hair curtain and tails behind everything, legs behind the
-    /// skirt, bare torso behind the top, arms in front of the top but behind the
-    /// head, hair over the finished face, sparkles last.
+    /// Back to front: hair curtain and back hair masses behind everything, the
+    /// jacket's back, legs, neck and shirt, the slacks' seat over the tuck, the
+    /// jacket's open fronts, arms, then the head, face, front hair, horns, brows
+    /// over the fringe, the top lock and sparkles last.
     public static let layers: [Layer] = build(shape)
 
     /// Composes the figure. A pure function of `p`, so a tool can call it with
@@ -123,21 +137,24 @@ public enum AnimeGirlArt {
         let hair = AnimeGirlParts.Hair.layers(p)
         let assembled =
             hair.back
+            + AnimeGirlParts.Outfit.jacketBack(p)
             + AnimeGirlParts.Limbs.legs(p)
-            + AnimeGirlParts.Outfit.skirt(p)
-            + AnimeGirlParts.Torso.layers(p)
-            + AnimeGirlParts.Outfit.top(p)
-            + AnimeGirlParts.Limbs.arm(p)
             + AnimeGirlParts.Head.neck(p)
+            + AnimeGirlParts.Outfit.shirt(p)
+            + AnimeGirlParts.Outfit.seat(p)
+            + AnimeGirlParts.Outfit.jacketFront(p)
+            + AnimeGirlParts.Limbs.arm(p)
             + AnimeGirlParts.Head.layers(p)
+            + AnimeGirlParts.Mouth.layers(p)
             + AnimeGirlParts.Eyes.layers(p)
             + hair.front
+            + AnimeGirlParts.Hair.horns(p)
+            + AnimeGirlParts.Eyes.brows(p)
             + AnimeGirlParts.Hair.ahogeLayer(p)
-            + AnimeGirlParts.Hair.ties(p)
             + AnimeGirlParts.Sparkles.layers(p)
 
         // Ids are assigned here rather than by the parts, so a part never has to
-        // know where it lands in the draw order — and `ForEach` still gets the
+        // know where it lands in the draw order, and `ForEach` still gets the
         // unique ids it needs to avoid silently dropping a layer.
         return assembled.enumerated().map { index, layer in
             Layer(index + 1, layer.name, layer.part, layer.fill,
