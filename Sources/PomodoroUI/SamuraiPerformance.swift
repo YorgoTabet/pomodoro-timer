@@ -50,6 +50,13 @@ public enum SamuraiPerformance {
     /// high guard, holds, and cuts once, fast, down across the bar.
     @KeyframesBuilder<SamuraiPose>
     public static var snapToGuard: some Keyframes<SamuraiPose> {
+        snapToGuardArms
+        snapToGuardTorso
+        snapToGuardArmour
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var snapToGuardArms: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.swordArmUpper) {
             LinearKeyframe(-6.52, duration: 0.12)
             Rest.moving(-6.52, duration: 0.33, drift: 0.8)
@@ -159,6 +166,10 @@ public enum SamuraiPerformance {
             Rest.breathing(0, duration: 1.6, drift: 0.8)
             CubicKeyframe(200, duration: 0.35, startVelocity: 0, endVelocity: 900)
         }
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var snapToGuardTorso: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.rootScaleY) {
             LinearKeyframe(1, duration: 0.45)
             CubicKeyframe(0.99, duration: 0.15)
@@ -238,6 +249,10 @@ public enum SamuraiPerformance {
             SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.5))
             Rest.moving(0, duration: 0.65, drift: 0.5)
         }
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var snapToGuardArmour: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.sodeR) {
             LinearKeyframe(0, duration: 0.6)
             CubicKeyframe(-6, duration: 0.35, endVelocity: 0)
@@ -327,6 +342,13 @@ public enum SamuraiPerformance {
     /// dozes with one small head bob, then jolts awake and sinks with the blade lifting.
     @KeyframesBuilder<SamuraiPose>
     public static var exhale: some Keyframes<SamuraiPose> {
+        exhaleArms
+        exhaleTorso
+        exhaleArmour
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var exhaleArms: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.swordArmUpper) {
             LinearKeyframe(-0.29, duration: 0.12)
             Rest.moving(-0.29, duration: 0.28, drift: 0.6)
@@ -415,6 +437,10 @@ public enum SamuraiPerformance {
             Rest.moving(-4, duration: 0.22, drift: 0.4)
             CubicKeyframe(0, duration: 0.48, startVelocity: 0, endVelocity: 0)
         }
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var exhaleTorso: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.kabuto) {
             LinearKeyframe(0, duration: 0.8)
             CubicKeyframe(2, duration: 0.6, endVelocity: 0)
@@ -510,6 +536,10 @@ public enum SamuraiPerformance {
             SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
             Rest.moving(0, duration: 0.2, drift: 0.4)
         }
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var exhaleArmour: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.legL) {
             LinearKeyframe(0, duration: 0.4)
             CubicKeyframe(3, duration: 0.4)
@@ -597,6 +627,13 @@ public enum SamuraiPerformance {
     /// landing and a held kiai. Then the blade comes down, he bows deeply and sinks.
     @KeyframesBuilder<SamuraiPose>
     public static var triumph: some Keyframes<SamuraiPose> {
+        triumphArms
+        triumphTorso
+        triumphArmour
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var triumphArms: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.swordArmUpper) {
             CubicKeyframe(0, duration: 0.35)
             CubicKeyframe(-26.92, duration: 0.2)
@@ -716,6 +753,10 @@ public enum SamuraiPerformance {
             LinearKeyframe(0.95, duration: 0.25)
             CubicKeyframe(1.04, duration: 0.5, endVelocity: 0)
         }
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var triumphTorso: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.rootLean) {
             Rest.breathing(0, duration: 1.15, drift: 0.4)
             CubicKeyframe(-0.8, duration: 0.35)
@@ -805,6 +846,10 @@ public enum SamuraiPerformance {
             SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.45))
             Rest.breathing(0, duration: 1.7, drift: 0.6)
         }
+    }
+
+    @KeyframesBuilder<SamuraiPose>
+    static var triumphArmour: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.kusazuriFL) {
             CubicKeyframe(-8.4, duration: 0.35)
             SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
