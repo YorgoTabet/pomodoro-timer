@@ -43,6 +43,15 @@ public struct GeneralPose: Equatable, Sendable {
     public var bootNear: Double = 0
     public var legFar: Double = 0
     public var bootFar: Double = 0
+    /// How far each leg lifts into the coat skirt on a march step (design units, up is negative).
+    public var legNearLift: Double = 0
+    public var legFarLift: Double = 0
+
+    /// 0 = forearm and hand drawn in front of the body, 1 = tucked behind his back.
+    public var nearBehind: Double = 0
+    public var farBehind: Double = 0
+    /// The swagger stick. It can be put away entirely (behind his back, out of sight).
+    public var stickOpacity: Double = 1
 
     /// Expression cross-fades. The aviators and moustache *are* the default face,
     /// so the alternates only ever add a mouth.
@@ -79,6 +88,12 @@ public struct GeneralPose: Equatable, Sendable {
         case "shoutMouth": shoutOpacity
         case "grinTeeth": grinOpacity
         case "sweatDrop": sweatOpacity
+        case "foreFarB", "cuffFarB", "handFarB": farBehind
+        case "foreFar", "cuffFar", "handFar": 1 - farBehind
+        case "foreNearB", "cuffNearB", "handNearB": nearBehind
+        case "foreNear", "cuffNear", "handNear": 1 - nearBehind
+        case "stickRodB", "stickTipB": nearBehind * stickOpacity
+        case "stickRod", "stickTip": (1 - nearBehind) * stickOpacity
         default: layer.restOpacity
         }
     }
@@ -131,6 +146,10 @@ struct GeneralPartExtras: ViewModifier {
                 .offset(y: pose.stacheLift)
         case .medals:
             content.offset(y: pose.medalsLift)
+        case .legNear:
+            content.offset(y: pose.legNearLift)
+        case .legFar:
+            content.offset(y: pose.legFarLift)
         default:
             content
         }
