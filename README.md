@@ -43,8 +43,8 @@ A draggable glass pill with a progress ring, the countdown and the phase. Play a
 <tr>
 <td valign="top">
 
-### 🎭&nbsp; Five characters
-A samurai, a ninja, a man in a rabbit suit, a general and Power. Each has its own move for focus start, break start and long break. They are decoration; the notification and the chime do the real work.
+### 🎭&nbsp; Six characters
+A samurai, a ninja, a man in a rabbit suit, a general, Power and Boa Hancock. Each has its own move for focus start, break start and long break. They are decoration; the notification and the chime do the real work.
 
 </td>
 <td valign="top">
@@ -83,7 +83,7 @@ Each character has three moves. Here is one move from each, recorded from the re
 <tr>
 <td align="center"><img src="docs/images/general-focusStart.gif" alt="The General inspecting"><br><b>The General</b><br><sub>Inspection before focus</sub></td>
 <td align="center"><img src="docs/images/power-longBreak.gif" alt="Power laughing in her signature pose"><br><b>Power</b><br><sub>Hey hey hey!</sub></td>
-<td align="center" valign="middle"><sub>Pick one, or none,<br>in Settings.</sub></td>
+<td align="center"><img src="docs/images/hancock-longBreak.gif" alt="Boa Hancock sweeping her cape"><br><b>Boa Hancock</b><br><sub>The Empress, laughing</sub></td>
 </tr>
 </table>
 
@@ -94,6 +94,9 @@ Each character has three moves. Here is one move from each, recorded from the re
 | **Rabbit Suit Guy** | A very reluctant salute | One hop of mandatory fun | Commits to a spin and a ta-da |
 | **The General** | Taps his stick, points, salutes | At ease, peeks over his shades | Two-step parade and a raised stick |
 | **Power** | "Grovel, human!" | A huge yawn, then a nap on the bar | Her signature laughing pose |
+| **Boa Hancock** | Looks down on you, points, winks | Love-struck, with a heart | Sweeps her cape and laughs "hohoho" |
+
+Pick one, or none, in Settings.
 
 ## Install
 
@@ -181,7 +184,7 @@ Design notes and specs are in [`docs/`](docs/).
 
 ## Credits
 
-Power is a character from *Chainsaw Man* by Tatsuki Fujimoto. Her version here is fan art, is not affiliated with or endorsed by the rights holders, and is not covered by this project's license. The other characters are original.
+Power is a character from *Chainsaw Man* by Tatsuki Fujimoto. Boa Hancock is a character from *One Piece* by Eiichiro Oda. Both versions here are fan art, are not affiliated with or endorsed by the rights holders, and are not covered by this project's license. The other characters are original.
 
 ## License
 
