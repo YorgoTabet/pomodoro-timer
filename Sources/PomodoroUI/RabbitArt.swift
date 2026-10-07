@@ -19,7 +19,7 @@ public enum RabbitArt {
         public static let outline = Color(hex: 0x45322A)
         public static let outlineCocoa = Color(hex: 0x45322A)
         public static let creamBase = Color(hex: 0xF6EAD7)
-        public static let creamShade = Color(hex: 0xE3CFAF)
+        public static let creamShade = Color(hex: 0xD1BEA1)
         public static let bellyCream = Color(hex: 0xFBF4E6)
         public static let pinkInner = Color(hex: 0xF5A8B8)
         public static let skinTone = Color(hex: 0xEFC9A8)
@@ -102,7 +102,7 @@ public enum RabbitArt {
         .init(9, "armL_upper", .armL, Ink.creamBase, stroke: 3.0, "M 80.0 112.0 C 68.0 114.0 58.5 125.0 55.0 144.0 L 68.5 144.5 C 68.5 136.5 71.0 129.5 74.5 125.5 C 77.0 122.0 80.5 119.5 83.5 117.5 Q 84.0 112.5 80.0 112.0 Z"),
         .init(50, "armL_fore", .armL_fore, Ink.creamBase, stroke: 3.0, "M 54.5 140.5 Q 55.0 132.5 62.0 132.5 Q 69.2 132.5 69.5 140.5 C 66.0 148.5 64.0 157.5 67.0 166.5 C 65.0 170.5 59.0 170.5 57.0 166.5 C 53.5 159.0 52.8 149.5 54.5 140.5 Z"),
         .init(10, "armL_paw", .armL_fore, Ink.creamBase, stroke: 3.0, "M 50.0 172.0 C 50.0 165.5 55.0 161.5 61.5 162.0 C 68.5 162.5 72.5 167.0 72.0 174.0 C 71.5 181.0 66.5 185.0 60.5 184.5 C 54.0 184.0 50.0 179.0 50.0 172.0 Z"),
-        .init(11, "torso_body", .torso, Ink.creamBase, stroke: 3.0, "M 100.0 107.0 C 122.0 107.5 136.5 120.0 140.5 143.0 C 143.8 163.0 141.0 185.0 137.0 204.0 L 63.0 204.0 C 59.0 185.0 56.2 163.0 59.5 143.0 C 63.5 120.0 78.0 107.5 100.0 107.0 Z"),
+        .init(11, "torso_body", .torso, Ink.creamBase, stroke: 3.6, "M 100.0 107.0 C 122.0 107.5 136.5 120.0 140.5 143.0 C 143.8 163.0 141.0 185.0 137.0 204.0 L 63.0 204.0 C 59.0 185.0 56.2 163.0 59.5 143.0 C 63.5 120.0 78.0 107.5 100.0 107.0 Z"),
         .init(12, "torso_shade", .torso, Ink.creamShade, stroke: nil, "M 128.0 122.0 C 136.0 132.0 139.8 148.0 140.5 162.0 C 141.3 178.0 139.5 192.0 137.0 202.0 L 129.0 202.0 C 132.5 188.0 134.5 170.0 132.5 152.0 C 131.0 138.0 129.0 128.0 124.0 120.0 Z"),
         .init(13, "belly_patch", .torso, Ink.bellyCream, stroke: 1.8, "M 100.0 130.0 C 114.5 130.0 125.0 141.8 125.0 158.0 C 125.0 174.2 114.5 186.0 100.0 186.0 C 85.5 186.0 75.0 174.2 75.0 158.0 C 75.0 141.8 85.5 130.0 100.0 130.0 Z"),
         .init(14, "seam_stitches", .torso, Ink.clear, stroke: 1.8, "M 65.5 166.0 L 70.5 165.0 M 64.8 174.0 L 69.8 173.2 M 64.5 182.0 L 69.5 181.4"),
@@ -110,7 +110,7 @@ public enum RabbitArt {
         .init(16, "zipper_track", .torso, Ink.clear, stroke: 1.8, "M 100.0 122.0 L 100.0 137.0 M 97.5 125.5 L 102.5 125.5 M 97.5 130.0 L 102.5 130.0 M 97.5 134.5 L 102.5 134.5"),
         .init(17, "zipper_slider", .torso, Ink.zincMetal, stroke: 1.8, "M 96.8 136.5 L 103.2 136.5 L 102.4 141.5 L 97.6 141.5 Z"),
         .init(18, "zipper_pull", .zipperPull, Ink.zincMetal, stroke: 1.8, "M 98.6 141.5 L 101.4 141.5 L 102.2 149.0 C 102.4 151.8 101.2 153.2 100.0 153.2 C 98.8 153.2 97.6 151.8 97.8 149.0 Z"),
-        .init(19, "head_fill", .head, Ink.creamBase, stroke: 3.0, "M 100.0 22.0 C 129.0 22.0 147.5 40.0 149.8 67.0 C 151.6 91.0 138.5 109.5 100.0 111.5 C 61.5 109.5 48.4 91.0 50.2 67.0 C 52.5 40.0 71.0 22.0 100.0 22.0 Z"),
+        .init(19, "head_fill", .head, Ink.creamBase, stroke: 3.6, "M 100.0 22.0 C 129.0 22.0 147.5 40.0 149.8 67.0 C 151.6 91.0 138.5 109.5 100.0 111.5 C 61.5 109.5 48.4 91.0 50.2 67.0 C 52.5 40.0 71.0 22.0 100.0 22.0 Z"),
         .init(20, "head_shade", .head, Ink.creamShade, stroke: nil, "M 131.0 33.5 C 143.0 43.0 148.6 56.0 149.3 68.0 C 150.2 86.0 142.0 101.5 124.0 108.5 C 138.0 99.0 143.5 84.0 142.3 66.5 C 141.3 52.5 137.0 41.5 131.0 33.5 Z"),
         .init(21, "blushL", .head, Ink.pinkInner, stroke: nil, path: VectorPath.circle(63.5, 71.0, 5.0)),
         .init(22, "blushR", .head, Ink.pinkInner, stroke: nil, path: VectorPath.circle(136.5, 71.0, 5.0)),

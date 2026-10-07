@@ -29,6 +29,9 @@ public struct RabbitPose: Equatable, Sendable {
     public var zipperPull: Double = 0
 
     public var head: Double = 0
+    /// Squash on the legs at landings, and a small sideways sway of the torso.
+    public var legsScaleY: Double = 1
+    public var torsoSway: Double = 0
     public var earL_base: Double = 0
     public var earL_tip: Double = 0
     public var earR_base: Double = 0
@@ -109,6 +112,11 @@ struct RabbitPartExtras: ViewModifier {
             content
                 .scaleEffect(y: pose.figureScaleY, anchor: .bottom)
                 .offset(y: pose.figureLift)
+        case .torso:
+            content.offset(x: pose.torsoSway)
+        case .legs:
+            // Anchored at the soles of the feet so a squash plants them.
+            content.scaleEffect(y: pose.legsScaleY, anchor: UnitPoint(x: 0.5, y: 253.5 / RabbitArt.canvas.height))
         default:
             content
         }
