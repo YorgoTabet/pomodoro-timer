@@ -41,8 +41,12 @@ public struct SamuraiPose: Equatable, Sendable {
     public var kusazuriFR: Double = 0
     public var kusazuriR: Double = 0
     public var scabbard: Double = 0
+    /// Hip angles. A knee bend seen from the front is the thigh opening outward and
+    /// the shin closing back in, so each leg has a hip and a knee.
     public var legL: Double = 0
     public var legR: Double = 0
+    public var shinL: Double = 0
+    public var shinR: Double = 0
 
     /// Expression cross-fades. The menpo hides the mouth, so the brows and eyes do
     /// all the acting.
@@ -53,6 +57,8 @@ public struct SamuraiPose: Equatable, Sendable {
     /// Eye whites and pupils, separate from the brows so the eyes can snap shut
     /// without a half-faded brow swap.
     public var eyeOpacity: Double = 1
+    /// 0...1: the mouth slit opens into a kiai.
+    public var kiai: Double = 0
 
     public init() {}
 
@@ -82,6 +88,11 @@ public struct SamuraiPose: Equatable, Sendable {
         // Counter-rotate by the root lean so the feet stay planted.
         case .legL: legL - rootLean
         case .legR: legR - rootLean
+        case .shinL: shinL
+        case .shinR: shinR
+        // The boot stays flat on the floor whatever the leg above it does.
+        case .footL: -(legL + shinL)
+        case .footR: -(legR + shinR)
         }
     }
 
@@ -92,6 +103,8 @@ public struct SamuraiPose: Equatable, Sendable {
         case "browsFierce": fierceOpacity
         case "browsEase": easeOpacity
         case "eyesTriumph": triumphOpacity
+        case "menpoKiai", "menpoKiaiTongue": kiai
+        case "menpoMouthSlit": 1 - kiai
         default: layer.restOpacity
         }
     }

@@ -1,24 +1,27 @@
 import PomodoroCore
 import SwiftUI
 
-/// The samurai's three performances, transcribed from the art-direction spec.
+/// The samurai's three performances, written from the round-2 animation plan.
 ///
-/// Each is a `KeyframeTrack` set over `SamuraiPose`; a timeline row in the spec maps
-/// to one keyframe here, so the two can be diffed by eye.
+/// Each is a `KeyframeTrack` set over `SamuraiPose`; a row of the plan's tables maps
+/// to a handful of keyframes here, so the two can be diffed by eye.
 ///
 /// Convention: positive rotation is clockwise on screen, `emergence` counts design
 /// units *behind* the pill edge (200 = hidden, 0 = risen, negative = overshoot).
+///
+/// The arm and sword angles are solved so the off hand lands on the hilt: the sword
+/// hand sets where the katana is, and the off hand sits one fist's width behind it on
+/// the handle. Each pose is annotated with the hand positions it was solved for.
 public enum SamuraiPerformance {
 
     /// Preferred emergence edge per cue. The stage flips these when the pill is too
     /// close to a screen edge.
-    /// Everything reveals from the top. Emerging sideways read as a different
-    /// character each time; rising from behind the pill is the one gesture that
-    /// makes the pill feel like the thing he lives in.
+    /// Everything reveals from the top. Rising from behind the pill is the one
+    /// gesture that makes the pill feel like the thing he lives in.
     public static func preferredEdge(for cue: CharacterCue) -> StageEdge { .top }
 
     /// Whether he comes *in front of* the pill rather than staying behind it.
-    /// Only the back-to-work cue does — stepping into the foreground and aiming at
+    /// Only the back-to-work cue does: stepping into the foreground and aiming at
     /// you is what makes it read as a demand rather than a wave.
     public static func comesForward(for cue: CharacterCue) -> Bool {
         cue == .focusStart
@@ -32,462 +35,886 @@ public enum SamuraiPerformance {
         }
     }
 
-    // MARK: - focusStart · "Get back to work" (2.4s)
+    // MARK: - focusStart: "One cut" (2.4s)
     //
-    // Beat sheet: 0-0.12 crest peeks, 0.18 launch, 0.48 apex (blade cocks back),
-    // 0.68 plant (strike lands, overshoots), 1.80 sheathe, 2.04 dip, 2.14 drop.
+    // 0.00-0.45 rise (blade low)  0.45-0.60 sink, off hand joins the hilt
+    // 0.60-0.95 blade arcs into high guard  0.95-1.10 hold  1.10-1.22 the cut
+    // 1.22-1.70 finish pose, armour catches up  1.70-2.05 straighten, bow  2.05-2.40 sink
+    //
+    // Hand targets (design units): A0 sword hand (128,172) blade 150 deg; A1 (112,152)
+    // blade 140; A2 high guard (127,98) blade 62; A3 finish (100,154) blade 205;
+    // A4 rest (104,156) blade 180. The off hand is always 10.5 behind the sword hand.
+    // Elbow bend stays between 0 and 140 degrees in every pose.
 
-    /// He vaults from behind the pill into the foreground, plants, and levels the
-    /// blade at you. The scale-up is what sells "stepped toward the viewer".
+    /// He rises calmly with the blade low, settles, lifts it over his shoulder into
+    /// high guard, holds, and cuts once, fast, down across the bar.
     @KeyframesBuilder<SamuraiPose>
     public static var snapToGuard: some Keyframes<SamuraiPose> {
-        KeyframeTrack(\.emergence) {
-            CubicKeyframe(140, duration: 0.12)            // crest peeks first
-            LinearKeyframe(140, duration: 0.06)           // a beat of anticipation
-            SpringKeyframe(-18, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
-            SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.62))
-            Hold.moving(0, duration: 1.36, drift: 0.8)
-            CubicKeyframe(-6, duration: 0.10)             // small rise before the drop
-            CubicKeyframe(200, duration: 0.26, endVelocity: 900)   // ease-in
-        }
-        KeyframeTrack(\.rootScale) {
-            LinearKeyframe(0.86, duration: 0.18)
-            SpringKeyframe(1.12, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
-            SpringKeyframe(1.06, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.62))
-            Hold.moving(1.06, duration: 1.46, drift: 0.012)
-            CubicKeyframe(0.9, duration: 0.26)
-        }
-        KeyframeTrack(\.rootScaleY) {
-            LinearKeyframe(0.92, duration: 0.18)          // crouch under the crest
-            SpringKeyframe(1.07, duration: 0.26, spring: .init(response: 0.30, dampingRatio: 0.50))
-            CubicKeyframe(1.0, duration: 0.12)
-            SpringKeyframe(0.93, duration: 0.12, spring: .init(response: 0.28, dampingRatio: 0.50))  // landing
-            SpringKeyframe(1.0, duration: 0.18, spring: .init(response: 0.30, dampingRatio: 0.60))
-            Hold.moving(1.0, duration: 1.28, drift: 0.012)
-            CubicKeyframe(1.04, duration: 0.26)
-        }
-        // Knees: tucked in the air, planted at the landing.
-        KeyframeTrack(\.legL) {
-            LinearKeyframe(-3, duration: 0.50)
-            CubicKeyframe(0, duration: 0.18)
-            Hold.moving(0, duration: 1.72, drift: 0.4)
-        }
-        KeyframeTrack(\.legR) {
-            LinearKeyframe(-3, duration: 0.50)
-            CubicKeyframe(0, duration: 0.18)
-            Hold.moving(0, duration: 1.72, drift: 0.3)
-        }
-        // The point. Cocks back at the apex, lands on the plant, overshoots, sheathes
-        // before the drop.
         KeyframeTrack(\.swordArmUpper) {
-            LinearKeyframe(0, duration: 0.36)
-            CubicKeyframe(-38, duration: 0.16)
-            SpringKeyframe(30, duration: 0.16, spring: .init(response: 0.26, dampingRatio: 0.55))
-            SpringKeyframe(24, duration: 0.14, spring: .init(response: 0.26, dampingRatio: 0.62))
-            Hold.moving(24, duration: 0.98, drift: 0.6)
-            CubicKeyframe(0, duration: 0.24)
-            LinearKeyframe(0, duration: 0.36)
+            LinearKeyframe(-6.52, duration: 0.12)
+            Rest.moving(-6.52, duration: 0.33, drift: 0.8)
+            CubicKeyframe(-6.73, duration: 0.15, startVelocity: 0)
+            CubicKeyframe(-130.28, duration: 0.35, endVelocity: 0)
+            Rest.moving(-130.28, duration: 0.15, drift: 0.7)
+            CubicKeyframe(13.11, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(13.11, duration: 0.3, spring: .init(response: 0.24, dampingRatio: 0.5))
+            Rest.moving(13.11, duration: 0.18, drift: 0.8)
+            CubicKeyframe(8.67, duration: 0.35, startVelocity: 0, endVelocity: 0)
+            Rest.moving(8.67, duration: 0.35, drift: 0.8)
         }
         KeyframeTrack(\.swordFore) {
-            LinearKeyframe(0, duration: 0.38)
-            CubicKeyframe(-14, duration: 0.14)
-            CubicKeyframe(62, duration: 0.14)             // strike lands on the plant
-            CubicKeyframe(52, duration: 0.12)             // overshoot settles
-            Hold.moving(52, duration: 1.02, drift: 0.6)
-            CubicKeyframe(0, duration: 0.24)
-            LinearKeyframe(0, duration: 0.36)
+            LinearKeyframe(21.36, duration: 0.12)
+            Rest.moving(21.36, duration: 0.33, drift: 0.8)
+            CubicKeyframe(97.48, duration: 0.15, startVelocity: 0)
+            CubicKeyframe(-121.03, duration: 0.35, endVelocity: 0)
+            Rest.moving(-121.03, duration: 0.15, drift: 0.7)
+            CubicKeyframe(73.3, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(73.3, duration: 0.3, spring: .init(response: 0.24, dampingRatio: 0.5))
+            Rest.moving(73.3, duration: 0.18, drift: 0.8)
+            CubicKeyframe(72.73, duration: 0.35, startVelocity: 0, endVelocity: 0)
+            Rest.moving(72.73, duration: 0.35, drift: 0.8)
         }
         KeyframeTrack(\.katana) {
-            LinearKeyframe(0, duration: 0.46)
-            SpringKeyframe(-18, duration: 0.34, spring: .init(response: 0.30, dampingRatio: 0.50))
-            Hold.moving(-18, duration: 1.00, drift: 0.6)
-            CubicKeyframe(0, duration: 0.20)
-            LinearKeyframe(0, duration: 0.40)
+            LinearKeyframe(111.03, duration: 0.12)
+            Rest.moving(111.03, duration: 0.33, drift: 0.8)
+            CubicKeyframe(20.13, duration: 0.15, startVelocity: 0)
+            CubicKeyframe(-76.81, duration: 0.35, endVelocity: 0)
+            Rest.moving(-76.81, duration: 0.15, drift: 0.7)
+            CubicKeyframe(-255.53, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(-255.53, duration: 0.3, spring: .init(response: 0.24, dampingRatio: 0.5))
+            Rest.moving(-255.53, duration: 0.18, drift: 0.8)
+            CubicKeyframe(-285.52, duration: 0.35, startVelocity: 0, endVelocity: 0)
+            Rest.moving(-285.52, duration: 0.35, drift: 0.8)
         }
-        KeyframeTrack(\.torso) {
-            LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(-9, duration: 0.16)             // twists in on the strike
-            SpringKeyframe(-6, duration: 0.14, spring: .init(response: 0.30, dampingRatio: 0.60))
-            Hold.moving(-6, duration: 1.08, drift: 0.6)
-            CubicKeyframe(0, duration: 0.28)
-            LinearKeyframe(0, duration: 0.24)
-        }
-        KeyframeTrack(\.head) {
-            LinearKeyframe(0, duration: 0.54)
-            CubicKeyframe(4, duration: 0.16)
-            Hold.moving(4, duration: 1.18, drift: 0.9)
-            CubicKeyframe(0, duration: 0.28)
-            LinearKeyframe(0, duration: 0.24)
-        }
-        KeyframeTrack(\.maedate) {
-            LinearKeyframe(12, duration: 0.24)
-            SpringKeyframe(-6, duration: 0.14, spring: .init(response: 0.50, dampingRatio: 0.35))
-            SpringKeyframe(0, duration: 0.18, spring: .init(response: 0.50, dampingRatio: 0.35))
-            Hold.moving(0, duration: 1.56, drift: 0.9)
-            CubicKeyframe(-12, duration: 0.28)
-        }
-        // Skirt and sleeve plates trail the torso by about 0.1s and settle on a spring.
-        KeyframeTrack(\.kusazuriL) { Lag.settle(from: -16, at: 0.58, kick: 4, total: 2.40) }
-        KeyframeTrack(\.kusazuriFL) { Lag.settle(from: -9, at: 0.62, kick: 3, total: 2.40) }
-        KeyframeTrack(\.kusazuriFR) { Lag.settle(from: 9, at: 0.66, kick: -3, total: 2.40) }
-        KeyframeTrack(\.kusazuriR) { Lag.settle(from: 16, at: 0.70, kick: -4, total: 2.40) }
-        KeyframeTrack(\.sodeL) { Lag.settle(from: -16, at: 0.64, kick: 4, total: 2.40) }
-        KeyframeTrack(\.sodeR) { Lag.settle(from: 16, at: 0.68, kick: -4, total: 2.40) }
-        // The off hand braces before the blade settles against it.
         KeyframeTrack(\.offArmUpper) {
-            LinearKeyframe(0, duration: 0.34)
-            CubicKeyframe(-16, duration: 0.16)
-            SpringKeyframe(26, duration: 0.20, spring: .init(response: 0.26, dampingRatio: 0.56))
-            Hold.moving(26, duration: 1.18, drift: 0.6)
-            CubicKeyframe(0, duration: 0.28)
-            LinearKeyframe(0, duration: 0.24)
+            LinearKeyframe(0, duration: 0.12)
+            Rest.moving(0, duration: 0.33, drift: 0.8)
+            CubicKeyframe(-26.29, duration: 0.15, startVelocity: 0)
+            CubicKeyframe(-105.85, duration: 0.35, endVelocity: 0)
+            Rest.moving(-105.85, duration: 0.15, drift: 0.7)
+            CubicKeyframe(-33.08, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(-33.08, duration: 0.3, spring: .init(response: 0.24, dampingRatio: 0.5))
+            Rest.moving(-33.08, duration: 0.18, drift: 0.8)
+            CubicKeyframe(-25.94, duration: 0.35, startVelocity: 0, endVelocity: 0)
+            Rest.moving(-25.94, duration: 0.35, drift: 0.8)
         }
         KeyframeTrack(\.offArmFore) {
-            LinearKeyframe(0, duration: 0.34)
-            CubicKeyframe(-8, duration: 0.18)
-            SpringKeyframe(44, duration: 0.24, spring: .init(response: 0.26, dampingRatio: 0.52))
-            Hold.moving(44, duration: 1.12, drift: 1.0)
-            CubicKeyframe(0, duration: 0.28)
-            LinearKeyframe(0, duration: 0.24)
+            LinearKeyframe(0, duration: 0.12)
+            Rest.moving(0, duration: 0.33, drift: 0.8)
+            CubicKeyframe(-85.81, duration: 0.15, startVelocity: 0)
+            CubicKeyframe(-56.45, duration: 0.35, endVelocity: 0)
+            Rest.moving(-56.45, duration: 0.15, drift: 0.7)
+            CubicKeyframe(-70.97, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(-70.97, duration: 0.3, spring: .init(response: 0.24, dampingRatio: 0.5))
+            Rest.moving(-70.97, duration: 0.18, drift: 0.8)
+            CubicKeyframe(-81.01, duration: 0.35, startVelocity: 0, endVelocity: 0)
+            Rest.moving(-81.01, duration: 0.35, drift: 0.8)
         }
-        KeyframeTrack(\.pupilDrop) {
-            LinearKeyframe(0, duration: 0.54)
-            CubicKeyframe(-0.9, duration: 0.16)
-            Hold.moving(-0.9, duration: 1.7, drift: 0.12)
+        KeyframeTrack(\.legL) {
+            LinearKeyframe(0, duration: 0.45)
+            CubicKeyframe(6, duration: 0.15)
+            CubicKeyframe(3, duration: 0.35)
+            LinearKeyframe(3, duration: 0.15)
+            CubicKeyframe(11, duration: 0.12)
+            SpringKeyframe(10, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.6))
+            LinearKeyframe(10, duration: 0.18)
+            CubicKeyframe(0, duration: 0.35, endVelocity: 0)
+            Rest.moving(0, duration: 0.35, drift: 0.4)
         }
-    }
-
-    // MARK: - breakStart · "Doze off" (2.8s)
-    //
-    // Beat sheet: 0.35 pupils drop, 0.45 eyes snap shut, 0.45-0.9 head and torso
-    // sag, 2.38 startle, 2.56 drop.
-
-    /// He rises just far enough to lean on the pill, lets the blade drop, closes
-    /// his eyes and nods off, drooping from the neck (not a whole-body tip), jerks
-    /// up once, then startles awake and ducks away.
-    @KeyframesBuilder<SamuraiPose>
-    public static var exhale: some Keyframes<SamuraiPose> {
+        KeyframeTrack(\.shinL) {
+            LinearKeyframe(0, duration: 0.45)
+            CubicKeyframe(-14.47, duration: 0.15)
+            CubicKeyframe(-7.23, duration: 0.35)
+            LinearKeyframe(-7.23, duration: 0.15)
+            CubicKeyframe(-26.6, duration: 0.12)
+            SpringKeyframe(-24.16, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.6))
+            LinearKeyframe(-24.16, duration: 0.18)
+            CubicKeyframe(0, duration: 0.35, endVelocity: 0)
+            Rest.moving(0, duration: 0.35, drift: 0.4)
+        }
+        KeyframeTrack(\.legR) {
+            LinearKeyframe(0, duration: 0.45)
+            CubicKeyframe(-6, duration: 0.15)
+            CubicKeyframe(-4, duration: 0.35)
+            LinearKeyframe(-4, duration: 0.15)
+            CubicKeyframe(-1, duration: 0.12)
+            SpringKeyframe(-2, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.6))
+            LinearKeyframe(-2, duration: 0.18)
+            CubicKeyframe(0, duration: 0.35, endVelocity: 0)
+            Rest.moving(0, duration: 0.35, drift: 0.4)
+        }
+        KeyframeTrack(\.shinR) {
+            LinearKeyframe(0, duration: 0.45)
+            CubicKeyframe(14.47, duration: 0.15)
+            CubicKeyframe(9.64, duration: 0.35)
+            LinearKeyframe(9.64, duration: 0.15)
+            CubicKeyframe(2.41, duration: 0.12)
+            SpringKeyframe(4.82, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.6))
+            LinearKeyframe(4.82, duration: 0.18)
+            CubicKeyframe(0, duration: 0.35, endVelocity: 0)
+            Rest.moving(0, duration: 0.35, drift: 0.4)
+        }
         KeyframeTrack(\.emergence) {
-            SpringKeyframe(38, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.85))
-            Hold.moving(38, duration: 1.98, drift: 1.0)
-            CubicKeyframe(30, duration: 0.18)              // startle: small rise
-            CubicKeyframe(200, duration: 0.24, endVelocity: 900)
+            CubicKeyframe(0, duration: 0.45, startVelocity: -900, endVelocity: 0)
+            Rest.breathing(0, duration: 1.6, drift: 0.8)
+            CubicKeyframe(200, duration: 0.35, startVelocity: 0, endVelocity: 900)
         }
-        // Barely leans; the sag lives in the torso and head.
+        KeyframeTrack(\.rootScaleY) {
+            LinearKeyframe(1, duration: 0.45)
+            CubicKeyframe(0.99, duration: 0.15)
+            CubicKeyframe(1, duration: 0.35)
+            LinearKeyframe(1, duration: 0.15)
+            CubicKeyframe(0.97, duration: 0.12)
+            SpringKeyframe(0.98, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.6))
+            LinearKeyframe(0.98, duration: 0.18)
+            CubicKeyframe(0.97, duration: 0.35)
+            LinearKeyframe(0.97, duration: 0.35)
+        }
         KeyframeTrack(\.rootLean) {
-            LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(2.5, duration: 0.35)
-            Hold.moving(2.5, duration: 1.81, drift: 0.4)
-            CubicKeyframe(0, duration: 0.24)
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(-0.8, duration: 0.12)
+            CubicKeyframe(-0.5, duration: 0.48)
+            CubicKeyframe(0, duration: 0.35)
+            LinearKeyframe(0, duration: 0.35)
+        }
+        KeyframeTrack(\.torso) {
+            LinearKeyframe(0, duration: 0.45)
+            CubicKeyframe(5, duration: 0.15)
+            CubicKeyframe(6, duration: 0.35, endVelocity: 0)
+            Rest.moving(6, duration: 0.15, drift: 0.5)
+            CubicKeyframe(-10, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(-9, duration: 0.3, spring: .init(response: 0.28, dampingRatio: 0.5))
+            Rest.moving(-9, duration: 0.18, drift: 0.5)
+            CubicKeyframe(0, duration: 0.35, startVelocity: 0, endVelocity: 0)
+            Rest.moving(0, duration: 0.35, drift: 0.4)
         }
         KeyframeTrack(\.torsoScaleY) {
-            LinearKeyframe(1.0, duration: 0.40)
-            CubicKeyframe(0.95, duration: 0.30)
-            LinearKeyframe(0.95, duration: 0.50)
-            CubicKeyframe(0.98, duration: 0.45)
-            CubicKeyframe(0.95, duration: 0.45)
-            CubicKeyframe(0.98, duration: 0.40)
-            LinearKeyframe(0.98, duration: 0.30)
+            LinearKeyframe(1, duration: 1.7)
+            CubicKeyframe(0.93, duration: 0.35)
+            LinearKeyframe(0.93, duration: 0.35)
         }
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(13, duration: 0.45)            // chin drops to the chest
-            LinearKeyframe(13, duration: 0.35)
-            SpringKeyframe(-4, duration: 0.16, spring: .init(response: 0.24, dampingRatio: 0.5))
-            SpringKeyframe(11, duration: 0.55, spring: .init(response: 0.60, dampingRatio: 0.85))
-            Hold.moving(11, duration: 0.42, drift: 0.5)
-            CubicKeyframe(-6, duration: 0.18)            // startle: head snaps up
-            CubicKeyframe(0, duration: 0.24)
+            CubicKeyframe(-2, duration: 0.15)
+            CubicKeyframe(-3, duration: 0.35, endVelocity: 0)
+            Rest.moving(-3, duration: 0.15, drift: 0.4)
+            CubicKeyframe(5, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(3, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.moving(3, duration: 0.18, drift: 0.4)
+            CubicKeyframe(0, duration: 0.35, startVelocity: 0)
+            LinearKeyframe(0, duration: 0.35)
+        }
+        KeyframeTrack(\.headScale) {
+            LinearKeyframe(1, duration: 1.7)
+            CubicKeyframe(0.94, duration: 0.35)
+            LinearKeyframe(0.94, duration: 0.35)
         }
         KeyframeTrack(\.kabuto) {
-            LinearKeyframe(0, duration: 0.55)
-            CubicKeyframe(5, duration: 0.45)
-            Hold.moving(5, duration: 1.56, drift: 0.8)
-            CubicKeyframe(0, duration: 0.24)
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(-3, duration: 0.12)
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.3, dampingRatio: 0.5))
+            LinearKeyframe(0, duration: 0.18)
+            CubicKeyframe(3, duration: 0.35)
+            LinearKeyframe(3, duration: 0.35)
         }
         KeyframeTrack(\.maedate) {
-            LinearKeyframe(10, duration: 0.24)
-            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.55, dampingRatio: 0.40))
-            LinearKeyframe(0, duration: 0.72)
-            SpringKeyframe(-7, duration: 0.20, spring: .init(response: 0.50, dampingRatio: 0.35))
-            SpringKeyframe(0, duration: 0.54, spring: .init(response: 0.50, dampingRatio: 0.45))
-            Hold.moving(0, duration: 0.80, drift: 0.8)
+            CubicKeyframe(6, duration: 0.3)
+            SpringKeyframe(-3, duration: 0.15, spring: .init(response: 0.45, dampingRatio: 0.35))
+            SpringKeyframe(0, duration: 0.15, spring: .init(response: 0.45, dampingRatio: 0.4))
+            CubicKeyframe(-5, duration: 0.35, endVelocity: 0)
+            Rest.moving(-5, duration: 0.15, drift: 0.6)
+            CubicKeyframe(9, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(-3, duration: 0.28, spring: .init(response: 0.4, dampingRatio: 0.35))
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.45, dampingRatio: 0.4))
+            Rest.moving(0, duration: 0.25, drift: 0.6)
+            CubicKeyframe(4, duration: 0.35, startVelocity: 0, endVelocity: 0)
         }
-        KeyframeTrack(\.swordArmUpper) {
-            LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(22, duration: 0.45)
-            Hold.moving(22, duration: 1.71, drift: 0.5)
-            CubicKeyframe(0, duration: 0.24)
-        }
-        KeyframeTrack(\.swordFore) {
-            LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(10, duration: 0.45)
-            Hold.moving(10, duration: 1.71, drift: 0.5)
-            CubicKeyframe(0, duration: 0.24)
-        }
-        KeyframeTrack(\.katana) {
-            LinearKeyframe(0, duration: 0.40)
-            SpringKeyframe(-16, duration: 0.50, spring: .init(response: 0.55, dampingRatio: 0.55))
-            Hold.moving(-16, duration: 1.66, drift: 0.6)
-            CubicKeyframe(0, duration: 0.24)
-        }
-        // Sleeves trail the torso by about 0.1s.
         KeyframeTrack(\.sodeL) {
-            LinearKeyframe(0, duration: 0.54)
-            SpringKeyframe(8, duration: 0.35, spring: .init(response: 0.60, dampingRatio: 0.70))
-            Hold.moving(8, duration: 1.91, drift: 0.5)
+            LinearKeyframe(0, duration: 0.6)
+            CubicKeyframe(6, duration: 0.35, endVelocity: 0)
+            Rest.moving(6, duration: 0.15, drift: 0.5)
+            CubicKeyframe(2, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(-7, duration: 0.18, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.65, drift: 0.5)
         }
         KeyframeTrack(\.sodeR) {
-            LinearKeyframe(0, duration: 0.58)
-            SpringKeyframe(-8, duration: 0.35, spring: .init(response: 0.60, dampingRatio: 0.70))
-            Hold.moving(-8, duration: 1.87, drift: 0.5)
-        }
-        KeyframeTrack(\.offArmUpper) {
-            LinearKeyframe(0, duration: 0.44)
-            SpringKeyframe(-9, duration: 0.50, spring: .init(response: 0.72, dampingRatio: 0.78))
-            Hold.breathing(-9, duration: 1.62, drift: 1.0)
-            CubicKeyframe(0, duration: 0.24)
-        }
-        KeyframeTrack(\.offArmFore) {
-            LinearKeyframe(0, duration: 0.50)
-            SpringKeyframe(-19, duration: 0.54, spring: .init(response: 0.78, dampingRatio: 0.74))
-            Hold.breathing(-19, duration: 1.52, drift: 1.2)
-            CubicKeyframe(0, duration: 0.24)
-        }
-        // Torso carries the sag (+3) and the slow breathing.
-        KeyframeTrack(\.torso) {
-            LinearKeyframe(0, duration: 0.44)
-            CubicKeyframe(3, duration: 0.46)
-            Hold.breathing(3, duration: 1.66, drift: 0.9)
-            CubicKeyframe(0, duration: 0.24)
+            LinearKeyframe(0, duration: 0.6)
+            CubicKeyframe(-6, duration: 0.35, endVelocity: 0)
+            Rest.moving(-6, duration: 0.15, drift: 0.5)
+            CubicKeyframe(-2, duration: 0.12, startVelocity: 0)
+            SpringKeyframe(7, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.36, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.62, drift: 0.5)
         }
         KeyframeTrack(\.kusazuriL) {
-            LinearKeyframe(-6, duration: 0.26)
-            SpringKeyframe(4, duration: 0.40, spring: .init(response: 0.55, dampingRatio: 0.50))
-            Hold.moving(4, duration: 2.14, drift: 0.6)
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(8, duration: 0.14)
+            SpringKeyframe(-5, duration: 0.22, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.6, drift: 0.5)
+        }
+        KeyframeTrack(\.kusazuriFL) {
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(6, duration: 0.14)
+            SpringKeyframe(-4, duration: 0.22, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.6, drift: 0.5)
+        }
+        KeyframeTrack(\.kusazuriFR) {
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(-6, duration: 0.14)
+            SpringKeyframe(4, duration: 0.22, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.6, drift: 0.5)
         }
         KeyframeTrack(\.kusazuriR) {
-            LinearKeyframe(6, duration: 0.30)
-            SpringKeyframe(-4, duration: 0.40, spring: .init(response: 0.55, dampingRatio: 0.50))
-            Hold.moving(-4, duration: 2.10, drift: 0.6)
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(-8, duration: 0.14)
+            SpringKeyframe(5, duration: 0.22, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.6, drift: 0.5)
         }
-        // Eyes: pupils drop, then the whites and pupils snap shut in 0.10s. The two
-        // brow sets swap one after the other, never as a half-and-half crossfade.
-        KeyframeTrack(\.eyeOpacity) {
-            LinearKeyframe(1, duration: 0.45)
-            LinearKeyframe(0, duration: 0.10)
-            LinearKeyframe(0, duration: 2.25)
+        KeyframeTrack(\.sashTailL) {
+            LinearKeyframe(0, duration: 0.6)
+            CubicKeyframe(8, duration: 0.2)
+            CubicKeyframe(-2, duration: 0.3)
+            CubicKeyframe(14, duration: 0.16)
+            SpringKeyframe(-7, duration: 0.29, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.moving(0, duration: 0.45, drift: 0.8)
         }
-        KeyframeTrack(\.fierceOpacity) {
-            LinearKeyframe(1, duration: 0.40)
-            LinearKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 2.32)
+        KeyframeTrack(\.sashTailR) {
+            LinearKeyframe(0, duration: 0.6)
+            CubicKeyframe(-8, duration: 0.2)
+            CubicKeyframe(2, duration: 0.3)
+            CubicKeyframe(-14, duration: 0.16)
+            SpringKeyframe(7, duration: 0.29, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.moving(0, duration: 0.45, drift: 0.8)
         }
-        KeyframeTrack(\.easeOpacity) {
-            LinearKeyframe(0, duration: 0.48)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 2.24)
+        KeyframeTrack(\.chestCord) {
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(7, duration: 0.14)
+            SpringKeyframe(-4, duration: 0.26, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.5, drift: 0.6)
+        }
+        KeyframeTrack(\.scabbard) {
+            Rest.breathing(0, duration: 1.1, drift: 0.4)
+            CubicKeyframe(4, duration: 0.14)
+            SpringKeyframe(-2, duration: 0.26, spring: .init(response: 0.3, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.5, drift: 0.4)
         }
         KeyframeTrack(\.pupilDrop) {
-            LinearKeyframe(0, duration: 0.35)
-            CubicKeyframe(1.4, duration: 0.10)
-            Hold.moving(1.4, duration: 2.35, drift: 0.12)
+            LinearKeyframe(0, duration: 0.6)
+            CubicKeyframe(-0.9, duration: 0.35, endVelocity: 0)
+            Rest.moving(-0.9, duration: 0.15, drift: 0.1)
+            CubicKeyframe(0.5, duration: 0.16, startVelocity: 0, endVelocity: 0)
+            Rest.moving(0.5, duration: 0.79, drift: 0.1)
+            CubicKeyframe(0, duration: 0.35, startVelocity: 0, endVelocity: 0)
         }
     }
 
-    // MARK: - longBreak · "Cheer" (3.2s)
+    // MARK: - breakStart: "Rest on the blade" (2.8s)
     //
-    // Beat sheet: 0.20 launch (eyes swap), 0.66 land, bounces peak at 0.88 / 1.32 /
-    // 1.76 and land at 1.10 / 1.54 / 1.98, kiai hold to 2.80, dip, drop at 2.90.
+    // Both fists stack on the pommel at (100,136), blade straight down. He stands
+    // 33 units taller than at rest (emergence -17) so the tip lands on the bar edge
+    // instead of vanishing behind it.
 
-    /// Four sessions done. He springs up higher than the other two and cheers on
-    /// three shrinking bounces, blade arm higher than the off arm, ending on a kiai.
+    /// He rises, plants the blade tip on the bar, rests both hands on the pommel and
+    /// dozes with one small head bob, then jolts awake and sinks with the blade lifting.
     @KeyframesBuilder<SamuraiPose>
-    public static var triumph: some Keyframes<SamuraiPose> {
-        KeyframeTrack(\.emergence) {
-            CubicKeyframe(170, duration: 0.10)           // crest peeks, a beat
-            LinearKeyframe(170, duration: 0.10)
-            SpringKeyframe(-26, duration: 0.28, spring: .init(response: 0.32, dampingRatio: 0.48))
-            SpringKeyframe(-8, duration: 0.18, spring: .init(response: 0.32, dampingRatio: 0.55))
-            // Three shrinking bounces: 22, 17, 12.
-            CubicKeyframe(-22, duration: 0.22)
-            CubicKeyframe(-8, duration: 0.22)
-            CubicKeyframe(-17, duration: 0.22)
-            CubicKeyframe(-8, duration: 0.22)
-            CubicKeyframe(-12, duration: 0.22)
-            CubicKeyframe(-8, duration: 0.22)
-            Hold.moving(-8, duration: 0.82, drift: 0.8)   // kiai
-            CubicKeyframe(-14, duration: 0.10)            // small rise before the drop
-            CubicKeyframe(200, duration: 0.30, endVelocity: 900)
-        }
-        KeyframeTrack(\.rootScaleY) {
-            LinearKeyframe(0.90, duration: 0.20)
-            SpringKeyframe(1.08, duration: 0.28, spring: .init(response: 0.32, dampingRatio: 0.48))
-            SpringKeyframe(1.0, duration: 0.18, spring: .init(response: 0.32, dampingRatio: 0.55))
-            // Stretch on the way up, squash on each landing.
-            CubicKeyframe(1.04, duration: 0.22)
-            CubicKeyframe(0.95, duration: 0.22)
-            CubicKeyframe(1.04, duration: 0.22)
-            CubicKeyframe(0.95, duration: 0.22)
-            CubicKeyframe(1.03, duration: 0.22)
-            CubicKeyframe(0.96, duration: 0.22)
-            Hold.moving(1.0, duration: 0.82, drift: 0.01)
-            CubicKeyframe(1.04, duration: 0.40)
-        }
-        // Legs: tucked at launch, then alternate a small kick per bounce.
-        KeyframeTrack(\.legL) {
-            LinearKeyframe(-3, duration: 0.48)
-            CubicKeyframe(0, duration: 0.18)
-            CubicKeyframe(4, duration: 0.22); CubicKeyframe(0, duration: 0.22)
-            CubicKeyframe(-4, duration: 0.22); CubicKeyframe(0, duration: 0.22)
-            CubicKeyframe(4, duration: 0.22); CubicKeyframe(0, duration: 0.22)
-            Hold.moving(0, duration: 1.22, drift: 0.4)
-        }
-        KeyframeTrack(\.legR) {
-            LinearKeyframe(-3, duration: 0.48)
-            CubicKeyframe(0, duration: 0.18)
-            CubicKeyframe(-4, duration: 0.22); CubicKeyframe(0, duration: 0.22)
-            CubicKeyframe(4, duration: 0.22); CubicKeyframe(0, duration: 0.22)
-            CubicKeyframe(-4, duration: 0.22); CubicKeyframe(0, duration: 0.22)
-            Hold.moving(0, duration: 1.22, drift: 0.3)
-        }
-        // Blade arm: the higher one (-85), swinging with the bounces.
+    public static var exhale: some Keyframes<SamuraiPose> {
         KeyframeTrack(\.swordArmUpper) {
-            LinearKeyframe(0, duration: 0.24)
-            SpringKeyframe(-85, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.48))
-            CubicKeyframe(-66, duration: 0.12)
-            CubicKeyframe(-85, duration: 0.22); CubicKeyframe(-66, duration: 0.22)
-            CubicKeyframe(-83, duration: 0.22); CubicKeyframe(-66, duration: 0.22)
-            CubicKeyframe(-85, duration: 0.22); CubicKeyframe(-70, duration: 0.22)
-            CubicKeyframe(-85, duration: 0.16)            // kiai
-            Hold.moving(-85, duration: 0.66, drift: 0.6)
-            CubicKeyframe(-10, duration: 0.40)
+            LinearKeyframe(-0.29, duration: 0.12)
+            Rest.moving(-0.29, duration: 0.28, drift: 0.6)
+            SpringKeyframe(28.19, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.7))
+            CubicKeyframe(29.74, duration: 0.6, endVelocity: 0)
+            Rest.breathing(29.74, duration: 0.5, drift: 0.7)
+            SpringKeyframe(36.35, duration: 0.2, spring: .init(response: 0.18, dampingRatio: 0.55))
+            Rest.moving(36.35, duration: 0.22, drift: 0.4)
+            CubicKeyframe(43.92, duration: 0.48, startVelocity: 0, endVelocity: 0)
         }
         KeyframeTrack(\.swordFore) {
-            LinearKeyframe(0, duration: 0.24)
-            SpringKeyframe(-14, duration: 0.42, spring: .init(response: 0.30, dampingRatio: 0.50))
-            CubicKeyframe(-20, duration: 0.22); CubicKeyframe(-10, duration: 0.22)
-            CubicKeyframe(-20, duration: 0.22); CubicKeyframe(-10, duration: 0.22)
-            CubicKeyframe(-20, duration: 0.22); CubicKeyframe(-10, duration: 0.22)
-            Hold.moving(-10, duration: 0.82, drift: 0.6)
-            CubicKeyframe(0, duration: 0.40)
+            LinearKeyframe(95.83, duration: 0.12)
+            Rest.moving(95.83, duration: 0.28, drift: 0.6)
+            SpringKeyframe(106.41, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.7))
+            CubicKeyframe(104.02, duration: 0.6, endVelocity: 0)
+            Rest.breathing(104.02, duration: 0.5, drift: 0.7)
+            SpringKeyframe(112.91, duration: 0.2, spring: .init(response: 0.18, dampingRatio: 0.55))
+            Rest.moving(112.91, duration: 0.22, drift: 0.4)
+            CubicKeyframe(129.73, duration: 0.48, startVelocity: 0, endVelocity: 0)
         }
-        // Katana flicks +-10 around 16, and goes out to 28 on the third bounce.
         KeyframeTrack(\.katana) {
-            LinearKeyframe(0, duration: 0.30)
-            SpringKeyframe(16, duration: 0.36, spring: .init(response: 0.35, dampingRatio: 0.45))
-            CubicKeyframe(26, duration: 0.22); CubicKeyframe(6, duration: 0.22)
-            CubicKeyframe(26, duration: 0.22); CubicKeyframe(6, duration: 0.22)
-            CubicKeyframe(28, duration: 0.22); CubicKeyframe(12, duration: 0.22)
-            Hold.moving(12, duration: 0.82, drift: 0.8)
-            CubicKeyframe(0, duration: 0.40)
+            LinearKeyframe(45.34, duration: 0.12)
+            Rest.moving(45.34, duration: 0.28, drift: 0.6)
+            SpringKeyframe(21.28, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.7))
+            CubicKeyframe(20.12, duration: 0.6, endVelocity: 0)
+            Rest.breathing(20.12, duration: 0.5, drift: 0.7)
+            SpringKeyframe(5.62, duration: 0.2, spring: .init(response: 0.18, dampingRatio: 0.55))
+            Rest.moving(5.62, duration: 0.22, drift: 0.4)
+            CubicKeyframe(-37.77, duration: 0.48, startVelocity: 0, endVelocity: 0)
         }
-        // Off arm: lower (-62 to -78) and leads the blade arm by 0.06s.
         KeyframeTrack(\.offArmUpper) {
-            LinearKeyframe(0, duration: 0.18)
-            SpringKeyframe(-78, duration: 0.30, spring: .init(response: 0.32, dampingRatio: 0.48))
-            CubicKeyframe(-62, duration: 0.12)
-            CubicKeyframe(-78, duration: 0.22); CubicKeyframe(-62, duration: 0.22)
-            CubicKeyframe(-78, duration: 0.22); CubicKeyframe(-62, duration: 0.22)
-            CubicKeyframe(-78, duration: 0.22); CubicKeyframe(-62, duration: 0.22)
-            Hold.moving(-70, duration: 0.72, drift: 0.6)
-            CubicKeyframe(0, duration: 0.40)
+            LinearKeyframe(-32.63, duration: 0.12)
+            Rest.moving(-32.63, duration: 0.28, drift: 0.6)
+            SpringKeyframe(-49.13, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.7))
+            CubicKeyframe(-48.08, duration: 0.6, endVelocity: 0)
+            Rest.breathing(-48.08, duration: 0.5, drift: 0.7)
+            SpringKeyframe(-61.25, duration: 0.2, spring: .init(response: 0.18, dampingRatio: 0.55))
+            Rest.moving(-61.25, duration: 0.22, drift: 0.4)
+            CubicKeyframe(-71.94, duration: 0.48, startVelocity: 0, endVelocity: 0)
         }
         KeyframeTrack(\.offArmFore) {
-            LinearKeyframe(0, duration: 0.18)
-            SpringKeyframe(-46, duration: 0.42, spring: .init(response: 0.32, dampingRatio: 0.50))
-            CubicKeyframe(-46, duration: 0.22); CubicKeyframe(-34, duration: 0.22)
-            CubicKeyframe(-46, duration: 0.22); CubicKeyframe(-34, duration: 0.22)
-            CubicKeyframe(-46, duration: 0.22); CubicKeyframe(-34, duration: 0.22)
-            Hold.moving(-40, duration: 0.88, drift: 0.8)
-            CubicKeyframe(0, duration: 0.40)
+            LinearKeyframe(-87.42, duration: 0.12)
+            Rest.moving(-87.42, duration: 0.28, drift: 0.6)
+            SpringKeyframe(-114.05, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.7))
+            CubicKeyframe(-117.55, duration: 0.6, endVelocity: 0)
+            Rest.breathing(-117.55, duration: 0.5, drift: 0.7)
+            SpringKeyframe(-112.48, duration: 0.2, spring: .init(response: 0.18, dampingRatio: 0.55))
+            Rest.moving(-112.48, duration: 0.22, drift: 0.4)
+            CubicKeyframe(-104.39, duration: 0.48, startVelocity: 0, endVelocity: 0)
+        }
+        KeyframeTrack(\.emergence) {
+            CubicKeyframe(-17, duration: 0.4, startVelocity: -1000, endVelocity: 0)
+            Rest.moving(-17, duration: 0.4, drift: 0.8)
+            Rest.breathing(-17, duration: 1.1, drift: 0.8)
+            CubicKeyframe(-24, duration: 0.2, startVelocity: 0, endVelocity: 0)
+            Rest.moving(-24, duration: 0.22, drift: 0.5)
+            CubicKeyframe(200, duration: 0.48, startVelocity: 0, endVelocity: 900)
+        }
+        KeyframeTrack(\.rootScaleY) {
+            CubicKeyframe(1.03, duration: 0.4)
+            SpringKeyframe(1, duration: 0.4, spring: .init(response: 0.3, dampingRatio: 0.6))
+            Rest.breathing(1, duration: 2, drift: 0.01)
+        }
+        KeyframeTrack(\.torso) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(2, duration: 0.6, endVelocity: 0)
+            Rest.breathing(2, duration: 0.5, drift: 0.5)
+            SpringKeyframe(-1, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.5))
+            CubicKeyframe(0, duration: 0.22, endVelocity: 0)
+            Rest.moving(0, duration: 0.48, drift: 0.3)
+        }
+        KeyframeTrack(\.torsoScaleY) {
+            LinearKeyframe(1, duration: 0.8)
+            CubicKeyframe(0.96, duration: 0.6)
+            CubicKeyframe(0.98, duration: 0.25)
+            CubicKeyframe(0.96, duration: 0.25)
+            SpringKeyframe(1, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.55))
+            Rest.moving(1, duration: 0.7, drift: 0.01)
         }
         KeyframeTrack(\.head) {
-            LinearKeyframe(0, duration: 0.34)
-            CubicKeyframe(-11, duration: 0.24)           // chin up, looking skyward
-            Hold.moving(-11, duration: 1.40, drift: 0.9)
-            CubicKeyframe(-14, duration: 0.14)           // kiai
-            Hold.moving(-14, duration: 0.68, drift: 0.6)
-            CubicKeyframe(0, duration: 0.40)
+            Rest.moving(0, duration: 0.8, drift: 0.4)
+            CubicKeyframe(13, duration: 0.6, startVelocity: 0)
+            CubicKeyframe(16, duration: 0.25)
+            CubicKeyframe(12, duration: 0.25)
+            SpringKeyframe(-4, duration: 0.2, spring: .init(response: 0.18, dampingRatio: 0.5))
+            Rest.moving(-4, duration: 0.22, drift: 0.4)
+            CubicKeyframe(0, duration: 0.48, startVelocity: 0, endVelocity: 0)
         }
-        KeyframeTrack(\.kabutoLift) {
-            LinearKeyframe(0, duration: 0.56)
-            SpringKeyframe(-4, duration: 0.18, spring: .init(response: 0.35, dampingRatio: 0.42))
-            SpringKeyframe(0, duration: 0.24, spring: .init(response: 0.35, dampingRatio: 0.45))
-            Hold.moving(0, duration: 1.92, drift: 0.5)
-            CubicKeyframe(-3, duration: 0.30)
+        KeyframeTrack(\.kabuto) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(2, duration: 0.6, endVelocity: 0)
+            Rest.breathing(2, duration: 0.5, drift: 0.6)
+            SpringKeyframe(-2, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.5))
+            CubicKeyframe(0, duration: 0.7, endVelocity: 0)
         }
         KeyframeTrack(\.maedate) {
-            LinearKeyframe(0, duration: 0.62)
-            SpringKeyframe(15, duration: 0.16, spring: .init(response: 0.50, dampingRatio: 0.28))
-            SpringKeyframe(-11, duration: 0.16, spring: .init(response: 0.50, dampingRatio: 0.28))
-            SpringKeyframe(0, duration: 0.16, spring: .init(response: 0.50, dampingRatio: 0.30))
-            CubicKeyframe(9, duration: 0.22)
-            CubicKeyframe(0, duration: 0.22)
-            CubicKeyframe(8, duration: 0.22)
-            CubicKeyframe(0, duration: 0.22)
-            Hold.moving(0, duration: 0.92, drift: 0.9)
-            CubicKeyframe(-12, duration: 0.30)
+            CubicKeyframe(8, duration: 0.3)
+            SpringKeyframe(-4, duration: 0.25, spring: .init(response: 0.45, dampingRatio: 0.35))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.45, dampingRatio: 0.4))
+            CubicKeyframe(3, duration: 0.5)
+            CubicKeyframe(0, duration: 0.5)
+            SpringKeyframe(-8, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.35))
+            SpringKeyframe(2, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.4))
+            CubicKeyframe(5, duration: 0.4, endVelocity: 0)
         }
-        KeyframeTrack(\.rootLean) {
-            Hold.moving(0, duration: 0.9, drift: 0.5)
-            CubicKeyframe(-2.5, duration: 0.30)
-            CubicKeyframe(2.5, duration: 0.44)
-            CubicKeyframe(-2, duration: 0.44)
-            CubicKeyframe(0, duration: 0.42)
-            LinearKeyframe(0, duration: 0.70)
+        KeyframeTrack(\.sodeL) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(-4, duration: 0.6, endVelocity: 0)
+            Rest.breathing(-4, duration: 0.5, drift: 0.5)
+            SpringKeyframe(3, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.5))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.3, drift: 0.4)
         }
-        KeyframeTrack(\.kusazuriL) { Lag.settle(from: -15, at: 0.50, kick: 4, total: 3.20) }
-        KeyframeTrack(\.kusazuriFL) { Lag.settle(from: -10, at: 0.54, kick: 3, total: 3.20) }
-        KeyframeTrack(\.kusazuriFR) { Lag.settle(from: 10, at: 0.58, kick: -3, total: 3.20) }
-        KeyframeTrack(\.kusazuriR) { Lag.settle(from: 15, at: 0.62, kick: -4, total: 3.20) }
-        // Sash tails whip on every landing.
-        KeyframeTrack(\.sashTailL) { Lag.sash(side: -1) }
-        KeyframeTrack(\.sashTailR) { Lag.sash(side: 1) }
-        // Eyes swap on the launch frame (0.20), a straight cut, not a fade.
+        KeyframeTrack(\.sodeR) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(4, duration: 0.6, endVelocity: 0)
+            Rest.breathing(4, duration: 0.5, drift: 0.5)
+            SpringKeyframe(-3, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.5))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.3, drift: 0.4)
+        }
+        KeyframeTrack(\.kusazuriL) {
+            CubicKeyframe(-5, duration: 0.3)
+            SpringKeyframe(2, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.45, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.9, drift: 0.6)
+            SpringKeyframe(-3.5, duration: 0.2, spring: .init(response: 0.22, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.2, drift: 0.4)
+        }
+        KeyframeTrack(\.kusazuriFL) {
+            CubicKeyframe(-3, duration: 0.3)
+            SpringKeyframe(1.2, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.45, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.9, drift: 0.6)
+            SpringKeyframe(-2.1, duration: 0.2, spring: .init(response: 0.22, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.2, drift: 0.4)
+        }
+        KeyframeTrack(\.kusazuriFR) {
+            CubicKeyframe(3, duration: 0.3)
+            SpringKeyframe(-1.2, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.45, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.9, drift: 0.6)
+            SpringKeyframe(2.1, duration: 0.2, spring: .init(response: 0.22, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.2, drift: 0.4)
+        }
+        KeyframeTrack(\.kusazuriR) {
+            CubicKeyframe(5, duration: 0.3)
+            SpringKeyframe(-2, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.45, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.9, drift: 0.6)
+            SpringKeyframe(3.5, duration: 0.2, spring: .init(response: 0.22, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.2, drift: 0.4)
+        }
+        KeyframeTrack(\.sashTailL) {
+            CubicKeyframe(10, duration: 0.4)
+            SpringKeyframe(-3, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.6, spring: .init(response: 0.5, dampingRatio: 0.5))
+            CubicKeyframe(2, duration: 0.5)
+            SpringKeyframe(10, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.moving(0, duration: 0.2, drift: 0.5)
+        }
+        KeyframeTrack(\.sashTailR) {
+            CubicKeyframe(-10, duration: 0.4)
+            SpringKeyframe(3, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.6, spring: .init(response: 0.5, dampingRatio: 0.5))
+            CubicKeyframe(-2, duration: 0.5)
+            SpringKeyframe(-10, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.moving(0, duration: 0.2, drift: 0.5)
+        }
+        KeyframeTrack(\.chestCord) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(3, duration: 0.6)
+            CubicKeyframe(2, duration: 0.5)
+            SpringKeyframe(-5, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.moving(0, duration: 0.2, drift: 0.4)
+        }
+        KeyframeTrack(\.legL) {
+            LinearKeyframe(0, duration: 0.4)
+            CubicKeyframe(3, duration: 0.4)
+            CubicKeyframe(2, duration: 1.1)
+            CubicKeyframe(5, duration: 0.2)
+            CubicKeyframe(0, duration: 0.4, endVelocity: 0)
+            Rest.moving(0, duration: 0.3, drift: 0.4)
+        }
+        KeyframeTrack(\.shinL) {
+            LinearKeyframe(0, duration: 0.4)
+            CubicKeyframe(-7.23, duration: 0.4)
+            CubicKeyframe(-4.82, duration: 1.1)
+            CubicKeyframe(-12.05, duration: 0.2)
+            CubicKeyframe(0, duration: 0.4, endVelocity: 0)
+            Rest.moving(0, duration: 0.3, drift: 0.4)
+        }
+        KeyframeTrack(\.legR) {
+            LinearKeyframe(0, duration: 0.4)
+            CubicKeyframe(-3, duration: 0.4)
+            CubicKeyframe(-2, duration: 1.1)
+            CubicKeyframe(-5, duration: 0.2)
+            CubicKeyframe(0, duration: 0.4, endVelocity: 0)
+            Rest.moving(0, duration: 0.3, drift: 0.4)
+        }
+        KeyframeTrack(\.shinR) {
+            LinearKeyframe(0, duration: 0.4)
+            CubicKeyframe(7.23, duration: 0.4)
+            CubicKeyframe(4.82, duration: 1.1)
+            CubicKeyframe(12.05, duration: 0.2)
+            CubicKeyframe(0, duration: 0.4, endVelocity: 0)
+            Rest.moving(0, duration: 0.3, drift: 0.4)
+        }
         KeyframeTrack(\.eyeOpacity) {
-            LinearKeyframe(1, duration: 0.16)
-            LinearKeyframe(0, duration: 0.04)
-            LinearKeyframe(0, duration: 3.00)
+            LinearKeyframe(1, duration: 1.05)
+            LinearKeyframe(0, duration: 0.1)
+            LinearKeyframe(0, duration: 0.75)
+            LinearKeyframe(1, duration: 0.06)
+            LinearKeyframe(1, duration: 0.84)
         }
         KeyframeTrack(\.fierceOpacity) {
-            LinearKeyframe(1, duration: 0.16)
+            LinearKeyframe(1, duration: 1)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 0.82)
+            LinearKeyframe(1, duration: 0.06)
+            LinearKeyframe(1, duration: 0.84)
+        }
+        KeyframeTrack(\.easeOpacity) {
+            LinearKeyframe(0, duration: 1.08)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 0.74)
+            LinearKeyframe(0, duration: 0.06)
+            LinearKeyframe(0, duration: 0.84)
+        }
+        KeyframeTrack(\.scabbard) {
+            CubicKeyframe(3, duration: 0.4)
+            SpringKeyframe(-1, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.4))
+            LinearKeyframe(0, duration: 1.3)
+            SpringKeyframe(4, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.45))
+            SpringKeyframe(0, duration: 0.5, spring: .init(response: 0.4, dampingRatio: 0.5))
+        }
+        KeyframeTrack(\.rootLean) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(0.6, duration: 0.6, endVelocity: 0)
+            Rest.breathing(0.6, duration: 0.5, drift: 0.3)
+            SpringKeyframe(-0.4, duration: 0.2, spring: .init(response: 0.2, dampingRatio: 0.5))
+            CubicKeyframe(0, duration: 0.22, endVelocity: 0)
+            Rest.moving(0, duration: 0.48, drift: 0.3)
+        }
+        KeyframeTrack(\.pupilDrop) {
+            LinearKeyframe(0, duration: 0.8)
+            CubicKeyframe(1.4, duration: 0.15, endVelocity: 0)
+            Rest.moving(1.4, duration: 0.95, drift: 0.1)
+            CubicKeyframe(-0.4, duration: 0.1, startVelocity: 0)
+            CubicKeyframe(0, duration: 0.8, endVelocity: 0)
+        }
+    }
+
+    // MARK: - longBreak: "Victory cry" (3.2s)
+    //
+    // 0.00-0.35 rise  0.35-0.55 crouch  0.55-0.95 one jump (24 units), blade thrust
+    // straight up, off fist to the hip  0.95-1.15 land wide  1.15-2.20 kiai hold
+    // 2.20-2.70 deep bow, blade lowers  2.70-3.20 sink
+
+    /// A fast rise, a crouch, one jump with the blade thrust straight up, a wide
+    /// landing and a held kiai. Then the blade comes down, he bows deeply and sinks.
+    @KeyframesBuilder<SamuraiPose>
+    public static var triumph: some Keyframes<SamuraiPose> {
+        KeyframeTrack(\.swordArmUpper) {
+            CubicKeyframe(0, duration: 0.35)
+            CubicKeyframe(-26.92, duration: 0.2)
+            SpringKeyframe(-130.44, duration: 0.25, spring: .init(response: 0.26, dampingRatio: 0.55))
+            Rest.moving(-130.44, duration: 0.15, drift: 0.6)
+            Rest.moving(-130.44, duration: 0.2, drift: 0.6)
+            Rest.breathing(-130.44, duration: 1.05, drift: 1.2)
+            CubicKeyframe(-7.76, duration: 0.4, startVelocity: 0, endVelocity: 0)
+            Rest.moving(-7.76, duration: 0.1, drift: 0.4)
+            Rest.moving(-7.76, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.swordFore) {
+            CubicKeyframe(0, duration: 0.35)
+            CubicKeyframe(107.87, duration: 0.2)
+            SpringKeyframe(-39.9, duration: 0.25, spring: .init(response: 0.26, dampingRatio: 0.55))
+            Rest.moving(-39.9, duration: 0.15, drift: 0.6)
+            Rest.moving(-39.9, duration: 0.2, drift: 0.6)
+            Rest.breathing(-39.9, duration: 1.05, drift: 1.2)
+            CubicKeyframe(54.42, duration: 0.4, startVelocity: 0, endVelocity: 0)
+            Rest.moving(54.42, duration: 0.1, drift: 0.4)
+            Rest.moving(54.42, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.katana) {
+            CubicKeyframe(0, duration: 0.35)
+            CubicKeyframe(-85.07, duration: 0.2)
+            SpringKeyframe(-213.78, duration: 0.25, spring: .init(response: 0.26, dampingRatio: 0.55))
+            CubicKeyframe(-213.78, duration: 0.15)
+            CubicKeyframe(-207.78, duration: 0.1)
+            SpringKeyframe(-213.78, duration: 0.2, spring: .init(response: 0.25, dampingRatio: 0.45))
+            Rest.moving(-213.78, duration: 0.95, drift: 1.2)
+            CubicKeyframe(-260.78, duration: 0.4, startVelocity: 0, endVelocity: 0)
+            Rest.moving(-260.78, duration: 0.1, drift: 0.4)
+            Rest.moving(-260.78, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.offArmUpper) {
+            CubicKeyframe(0, duration: 0.35)
+            CubicKeyframe(28.12, duration: 0.2)
+            SpringKeyframe(28.77, duration: 0.25, spring: .init(response: 0.26, dampingRatio: 0.55))
+            Rest.moving(28.77, duration: 0.15, drift: 0.6)
+            Rest.moving(28.77, duration: 0.2, drift: 0.6)
+            Rest.breathing(28.77, duration: 1.05, drift: 1.2)
+            CubicKeyframe(0, duration: 0.4, startVelocity: 0, endVelocity: 0)
+            Rest.moving(0, duration: 0.1, drift: 0.4)
+            Rest.moving(0, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.offArmFore) {
+            CubicKeyframe(0, duration: 0.35)
+            CubicKeyframe(-85.22, duration: 0.2)
+            SpringKeyframe(-78.51, duration: 0.25, spring: .init(response: 0.26, dampingRatio: 0.55))
+            Rest.moving(-78.51, duration: 0.15, drift: 0.6)
+            Rest.moving(-78.51, duration: 0.2, drift: 0.6)
+            Rest.breathing(-78.51, duration: 1.05, drift: 1.2)
+            CubicKeyframe(0, duration: 0.4, startVelocity: 0, endVelocity: 0)
+            Rest.moving(0, duration: 0.1, drift: 0.4)
+            Rest.moving(0, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.legL) {
+            LinearKeyframe(0, duration: 0.35)
+            CubicKeyframe(12, duration: 0.2)
+            CubicKeyframe(3, duration: 0.2)
+            CubicKeyframe(14, duration: 0.2)
+            SpringKeyframe(12, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.breathing(12, duration: 1.05, drift: 0.4)
+            CubicKeyframe(4, duration: 0.25)
+            CubicKeyframe(0, duration: 0.25, endVelocity: 0)
+            Rest.moving(0, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.shinL) {
+            LinearKeyframe(0, duration: 0.35)
+            CubicKeyframe(-29.04, duration: 0.2)
+            CubicKeyframe(-7.23, duration: 0.2)
+            CubicKeyframe(-33.93, duration: 0.2)
+            SpringKeyframe(-29.04, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.breathing(-29.04, duration: 1.05, drift: 0.4)
+            CubicKeyframe(-9.64, duration: 0.25)
+            CubicKeyframe(0, duration: 0.25, endVelocity: 0)
+            Rest.moving(0, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.legR) {
+            LinearKeyframe(0, duration: 0.35)
+            CubicKeyframe(-12, duration: 0.2)
+            CubicKeyframe(-3, duration: 0.2)
+            CubicKeyframe(-14, duration: 0.2)
+            SpringKeyframe(-12, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.breathing(-12, duration: 1.05, drift: 0.4)
+            CubicKeyframe(-4, duration: 0.25)
+            CubicKeyframe(0, duration: 0.25, endVelocity: 0)
+            Rest.moving(0, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.shinR) {
+            LinearKeyframe(0, duration: 0.35)
+            CubicKeyframe(29.04, duration: 0.2)
+            CubicKeyframe(7.23, duration: 0.2)
+            CubicKeyframe(33.93, duration: 0.2)
+            SpringKeyframe(29.04, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.breathing(29.04, duration: 1.05, drift: 0.4)
+            CubicKeyframe(9.64, duration: 0.25)
+            CubicKeyframe(0, duration: 0.25, endVelocity: 0)
+            Rest.moving(0, duration: 0.5, drift: 0.4)
+        }
+        KeyframeTrack(\.emergence) {
+            CubicKeyframe(-6, duration: 0.35, startVelocity: -900, endVelocity: 0)
+            CubicKeyframe(0, duration: 0.2)
+            CubicKeyframe(-12.5, duration: 0.2, startVelocity: -260, endVelocity: 0)
+            CubicKeyframe(0, duration: 0.2, startVelocity: 0, endVelocity: 520)
+            Rest.breathing(0, duration: 1.75, drift: 0.8)
+            CubicKeyframe(200, duration: 0.5, startVelocity: 0, endVelocity: 900)
+        }
+        KeyframeTrack(\.rootScaleY) {
+            CubicKeyframe(1.05, duration: 0.35)
+            CubicKeyframe(0.9, duration: 0.2)
+            CubicKeyframe(1.06, duration: 0.2)
+            CubicKeyframe(0.92, duration: 0.2)
+            SpringKeyframe(1, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.breathing(1, duration: 1.05, drift: 0.01)
+            CubicKeyframe(0.95, duration: 0.25, startVelocity: 0)
+            LinearKeyframe(0.95, duration: 0.25)
+            CubicKeyframe(1.04, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.rootLean) {
+            Rest.breathing(0, duration: 1.15, drift: 0.4)
+            CubicKeyframe(-0.8, duration: 0.35)
+            CubicKeyframe(0.6, duration: 0.4)
+            CubicKeyframe(0, duration: 0.3)
+            Rest.moving(0, duration: 1, drift: 0.4)
+        }
+        KeyframeTrack(\.torso) {
+            Rest.breathing(0, duration: 1.15, drift: 0.4)
+            Rest.breathing(0, duration: 1.05, drift: 0.8)
+            LinearKeyframe(0, duration: 0.25)
+            Rest.moving(0, duration: 0.75, drift: 0.3)
+        }
+        KeyframeTrack(\.torsoScaleY) {
+            CubicKeyframe(0.95, duration: 0.55)
+            CubicKeyframe(1.03, duration: 0.2)
+            CubicKeyframe(0.96, duration: 0.2)
+            SpringKeyframe(1, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            Rest.breathing(1, duration: 1.05, drift: 0.012)
+            CubicKeyframe(0.9, duration: 0.25, startVelocity: 0)
+            LinearKeyframe(0.9, duration: 0.25)
+            CubicKeyframe(1, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.head) {
+            LinearKeyframe(0, duration: 0.55)
+            CubicKeyframe(-6, duration: 0.2)
+            CubicKeyframe(-8, duration: 0.2)
+            CubicKeyframe(-14, duration: 0.2, endVelocity: 0)
+            Rest.breathing(-14, duration: 1.05, drift: 1.0)
+            CubicKeyframe(2, duration: 0.25, startVelocity: 0)
+            LinearKeyframe(2, duration: 0.25)
+            CubicKeyframe(0, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.headScale) {
+            LinearKeyframe(1, duration: 2.2)
+            CubicKeyframe(0.93, duration: 0.25)
+            LinearKeyframe(0.93, duration: 0.25)
+            CubicKeyframe(1, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.kabutoLift) {
+            Rest.moving(0, duration: 0.95, drift: 0.4)
+            CubicKeyframe(-4, duration: 0.07)
+            SpringKeyframe(0, duration: 0.23, spring: .init(response: 0.3, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.95, drift: 0.4)
+        }
+        KeyframeTrack(\.kabuto) {
+            Rest.breathing(0, duration: 2.2, drift: 0.4)
+            CubicKeyframe(4, duration: 0.25)
+            LinearKeyframe(4, duration: 0.25)
+            CubicKeyframe(0, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.maedate) {
+            CubicKeyframe(8, duration: 0.35)
+            CubicKeyframe(-4, duration: 0.2)
+            CubicKeyframe(12, duration: 0.2)
+            CubicKeyframe(-14, duration: 0.2)
+            SpringKeyframe(8, duration: 0.2, spring: .init(response: 0.4, dampingRatio: 0.3))
+            SpringKeyframe(-3, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.35))
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.45, dampingRatio: 0.4))
+            Rest.moving(0, duration: 0.45, drift: 0.8)
+            CubicKeyframe(6, duration: 0.25, startVelocity: 0)
+            LinearKeyframe(6, duration: 0.25)
+            CubicKeyframe(0, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.sodeL) {
+            LinearKeyframe(0, duration: 0.55)
+            CubicKeyframe(-8, duration: 0.2)
+            CubicKeyframe(12, duration: 0.2)
+            SpringKeyframe(-4, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.75, drift: 0.5)
+        }
+        KeyframeTrack(\.sodeR) {
+            LinearKeyframe(0, duration: 0.55)
+            CubicKeyframe(8, duration: 0.2)
+            CubicKeyframe(-12, duration: 0.2)
+            SpringKeyframe(4, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.75, drift: 0.5)
+        }
+        KeyframeTrack(\.kusazuriL) {
+            CubicKeyframe(-12, duration: 0.35)
+            SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            CubicKeyframe(10, duration: 0.2)
+            CubicKeyframe(-14, duration: 0.2)
+            SpringKeyframe(6, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.7, drift: 0.6)
+        }
+        KeyframeTrack(\.kusazuriFL) {
+            CubicKeyframe(-8.4, duration: 0.35)
+            SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            CubicKeyframe(7, duration: 0.2)
+            CubicKeyframe(-9.8, duration: 0.2)
+            SpringKeyframe(4.2, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.7, drift: 0.6)
+        }
+        KeyframeTrack(\.kusazuriFR) {
+            CubicKeyframe(8.4, duration: 0.35)
+            SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            CubicKeyframe(-7, duration: 0.2)
+            CubicKeyframe(9.8, duration: 0.2)
+            SpringKeyframe(-4.2, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.7, drift: 0.6)
+        }
+        KeyframeTrack(\.kusazuriR) {
+            CubicKeyframe(12, duration: 0.35)
+            SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            CubicKeyframe(-10, duration: 0.2)
+            CubicKeyframe(14, duration: 0.2)
+            SpringKeyframe(-6, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.7, drift: 0.6)
+        }
+        KeyframeTrack(\.sashTailL) {
+            CubicKeyframe(-20, duration: 0.35)
+            SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            CubicKeyframe(-16, duration: 0.2)
+            SpringKeyframe(24, duration: 0.2, spring: .init(response: 0.28, dampingRatio: 0.4))
+            SpringKeyframe(-14, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.38))
+            SpringKeyframe(8, duration: 0.25, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.moving(0, duration: 0.5, drift: 1.0)
+            CubicKeyframe(-6, duration: 0.25, startVelocity: 0)
+            LinearKeyframe(-6, duration: 0.25)
+            CubicKeyframe(0, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.sashTailR) {
+            CubicKeyframe(20, duration: 0.35)
+            SpringKeyframe(0, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.5))
+            CubicKeyframe(16, duration: 0.2)
+            SpringKeyframe(-24, duration: 0.2, spring: .init(response: 0.28, dampingRatio: 0.4))
+            SpringKeyframe(14, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.38))
+            SpringKeyframe(-8, duration: 0.25, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.moving(0, duration: 0.5, drift: 1.0)
+            CubicKeyframe(6, duration: 0.25, startVelocity: 0)
+            LinearKeyframe(6, duration: 0.25)
+            CubicKeyframe(0, duration: 0.5, endVelocity: 0)
+        }
+        KeyframeTrack(\.chestCord) {
+            LinearKeyframe(0, duration: 0.75)
+            CubicKeyframe(8, duration: 0.2)
+            SpringKeyframe(-6, duration: 0.25, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.4, spring: .init(response: 0.4, dampingRatio: 0.5))
+            Rest.breathing(0, duration: 1.6, drift: 0.6)
+        }
+        KeyframeTrack(\.scabbard) {
+            LinearKeyframe(0, duration: 0.55)
+            CubicKeyframe(5, duration: 0.2)
+            CubicKeyframe(-6, duration: 0.2)
+            SpringKeyframe(4, duration: 0.2, spring: .init(response: 0.3, dampingRatio: 0.4))
+            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.4, dampingRatio: 0.45))
+            Rest.breathing(0, duration: 1.7, drift: 0.5)
+        }
+        KeyframeTrack(\.eyeOpacity) {
+            LinearKeyframe(1, duration: 0.52)
             LinearKeyframe(0, duration: 0.04)
-            LinearKeyframe(0, duration: 3.00)
+            LinearKeyframe(0, duration: 2.64)
+        }
+        KeyframeTrack(\.fierceOpacity) {
+            LinearKeyframe(1, duration: 0.52)
+            LinearKeyframe(0, duration: 0.04)
+            LinearKeyframe(0, duration: 2.64)
         }
         KeyframeTrack(\.triumphOpacity) {
-            LinearKeyframe(0, duration: 0.16)
+            LinearKeyframe(0, duration: 0.52)
             LinearKeyframe(1, duration: 0.04)
-            LinearKeyframe(1, duration: 3.00)
+            LinearKeyframe(1, duration: 2.64)
+        }
+        KeyframeTrack(\.kiai) {
+            LinearKeyframe(0, duration: 0.9)
+            LinearKeyframe(1, duration: 0.1)
+            LinearKeyframe(1, duration: 1.15)
+            LinearKeyframe(0, duration: 0.1)
+            LinearKeyframe(0, duration: 0.95)
         }
     }
 }
 
-/// Secondary-motion helpers for plates and tails that trail what they hang from.
-private enum Lag {
-
-    /// Hangs at `initial` until `at`, kicks past rest, then settles on a spring.
+/// Holds that start and end at rest. `Hold.moving` leaves the incoming velocity to
+/// the spline, which carries the previous move straight through the hold and
+/// overshoots it; these pin both ends so a hold stays a hold.
+private enum Rest {
     @KeyframeTrackContentBuilder<Double>
-    static func settle(from initial: Double, at settleAt: Double, kick: Double, total: Double)
+    static func moving(_ value: Double, duration: Double, drift: Double)
         -> some KeyframeTrackContent<Double> {
-        LinearKeyframe(initial, duration: settleAt)
-        SpringKeyframe(kick, duration: 0.14, spring: .init(response: 0.40, dampingRatio: 0.50))
-        SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.45, dampingRatio: 0.45))
-        Hold.moving(0, duration: total - settleAt - 0.44, drift: 0.5)
+        CubicKeyframe(value + drift, duration: duration * 0.58, startVelocity: 0, endVelocity: 0)
+        CubicKeyframe(value, duration: duration * 0.42, startVelocity: 0, endVelocity: 0)
     }
 
-    /// Cheer sash tail (3.2s): flung back at launch, then a kick on each landing.
     @KeyframeTrackContentBuilder<Double>
-    static func sash(side s: Double) -> some KeyframeTrackContent<Double> {
-        LinearKeyframe(24 * s, duration: 0.32)
-        SpringKeyframe(0, duration: 0.34, spring: .init(response: 0.60, dampingRatio: 0.32))
-        CubicKeyframe(-8 * s, duration: 0.22)
-        SpringKeyframe(-18 * s, duration: 0.22, spring: .init(response: 0.30, dampingRatio: 0.45))
-        CubicKeyframe(8 * s, duration: 0.22)
-        SpringKeyframe(18 * s, duration: 0.22, spring: .init(response: 0.30, dampingRatio: 0.45))
-        CubicKeyframe(-8 * s, duration: 0.22)
-        SpringKeyframe(-18 * s, duration: 0.22, spring: .init(response: 0.30, dampingRatio: 0.45))
-        SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.50, dampingRatio: 0.40))
-        Hold.moving(0, duration: 0.92, drift: 1.0)
+    static func breathing(_ value: Double, duration: Double, drift: Double)
+        -> some KeyframeTrackContent<Double> {
+        CubicKeyframe(value + drift, duration: duration * 0.34, startVelocity: 0, endVelocity: 0)
+        CubicKeyframe(value - drift * 0.55, duration: duration * 0.30, startVelocity: 0, endVelocity: 0)
+        CubicKeyframe(value + drift * 0.35, duration: duration * 0.22, startVelocity: 0, endVelocity: 0)
+        CubicKeyframe(value, duration: duration * 0.14, startVelocity: 0, endVelocity: 0)
     }
 }

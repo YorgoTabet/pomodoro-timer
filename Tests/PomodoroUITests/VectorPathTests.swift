@@ -141,8 +141,8 @@ struct SamuraiArtTests {
 
     @Test("The full set is present and numbered without gaps")
     func layerCount() {
-        #expect(SamuraiArt.layers.count == 60)
-        #expect(SamuraiArt.layers.map(\.id) == Array(1...60))
+        #expect(SamuraiArt.layers.count == 68)
+        #expect(SamuraiArt.layers.map(\.id) == Array(1...68))
     }
 
     @Test("Every layer sits inside the design canvas, allowing for the blade's reach")
