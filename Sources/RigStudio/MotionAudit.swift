@@ -35,6 +35,7 @@ enum MotionAudit {
             report(GeneralSubject.self, cue)
             report(RabbitSubject.self, cue)
             report(AnimeGirlSubject.self, cue)
+            report(HancockSubject.self, cue)
         }
     }
 

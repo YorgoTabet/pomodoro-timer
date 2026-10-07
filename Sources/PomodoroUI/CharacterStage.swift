@@ -94,6 +94,8 @@ public struct CharacterStage: View {
             rabbit(cue)
         case .animeGirl:
             animeGirl(cue)
+        case .hancock:
+            hancock(cue)
         default:
             // Declared in the roster but not drawn yet.
             EmptyView()
@@ -145,6 +147,55 @@ public struct CharacterStage: View {
 
     private var animeGirlRestingPose: AnimeGirlPose {
         var pose = AnimeGirlPose()
+        pose.emergence = 0
+        return pose
+    }
+
+    // MARK: - Boa Hancock
+
+    @ViewBuilder
+    private func hancock(_ cue: CharacterCue) -> some View {
+        if reduceMotion {
+            HancockView(pose: hancockRestingPose)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+                .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+        } else {
+            switch cue {
+            case .focusStart: hancockAnimator { HancockPerformance.lookingDown }
+            case .breakStart: hancockAnimator { HancockPerformance.loveStruck }
+            case .longBreak: hancockAnimator { HancockPerformance.empress }
+            }
+        }
+    }
+
+    private func hancockAnimator<K: Keyframes<HancockPose>>(
+        @KeyframesBuilder<HancockPose> _ track: @escaping () -> K
+    ) -> some View {
+        KeyframeAnimator(initialValue: HancockPose(), trigger: generation) { pose in
+            HancockView(pose: pose)
+                .opacity(pose.emergence >= 185 ? 0 : 1)
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width,
+                       height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .offset(
+                    x: -hidden(pose.emergence) * edge.inwardNormal.x,
+                    y: -hidden(pose.emergence) * edge.inwardNormal.y
+                )
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } keyframes: { _ in
+            track()
+        }
+    }
+
+    private var hancockRestingPose: HancockPose {
+        var pose = HancockPose()
         pose.emergence = 0
         return pose
     }

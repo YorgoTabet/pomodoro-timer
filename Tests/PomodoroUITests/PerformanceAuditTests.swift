@@ -51,6 +51,10 @@ struct PerformanceAuditTests {
             let girl = AnimeGirlPerformance.timeline(for: cue)
             #expect(girl.value(time: girl.duration).emergence > 150,
                     "Anime girl · \(cue.displayName) ends still on screen")
+
+            let hancock = HancockPerformance.timeline(for: cue)
+            #expect(hancock.value(time: hancock.duration).emergence > 150,
+                    "Hancock · \(cue.displayName) ends still on screen")
         }
     }
 }

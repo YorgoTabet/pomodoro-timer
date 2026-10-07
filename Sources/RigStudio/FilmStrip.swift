@@ -29,6 +29,7 @@ enum FilmStrip {
         render(GeneralSubject.self, into: url)
         render(RabbitSubject.self, into: url)
         render(AnimeGirlSubject.self, into: url)
+        render(HancockSubject.self, into: url)
     }
 
     static func render<S: RigSubject>(_ subject: S.Type, into directory: URL) {

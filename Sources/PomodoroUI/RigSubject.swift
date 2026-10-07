@@ -106,7 +106,7 @@ extension CGPoint {
     }
 }
 
-// MARK: - The five characters
+// MARK: - The characters
 
 public enum SamuraiSubject: RigSubject {
     public static var character: PomodoroCharacter { .samurai }
@@ -161,4 +161,15 @@ public enum AnimeGirlSubject: RigSubject {
         pose.rotation(of: part)
     }
     public static func draw(_ pose: AnimeGirlPose) -> some View { AnimeGirlView(pose: pose) }
+}
+
+public enum HancockSubject: RigSubject {
+    public static var character: PomodoroCharacter { .hancock }
+    public static func timeline(for cue: CharacterCue) -> KeyframeTimeline<HancockPose> {
+        HancockPerformance.timeline(for: cue)
+    }
+    public static func angle(_ pose: HancockPose, _ part: HancockArt.Part) -> Double {
+        pose.rotation(of: part)
+    }
+    public static func draw(_ pose: HancockPose) -> some View { HancockView(pose: pose) }
 }

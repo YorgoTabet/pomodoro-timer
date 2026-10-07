@@ -174,6 +174,7 @@ struct StudioView: View {
                 case .general: rig(GeneralSubject.self)
                 case .rabbit: rig(RabbitSubject.self)
                 case .animeGirl: rig(AnimeGirlSubject.self)
+                case .hancock: rig(HancockSubject.self)
                 case .none: EmptyView()
                 }
             }
@@ -322,6 +323,7 @@ enum Facade {
         case .general: GeneralSubject.duration(for: cue)
         case .rabbit: RabbitSubject.duration(for: cue)
         case .animeGirl: AnimeGirlSubject.duration(for: cue)
+        case .hancock: HancockSubject.duration(for: cue)
         case .none: 0
         }
     }
@@ -333,6 +335,7 @@ enum Facade {
         case .general: names(GeneralSubject.self)
         case .rabbit: names(RabbitSubject.self)
         case .animeGirl: names(AnimeGirlSubject.self)
+        case .hancock: names(HancockSubject.self)
         case .none: []
         }
     }
@@ -344,6 +347,7 @@ enum Facade {
         case .general: angles(GeneralSubject.self, cue, time)
         case .rabbit: angles(RabbitSubject.self, cue, time)
         case .animeGirl: angles(AnimeGirlSubject.self, cue, time)
+        case .hancock: angles(HancockSubject.self, cue, time)
         case .none: []
         }
     }

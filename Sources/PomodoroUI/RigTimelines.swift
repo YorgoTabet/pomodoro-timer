@@ -65,6 +65,16 @@ public extension AnimeGirlPerformance {
     }
 }
 
+public extension HancockPerformance {
+    static func timeline(for cue: CharacterCue) -> KeyframeTimeline<HancockPose> {
+        switch cue {
+        case .focusStart: KeyframeTimeline(initialValue: HancockPose()) { lookingDown }
+        case .breakStart: KeyframeTimeline(initialValue: HancockPose()) { loveStruck }
+        case .longBreak: KeyframeTimeline(initialValue: HancockPose()) { empress }
+        }
+    }
+}
+
 /// The declared duration and the longest authored track, for every performance.
 ///
 /// `duration(for:)` is what the stage uses to decide how long to keep the window
@@ -102,6 +112,9 @@ public enum PerformanceAudit {
             entries.append(.init(character: .animeGirl, cue: cue,
                                  declared: AnimeGirlPerformance.duration(for: cue),
                                  authored: AnimeGirlPerformance.timeline(for: cue).duration))
+            entries.append(.init(character: .hancock, cue: cue,
+                                 declared: HancockPerformance.duration(for: cue),
+                                 authored: HancockPerformance.timeline(for: cue).duration))
         }
         return entries
     }
