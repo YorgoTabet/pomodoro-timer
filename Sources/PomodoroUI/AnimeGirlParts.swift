@@ -467,6 +467,21 @@ enum AnimeGirlParts {
                 .close,
             ]
 
+            // Clenched version of the hand for the fist pump: a fatter rounded
+            // blob with two finger creases, faded in over the open hand.
+            let fist: [Sketch] = [
+                .move(sx - 4.4, p.wrist + 1),
+                .quad(sx - 6.2, p.wrist + 6.5, sx - 4.2, p.wrist + 11),
+                .quad(sx, p.wrist + 13.6, sx + 4.2, p.wrist + 11),
+                .quad(sx + 6.2, p.wrist + 6.5, sx + 4.4, p.wrist + 1),
+                .quad(sx, p.wrist - 1.6, sx - 4.4, p.wrist + 1),
+                .close,
+            ]
+            let creases: [Sketch] = [
+                .move(sx - 3.8, p.wrist + 6.2), .line(sx + 3.8, p.wrist + 6.2),
+                .move(sx - 3.4, p.wrist + 9.4), .line(sx + 3.4, p.wrist + 9.4),
+            ]
+
             return [
                 Layer(0, "armL_skin", .armL, Ink.skin, stroke: 3.0, path: upper.path()),
                 Layer(0, "foreSleeveL", .armL_fore, Ink.navy, stroke: 3.0, path: sleeve.path()),
@@ -477,6 +492,10 @@ enum AnimeGirlParts {
                       path: sleeve.path(mirrorAbout: cx)),
                 Layer(0, "handR", .armR_fore, Ink.skin, stroke: 1.8,
                       path: hand.path(mirrorAbout: cx)),
+                Layer(0, "fistR", .armR_fore, Ink.skin, stroke: 2.0,
+                      path: fist.path(mirrorAbout: cx), restOpacity: 0),
+                Layer(0, "fistCreasesR", .armR_fore, Ink.clear, stroke: 1.2,
+                      path: creases.path(mirrorAbout: cx), restOpacity: 0),
             ]
         }
 

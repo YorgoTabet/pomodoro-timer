@@ -40,6 +40,9 @@ public struct AnimeGirlPose: Equatable, Sendable {
     public var happyOpacity: Double = 0
     public var determinedOpacity: Double = 0
 
+    /// 0 = open hand, 1 = clenched fist (right hand only).
+    public var fist: Double = 0
+
     public var sparkleOpacity: Double = 0
     public var sparkleScale: Double = 0.4
     public var sparkleRotation: Double = 0
@@ -82,6 +85,8 @@ public struct AnimeGirlPose: Equatable, Sendable {
         case "eyeWhiteL", "eyeWhiteR", "irisL", "irisR", "pupilL", "pupilR",
              "hiBigL", "hiBigR", "hiSmallL", "hiSmallR", "lashL", "lashR":
             1 - happyOpacity
+        case "handR": 1 - fist
+        case "fistR", "fistCreasesR": fist
         case "sparkleA", "sparkleB", "sparkleC": sparkleOpacity
         default: layer.restOpacity
         }

@@ -116,13 +116,13 @@ public struct AnimeGirlProportions: Equatable, Sendable {
     /// The shipped figure: ~5.9 heads, shoulders 1.65 head-widths, waist 0.67 of
     /// shoulders, legs 0.48 of height. Adult on every ratio that matters.
     public static let standard = AnimeGirlProportions(
-        crown: 26, chin: 63.5,
+        crown: 26, chin: 69,
         shoulder: 76, elbow: 112, wrist: 140,
         waist: 119, hip: 136, bootTop: 170, sole: 239,
 
-        headWidth: 28, chinTaper: 1.0, skullRound: 1.0, neckWidth: 10.4,
+        headWidth: 32, chinTaper: 1.0, skullRound: 1.0, neckWidth: 10.4,
 
-        eyeHeightRatio: 0.195, eyeAspect: 1.29, eyeGap: 6.0,
+        eyeHeightRatio: 0.215, eyeAspect: 1.29, eyeGap: 6.0,
         irisFill: 0.93, lidWeight: 1.9,
 
         hairVolume: 6.0, fringeDepth: 0.62,

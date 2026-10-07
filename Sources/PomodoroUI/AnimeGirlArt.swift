@@ -36,7 +36,7 @@ public enum AnimeGirlArt {
         public static let blue = Color(hex: 0x3F6ED8)
         public static let blueDeep = Color(hex: 0x2B4DA6)
         /// Boots and detached sleeves.
-        public static let navy = Color(hex: 0x27355C)
+        public static let navy = Color(hex: 0x3C4C80)
         /// The vocaloid nod: tie, hem stripe, boot trim, hair ties.
         public static let teal = Color(hex: 0x3BBFC9)
         /// Form shading on the white top — light enough to read as fold, not dirt.
