@@ -94,9 +94,9 @@ public enum RabbitPerformance {
         KeyframeTrack(\.armR) {
             Hold.moving(0, duration: 0.45, drift: 0.5)
             CubicKeyframe(3, duration: 0.55)
-            CubicKeyframe(-110, duration: 0.20)
-            CubicKeyframe(-135, duration: 0.22)
-            Hold.moving(-135, duration: 0.68, drift: 1.2)
+            CubicKeyframe(-92, duration: 0.20)
+            CubicKeyframe(-100, duration: 0.22)
+            Hold.moving(-100, duration: 0.68, drift: 1.0)
             CubicKeyframe(0, duration: 0.30)
             Hold.moving(0, duration: 0.40, drift: 0.5)
         }
@@ -104,9 +104,9 @@ public enum RabbitPerformance {
             Hold.moving(0, duration: 0.45, drift: -0.6)
             CubicKeyframe(-6, duration: 0.55)
             CubicKeyframe(-12, duration: 0.12)
-            CubicKeyframe(-72, duration: 0.22)
-            CubicKeyframe(-62, duration: 0.16)
-            Hold.moving(-62, duration: 0.60, drift: -1.5)
+            CubicKeyframe(-92, duration: 0.22)
+            CubicKeyframe(-84, duration: 0.16)
+            Hold.moving(-84, duration: 0.60, drift: -1.5)
             CubicKeyframe(-4, duration: 0.30)
             Hold.moving(-4, duration: 0.40, drift: -0.8)
         }
@@ -237,6 +237,17 @@ public enum RabbitPerformance {
             CubicKeyframe(0.92, duration: 0.08)
             SpringKeyframe(1.0, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.55))
             Hold.moving(1.0, duration: 1.67, drift: 0.01)
+        }
+        // The legs lean into the crouch, kick back at takeoff, tuck in the air and
+        // jolt at the landing, so the body is not one rigid block.
+        KeyframeTrack(\.legs) {
+            Hold.moving(0, duration: 0.45, drift: 0.2)
+            CubicKeyframe(2, duration: 0.20)
+            CubicKeyframe(-3, duration: 0.12)
+            CubicKeyframe(1.5, duration: 0.28)
+            CubicKeyframe(-2, duration: 0.08)
+            SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.30, dampingRatio: 0.55))
+            Hold.moving(0, duration: 1.67, drift: 0.2)
         }
         KeyframeTrack(\.figureRotation) {
             Hold.moving(0, duration: 0.45, drift: 0.4)
@@ -435,13 +446,23 @@ public enum RabbitPerformance {
             SpringKeyframe(1.0, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
             Hold.moving(1.0, duration: 1.60, drift: 0.01)
         }
+        // Legs lean into the crouch, kick back at takeoff, tuck in the air, jolt on landing.
+        KeyframeTrack(\.legs) {
+            Hold.moving(0, duration: 0.50, drift: 0.2)
+            CubicKeyframe(3, duration: 0.30)
+            CubicKeyframe(-4, duration: 0.12)
+            CubicKeyframe(2, duration: 0.48)
+            CubicKeyframe(-3, duration: 0.10)
+            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
+            Hold.moving(0, duration: 1.60, drift: 0.2)
+        }
         // One turn about the vertical axis. A small wind-up the other way, then a fast
         // turn that eases out so he faces front again as he lands at 1.40.
         KeyframeTrack(\.figureSpin) {
             LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(-22, duration: 0.30)
-            CubicKeyframe(360, duration: 0.60, startVelocity: 1500, endVelocity: 0)
-            LinearKeyframe(360, duration: 2.00)
+            LinearKeyframe(-22, duration: 0.30)
+            CubicKeyframe(360, duration: 0.50, startVelocity: 0, endVelocity: 0)
+            LinearKeyframe(360, duration: 2.10)
         }
         KeyframeTrack(\.figureRotation) {
             Hold.moving(0, duration: 0.50, drift: 0.3)

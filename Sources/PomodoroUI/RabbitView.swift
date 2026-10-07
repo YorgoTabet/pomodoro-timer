@@ -113,11 +113,17 @@ struct RabbitPartExtras: ViewModifier {
     let part: RabbitArt.Part
     let pose: RabbitPose
 
+    /// Width factor of a turn: cos, but never thinner than 0.2, so he is never paper-thin.
+    static func spinWidth(_ degrees: Double) -> Double {
+        let c = cos(degrees * .pi / 180)
+        return (c < 0 ? -1 : 1) * max(0.2, abs(c))
+    }
+
     func body(content: Content) -> some View {
         switch part {
         case .figure:
             content
-                .scaleEffect(x: cos(pose.figureSpin * .pi / 180), y: pose.figureScaleY, anchor: .bottom)
+                .scaleEffect(x: Self.spinWidth(pose.figureSpin), y: pose.figureScaleY, anchor: .bottom)
                 .offset(y: pose.figureLift)
         case .torso:
             content.offset(x: pose.torsoSway)
