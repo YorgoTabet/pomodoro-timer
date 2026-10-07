@@ -1,19 +1,19 @@
 import PomodoroCore
 import SwiftUI
 
-/// The anime girl's three performances.
+/// Power's three performances (the type keeps its old name).
 ///
-/// The ahoge does the emotional work: it snaps rigid when she is determined,
-/// droops when she relaxes, and whips hardest coming out of the twirl. It lags
-/// everything else by design.
+/// Loud, arrogant, gremlin energy: snappy moves with clear holds. Her two long
+/// back hair masses lag the body by two or three frames; the face swaps are fast
+/// crossfades so two faces are never half-blended for long.
 public enum AnimeGirlPerformance {
 
     public static func preferredEdge(for cue: CharacterCue) -> StageEdge { .top }
 
     public static func comesForward(for cue: CharacterCue) -> Bool {
-        // The break perch needs the mask off: she sits on the pill's top edge with
-        // her boots dangling over the glass, which only reads drawn in front of it.
-        cue == .focusStart || cue == .breakStart
+        // The yawn rests her arms on the bar edge, so she has to stay behind it.
+        // The shout leans over the bar and points down at you, so it comes forward.
+        cue == .focusStart
     }
 
     public static func duration(for cue: CharacterCue) -> Double {
@@ -24,505 +24,735 @@ public enum AnimeGirlPerformance {
         }
     }
 
-    // MARK: - focusStart · "Ganbatte" (2.6s)
+    // MARK: - focusStart · "Grovel, human!" (2.6s)
 
-    /// Determined face, then a fist pumped overhead while she steps toward you.
+    /// Bursts up, leans over the bar and points down with a claw, shouting. Recoils,
+    /// crosses her arms, smug. One foot tap, a hair flick, then she ducks out.
     @KeyframesBuilder<AnimeGirlPose>
     public static var fistPump: some Keyframes<AnimeGirlPose> {
+        fistPumpPart1
+        fistPumpPart2
+        fistPumpPart3
+        fistPumpPart4
+    }
+
+    /// fistPump: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var fistPumpPart1: some Keyframes<AnimeGirlPose> {
         KeyframeTrack(\.emergence) {
-            CubicKeyframe(0, duration: 0.45)
-            Hold.moving(0, duration: 1.75, drift: 1.4)
-            CubicKeyframe(-3, duration: 0.10)            // small rise before the drop
-            CubicKeyframe(200, duration: 0.30)
-        }
-        KeyframeTrack(\.figureScaleY) {
-            LinearKeyframe(1, duration: 0.45)
-            CubicKeyframe(0.96, duration: 0.12)          // squash into the wind-up
-            CubicKeyframe(1.04, duration: 0.12)          // stretch on the pump
-            CubicKeyframe(1.0, duration: 0.20)
-            Hold.moving(1.0, duration: 1.30, drift: 0.014)
-            CubicKeyframe(0.97, duration: 0.10)          // exit dip
-            CubicKeyframe(1.0, duration: 0.30)
+            CubicKeyframe(-8, duration: 0.22)
+            CubicKeyframe(0, duration: 0.08)
+            Hold.moving(0, duration: 0.15, drift: 0.8)
+            CubicKeyframe(-5, duration: 0.14)
+            CubicKeyframe(-3, duration: 0.16)
+            Hold.moving(-4, duration: 0.35, drift: 1.0)
+            CubicKeyframe(0, duration: 0.3)
+            Hold.breathing(0, duration: 0.65, drift: 1.2)
+            Hold.moving(0, duration: 0.25, drift: 0.8)
+            CubicKeyframe(-3, duration: 0.05)
+            CubicKeyframe(200, duration: 0.25)
         }
         KeyframeTrack(\.figureScale) {
-            LinearKeyframe(1, duration: 0.57)
-            SpringKeyframe(1.12, duration: 0.40, spring: .init(response: 0.4, dampingRatio: 0.65))
-            Hold.moving(1.12, duration: 0.78, drift: 0.014)
+            Hold.moving(1, duration: 0.3, drift: 0.01)
+            CubicKeyframe(0.97, duration: 0.15)
+            SpringKeyframe(1.1, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(1.1, duration: 0.35, drift: 0.012)
+            CubicKeyframe(1.0, duration: 0.3)
+            Hold.breathing(1.0, duration: 0.65, drift: 0.012)
+            Hold.moving(1.0, duration: 0.25, drift: 0.01)
+            CubicKeyframe(0.97, duration: 0.05)
             CubicKeyframe(1.0, duration: 0.25)
-            LinearKeyframe(1.0, duration: 0.60)
         }
         KeyframeTrack(\.figureLift) {
-            LinearKeyframe(0, duration: 0.57)
-            CubicKeyframe(9, duration: 0.30)
-            Hold.moving(9, duration: 0.78, drift: 0.5)
+            Hold.moving(0, duration: 0.3, drift: 0.4)
+            CubicKeyframe(-2, duration: 0.15)
+            CubicKeyframe(5, duration: 0.3)
+            Hold.moving(5, duration: 0.35, drift: 0.6)
+            CubicKeyframe(0, duration: 0.3)
+            Hold.moving(0, duration: 0.25, drift: 0.5)
+            CubicKeyframe(2, duration: 0.06)
+            CubicKeyframe(0, duration: 0.08)
+            Hold.moving(0, duration: 0.26, drift: 0.5)
+            Hold.moving(0, duration: 0.25, drift: 0.5)
+            Hold.moving(0, duration: 0.3, drift: 0.4)
+        }
+        KeyframeTrack(\.torso) {
+            Hold.moving(0, duration: 0.3, drift: 0.8)
+            CubicKeyframe(-4, duration: 0.15)
+            CubicKeyframe(6, duration: 0.3)
+            Hold.breathing(6, duration: 0.35, drift: 0.8)
+            CubicKeyframe(-2, duration: 0.15)
+            SpringKeyframe(0, duration: 0.15, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.breathing(0, duration: 0.65, drift: 1.0)
+            CubicKeyframe(-3, duration: 0.25)
+            CubicKeyframe(0, duration: 0.3)
+        }
+        KeyframeTrack(\.hips) {
+            Hold.moving(0, duration: 0.3, drift: 0.6)
+            CubicKeyframe(1.5, duration: 0.15)
+            CubicKeyframe(-2, duration: 0.3)
+            Hold.moving(-2, duration: 0.35, drift: 0.6)
+            SpringKeyframe(0, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.breathing(0, duration: 0.65, drift: 0.8)
+            Hold.moving(0, duration: 0.25, drift: 0.6)
+            Hold.moving(0, duration: 0.3, drift: 0.5)
+        }
+        KeyframeTrack(\.head) {
+            Hold.moving(0, duration: 0.3, drift: 1.0)
+            CubicKeyframe(3, duration: 0.15)
+            CubicKeyframe(-4, duration: 0.3)
+            Hold.moving(-4, duration: 0.35, drift: 1.0)
+            CubicKeyframe(-8, duration: 0.3)
+            Hold.breathing(-8, duration: 0.65, drift: 1.0)
+            CubicKeyframe(9, duration: 0.25)
+            CubicKeyframe(0, duration: 0.3)
+        }
+    }
+
+    /// fistPump: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var fistPumpPart2: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.eyesLift) {
+            LinearKeyframe(0, duration: 1.1)
+            CubicKeyframe(-1.5, duration: 0.3)
+            LinearKeyframe(-1.5, duration: 0.95)
             CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.70)
         }
         KeyframeTrack(\.shoutOpacity) {
-            LinearKeyframe(0, duration: 0.30)
-            LinearKeyframe(1, duration: 0.12)
-            LinearKeyframe(1, duration: 1.73)
-            LinearKeyframe(0, duration: 0.10)
-            LinearKeyframe(0, duration: 0.35)
+            LinearKeyframe(0, duration: 0.38)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 0.64)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 1.42)
         }
-        KeyframeTrack(\.ahogeScaleY) {
-            LinearKeyframe(1, duration: 0.30)
-            SpringKeyframe(1.3, duration: 0.25, spring: .init(response: 0.3, dampingRatio: 0.5))
-            Hold.moving(1.3, duration: 1.6, drift: 0.014)
-            CubicKeyframe(1.0, duration: 0.45)
+        KeyframeTrack(\.smugOpacity) {
+            LinearKeyframe(0, duration: 1.1)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 1.42)
         }
-        // The pump: up fast, a bounce at the top, then held. -155° puts the fist at
-        // roughly (148, 20) — clear of the narrowed skull, which matters because
-        // arms draw behind the head. The earlier -115° cap was sized for the old
-        // wide face and now reads as a shrug rather than a punch.
         KeyframeTrack(\.armR) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(-10, duration: 0.12)           // wind-up: the arm drops back first
-            CubicKeyframe(-155, duration: 0.22)
-            SpringKeyframe(-132, duration: 0.25, spring: .init(response: 0.26, dampingRatio: 0.45))
-            CubicKeyframe(-155, duration: 0.25)
-            LinearKeyframe(-155, duration: 0.46)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.60)
+            Hold.moving(0, duration: 0.3, drift: 1.0)
+            CubicKeyframe(10, duration: 0.15)
+            CubicKeyframe(-52, duration: 0.3)
+            Hold.moving(-52, duration: 0.35, drift: 2.0)
+            CubicKeyframe(-22, duration: 0.3)
+            Hold.breathing(-22, duration: 0.65, drift: 1.5)
+            CubicKeyframe(-78, duration: 0.25)
+            CubicKeyframe(0, duration: 0.3)
         }
-        // A fist pump is mostly elbow. The shoulder sets the arm's direction; the
-        // forearm is what actually pumps, and it bounces harder and later than the
-        // shoulder — which is the whole reason the gesture reads as energetic.
-        // Elbow angles are *relative to the shoulder*, so they compound. With the
-        // shoulder at -155 a -54 elbow totals -209° and folds the fist back over
-        // her head — the pose that read as a head-scratch. -20 keeps the fist out
-        // at x≈136, clear of the skull, and the bounce toward -4 straightens the
-        // arm, which is what drives the fist upward on the pump.
         KeyframeTrack(\.armR_fore) {
-            LinearKeyframe(0, duration: 0.61)
-            CubicKeyframe(-20, duration: 0.25)
-            SpringKeyframe(-4, duration: 0.25, spring: .init(response: 0.22, dampingRatio: 0.38))
-            CubicKeyframe(-20, duration: 0.25)
-            Hold.moving(-20, duration: 0.49, drift: 3.0)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.50)
+            Hold.moving(0, duration: 0.45, drift: 0.8)
+            CubicKeyframe(6, duration: 0.3)
+            Hold.moving(6, duration: 0.35, drift: 2.0)
+            CubicKeyframe(108, duration: 0.3)
+            Hold.breathing(108, duration: 0.65, drift: 1.5)
+            CubicKeyframe(-125, duration: 0.25)
+            CubicKeyframe(0, duration: 0.3)
         }
-        // The other arm was entirely static. It braces down and back as a counter
-        // to the pump, then settles.
         KeyframeTrack(\.armL) {
-            LinearKeyframe(0, duration: 0.60)
-            CubicKeyframe(17, duration: 0.28)
-            SpringKeyframe(9, duration: 0.24, spring: .init(response: 0.34, dampingRatio: 0.55))
-            Hold.breathing(9, duration: 0.78, drift: 2.0)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        KeyframeTrack(\.armL_fore) {
-            LinearKeyframe(0, duration: 0.64)
-            CubicKeyframe(26, duration: 0.28)
-            SpringKeyframe(15, duration: 0.24, spring: .init(response: 0.38, dampingRatio: 0.52))
-            Hold.breathing(15, duration: 0.74, drift: 2.4)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        KeyframeTrack(\.head) {
-            LinearKeyframe(0, duration: 0.55)
-            CubicKeyframe(-6, duration: 0.20)
-            Hold.breathing(-6, duration: 1.20, drift: 1.8)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.40)
-        }
-        KeyframeTrack(\.eyesScale) {
-            LinearKeyframe(1, duration: 0.30)
-            CubicKeyframe(0.92, duration: 0.12)
-            Hold.moving(0.92, duration: 0.80, drift: 0.014)
-            CubicKeyframe(0.1, duration: 0.06)           // one blink around 1.3s
-            CubicKeyframe(0.92, duration: 0.06)
-            Hold.moving(0.92, duration: 0.80, drift: 0.014)
-            CubicKeyframe(1.0, duration: 0.46)
-        }
-        // The ahoge quivers through the held pose.
-        KeyframeTrack(\.ahoge) {
-            LinearKeyframe(0, duration: 0.85)
-            SpringKeyframe(-14, duration: 0.25, spring: .init(response: 0.35, dampingRatio: 0.35))
-            CubicKeyframe(8, duration: 0.25)
-            CubicKeyframe(-8, duration: 0.25)
-            CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.70)
-        }
-        KeyframeTrack(\.tailL_base) {
-            LinearKeyframe(0, duration: 0.68)
-            SpringKeyframe(-16, duration: 0.25, spring: .init(response: 0.35, dampingRatio: 0.55))
-            SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.35, dampingRatio: 0.55))
-            Hold.moving(0, duration: 1.27, drift: 1.8)
-        }
-        KeyframeTrack(\.tailR_base) {
-            LinearKeyframe(0, duration: 0.68)
-            SpringKeyframe(16, duration: 0.25, spring: .init(response: 0.35, dampingRatio: 0.55))
-            SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.35, dampingRatio: 0.55))
-            Hold.moving(0, duration: 1.27, drift: 1.8)
-        }
-        KeyframeTrack(\.tailL_tip) {
-            LinearKeyframe(0, duration: 0.80)
-            SpringKeyframe(-26, duration: 0.28, spring: .init(response: 0.40, dampingRatio: 0.42))
-            SpringKeyframe(0, duration: 0.45, spring: .init(response: 0.40, dampingRatio: 0.42))
-            Hold.moving(0, duration: 1.07, drift: 1.8)
-        }
-        KeyframeTrack(\.tailR_tip) {
-            LinearKeyframe(0, duration: 0.80)
-            SpringKeyframe(26, duration: 0.28, spring: .init(response: 0.40, dampingRatio: 0.42))
-            SpringKeyframe(0, duration: 0.45, spring: .init(response: 0.40, dampingRatio: 0.42))
-            Hold.moving(0, duration: 1.07, drift: 1.8)
-        }
-        KeyframeTrack(\.fist) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(1, duration: 0.20)             // the hand closes before the arm lands
-            LinearKeyframe(1, duration: 1.35)
-            CubicKeyframe(0, duration: 0.15)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        KeyframeTrack(\.torso) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(-4, duration: 0.12)
-            CubicKeyframe(5, duration: 0.25)
-            Hold.breathing(5, duration: 0.90, drift: 1.2)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.63)
-        }
-        KeyframeTrack(\.hips) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(1.5, duration: 0.12)
-            CubicKeyframe(-2, duration: 0.25)
-            SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.40, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 1.38)
-        }
-        KeyframeTrack(\.eyesLift) {
-            LinearKeyframe(0, duration: 0.57)
-            CubicKeyframe(-1.5, duration: 0.20)
-            LinearKeyframe(-1.5, duration: 0.90)
-            CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.68)
+            Hold.moving(0, duration: 0.3, drift: 0.8)
+            CubicKeyframe(12, duration: 0.15)
+            CubicKeyframe(26, duration: 0.3)
+            Hold.breathing(26, duration: 0.35, drift: 1.2)
+            CubicKeyframe(22, duration: 0.3)
+            Hold.breathing(22, duration: 0.65, drift: 1.2)
+            Hold.moving(22, duration: 0.25, drift: 1.0)
+            CubicKeyframe(0, duration: 0.3)
         }
     }
 
-    // MARK: - breakStart · "Perch & wave" (3.0s)
-
-    /// She pops up in front of the pill, sits down on its top edge — boots
-    /// dangling over the glass — and waves with her eyes closed happy.
-    ///
-    /// Sitting is sold by three cues, none of which is a knee joint (the legs are
-    /// single segments): the figure settles ~45 design units lower than standing,
-    /// so her seat lands on the occluding edge; a small squash absorbs the
-    /// sit-down; and the legs kick alternately from the hip like anyone perched on
-    /// a ledge. Emergence 23 ≈ that 45-unit drop through the top edge's mapping.
+    /// fistPump: one group of tracks, split out to keep each builder small.
     @KeyframesBuilder<AnimeGirlPose>
-    public static var perchWave: some Keyframes<AnimeGirlPose> {
-        KeyframeTrack(\.emergence) {
-            CubicKeyframe(14, duration: 0.50)         // rises a touch high…
-            SpringKeyframe(23, duration: 0.25, spring: .init(response: 0.35, dampingRatio: 0.60))
-            Hold.moving(23, duration: 1.75, drift: 1.2)   // …and sits into the hold
-            CubicKeyframe(20, duration: 0.10)         // small rise before the drop
-            CubicKeyframe(200, duration: 0.40)
+    static var fistPumpPart3: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.armL_fore) {
+            Hold.moving(0, duration: 0.45, drift: 0.8)
+            CubicKeyframe(-80, duration: 0.3)
+            Hold.moving(-80, duration: 0.35, drift: 2.0)
+            CubicKeyframe(-108, duration: 0.3)
+            Hold.breathing(-108, duration: 0.65, drift: 1.5)
+            Hold.moving(-108, duration: 0.25, drift: 1.5)
+            CubicKeyframe(0, duration: 0.3)
         }
-        // The sit-down lands with a small squash, like the fist pump's entry.
-        KeyframeTrack(\.figureScaleY) {
-            LinearKeyframe(1, duration: 0.62)
-            CubicKeyframe(0.955, duration: 0.13)
-            SpringKeyframe(1.0, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.55))
-            Hold.moving(1.0, duration: 1.55, drift: 0.014)
-            CubicKeyframe(0.97, duration: 0.10)       // exit dip
-            CubicKeyframe(1.0, duration: 0.30)
+        KeyframeTrack(\.clawR) {
+            LinearKeyframe(0, duration: 0.3)
+            CubicKeyframe(1, duration: 0.15)
+            LinearKeyframe(1, duration: 0.65)
+            CubicKeyframe(0, duration: 0.1)
+            LinearKeyframe(0, duration: 1.4)
         }
-        KeyframeTrack(\.laughOpacity) {
-            LinearKeyframe(0, duration: 0.45)
-            LinearKeyframe(1, duration: 0.12)
-            LinearKeyframe(1, duration: 1.86)
-            LinearKeyframe(0, duration: 0.12)
-            LinearKeyframe(0, duration: 0.45)
+        KeyframeTrack(\.tailL_base) {
+            CubicKeyframe(4.5, duration: 0.3)
+            CubicKeyframe(1.8, duration: 0.15)
+            SpringKeyframe(7.2, duration: 0.4, spring: .init(response: 0.40, dampingRatio: 0.40))
+            CubicKeyframe(3.6, duration: 0.25)
+            CubicKeyframe(-2.7, duration: 0.3)
+            SpringKeyframe(0.0, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(0.0, duration: 0.35, drift: 0.68)
+            CubicKeyframe(4.5, duration: 0.25)
+            SpringKeyframe(0.0, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
         }
-        // Perched-on-a-ledge kicks: whole legs from the hip, counter-phased and
-        // slightly uneven so they read as idle swinging, not a metronome.
-        KeyframeTrack(\.legL) {
-            LinearKeyframe(0, duration: 0.55)
-            CubicKeyframe(11, duration: 0.25)         // legs rest forward over the pill edge
-            CubicKeyframe(6, duration: 0.40)
-            CubicKeyframe(15, duration: 0.40)
-            CubicKeyframe(7, duration: 0.35)
-            CubicKeyframe(13, duration: 0.30)
-            CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.45)
+        KeyframeTrack(\.tailR_base) {
+            CubicKeyframe(-4.5, duration: 0.3)
+            CubicKeyframe(-1.8, duration: 0.15)
+            SpringKeyframe(-7.2, duration: 0.4, spring: .init(response: 0.40, dampingRatio: 0.40))
+            CubicKeyframe(-3.6, duration: 0.25)
+            CubicKeyframe(2.7, duration: 0.3)
+            SpringKeyframe(0.0, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(0.0, duration: 0.35, drift: -0.68)
+            CubicKeyframe(-4.5, duration: 0.25)
+            SpringKeyframe(0.0, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+        }
+        KeyframeTrack(\.tailL_tip) {
+            CubicKeyframe(5.4, duration: 0.37)
+            CubicKeyframe(2.25, duration: 0.15)
+            SpringKeyframe(9.9, duration: 0.4, spring: .init(response: 0.40, dampingRatio: 0.40))
+            CubicKeyframe(4.5, duration: 0.25)
+            CubicKeyframe(-4.05, duration: 0.3)
+            SpringKeyframe(0.0, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.35, drift: 0.9)
+            CubicKeyframe(6.3, duration: 0.25)
+            SpringKeyframe(0.0, duration: 0.23, spring: .init(response: 0.40, dampingRatio: 0.40))
+        }
+        KeyframeTrack(\.tailR_tip) {
+            CubicKeyframe(-5.4, duration: 0.37)
+            CubicKeyframe(-2.25, duration: 0.15)
+            SpringKeyframe(-9.9, duration: 0.4, spring: .init(response: 0.40, dampingRatio: 0.40))
+            CubicKeyframe(-4.5, duration: 0.25)
+            CubicKeyframe(4.05, duration: 0.3)
+            SpringKeyframe(0.0, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.35, drift: -0.9)
+            CubicKeyframe(-6.3, duration: 0.25)
+            SpringKeyframe(0.0, duration: 0.23, spring: .init(response: 0.40, dampingRatio: 0.40))
+        }
+    }
+
+    /// fistPump: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var fistPumpPart4: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.ahoge) {
+            CubicKeyframe(-3.6, duration: 0.4)
+            SpringKeyframe(4.5, duration: 0.5, spring: .init(response: 0.40, dampingRatio: 0.40))
+            CubicKeyframe(-2.7, duration: 0.3)
+            SpringKeyframe(0.0, duration: 0.5, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.55, drift: 0.68)
+            SpringKeyframe(3.6, duration: 0.35, spring: .init(response: 0.40, dampingRatio: 0.40))
         }
         KeyframeTrack(\.legR) {
-            LinearKeyframe(0, duration: 0.65)
-            CubicKeyframe(6, duration: 0.25)
-            CubicKeyframe(1, duration: 0.40)
-            CubicKeyframe(10, duration: 0.40)
-            CubicKeyframe(3, duration: 0.35)
-            CubicKeyframe(8, duration: 0.25)
-            CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.40)
+            Hold.moving(0, duration: 1.6, drift: 0.8)
+            CubicKeyframe(-5, duration: 0.07)
+            CubicKeyframe(0, duration: 0.08)
+            Hold.moving(0, duration: 0.85, drift: 0.8)
         }
-        // The wave: the shoulder raises the arm beside her head and holds with a
-        // breath; the forearm does the actual waving, three wags from the elbow.
-        KeyframeTrack(\.armR) {
-            LinearKeyframe(0, duration: 0.55)
-            CubicKeyframe(-145, duration: 0.30)
-            Hold.breathing(-145, duration: 1.35, drift: 3.0)
-            CubicKeyframe(0, duration: 0.40)
-            LinearKeyframe(0, duration: 0.40)
-        }
-        KeyframeTrack(\.armR_fore) {
-            LinearKeyframe(0, duration: 0.60)
-            CubicKeyframe(-38, duration: 0.25)
-            CubicKeyframe(-8, duration: 0.30)
-            CubicKeyframe(-42, duration: 0.30)
-            CubicKeyframe(-8, duration: 0.30)
-            CubicKeyframe(-38, duration: 0.25)
-            CubicKeyframe(0, duration: 0.45)
-            LinearKeyframe(0, duration: 0.55)
-        }
-        // The other hand props against the pill's edge beside her hip.
-        KeyframeTrack(\.armL) {
-            LinearKeyframe(0, duration: 0.58)
-            CubicKeyframe(14, duration: 0.30)
-            SpringKeyframe(9, duration: 0.30, spring: .init(response: 0.34, dampingRatio: 0.55))
-            Hold.breathing(9, duration: 1.02, drift: 2.0)
-            CubicKeyframe(0, duration: 0.35)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        KeyframeTrack(\.armL_fore) {
-            LinearKeyframe(0, duration: 0.62)
-            CubicKeyframe(20, duration: 0.30)
-            SpringKeyframe(13, duration: 0.28, spring: .init(response: 0.38, dampingRatio: 0.52))
-            Hold.breathing(13, duration: 0.95, drift: 2.2)
-            CubicKeyframe(0, duration: 0.40)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        // A small lean toward the waving side.
-        KeyframeTrack(\.head) {
-            LinearKeyframe(0, duration: 0.70)
-            CubicKeyframe(-4, duration: 0.30)
-            Hold.breathing(-4, duration: 1.20, drift: 1.5)
-            CubicKeyframe(0, duration: 0.35)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        // Tails settle from the drop, then idle; tips lag their bases.
-        KeyframeTrack(\.tailL_base) {
-            LinearKeyframe(0, duration: 0.75)
-            SpringKeyframe(-8, duration: 0.30, spring: .init(response: 0.45, dampingRatio: 0.50))
-            SpringKeyframe(5, duration: 0.55, spring: .init(response: 0.45, dampingRatio: 0.50))
-            SpringKeyframe(-4, duration: 0.55, spring: .init(response: 0.45, dampingRatio: 0.50))
-            SpringKeyframe(0, duration: 0.45, spring: .init(response: 0.45, dampingRatio: 0.50))
-            LinearKeyframe(0, duration: 0.40)
-        }
-        KeyframeTrack(\.tailR_base) {
-            LinearKeyframe(0, duration: 0.75)
-            SpringKeyframe(8, duration: 0.30, spring: .init(response: 0.45, dampingRatio: 0.50))
-            SpringKeyframe(-5, duration: 0.55, spring: .init(response: 0.45, dampingRatio: 0.50))
-            SpringKeyframe(4, duration: 0.55, spring: .init(response: 0.45, dampingRatio: 0.50))
-            SpringKeyframe(0, duration: 0.45, spring: .init(response: 0.45, dampingRatio: 0.50))
-            LinearKeyframe(0, duration: 0.40)
-        }
-        KeyframeTrack(\.tailL_tip) {
-            Hold.moving(0, duration: 0.90, drift: 1.8)
-            SpringKeyframe(-12, duration: 0.35, spring: .init(response: 0.40, dampingRatio: 0.38))
-            SpringKeyframe(8, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.38))
-            SpringKeyframe(-6, duration: 0.55, spring: .init(response: 0.40, dampingRatio: 0.38))
-            SpringKeyframe(0, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.38))
-        }
-        KeyframeTrack(\.tailR_tip) {
-            Hold.moving(0, duration: 0.90, drift: 1.8)
-            SpringKeyframe(12, duration: 0.35, spring: .init(response: 0.40, dampingRatio: 0.38))
-            SpringKeyframe(-8, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.38))
-            SpringKeyframe(6, duration: 0.55, spring: .init(response: 0.40, dampingRatio: 0.38))
-            SpringKeyframe(0, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.38))
-        }
-        KeyframeTrack(\.ahoge) {
-            Hold.moving(0, duration: 0.80, drift: 1.8)
-            SpringKeyframe(10, duration: 0.35, spring: .init(response: 0.50, dampingRatio: 0.38))
-            SpringKeyframe(-10, duration: 0.60, spring: .init(response: 0.50, dampingRatio: 0.38))
-            SpringKeyframe(6, duration: 0.50, spring: .init(response: 0.50, dampingRatio: 0.38))
-            SpringKeyframe(0, duration: 0.45, spring: .init(response: 0.50, dampingRatio: 0.38))
-            LinearKeyframe(0, duration: 0.30)
-        }
-        KeyframeTrack(\.ahogeScaleY) {
-            LinearKeyframe(1, duration: 0.55)
-            CubicKeyframe(0.8, duration: 0.30)        // droops as she relaxes
-            Hold.moving(0.8, duration: 1.65, drift: 0.014)
-            CubicKeyframe(1.0, duration: 0.50)
-        }
-        KeyframeTrack(\.hips) {
-            LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(3, duration: 0.25)          // hips settle back onto the ledge
-            Hold.breathing(3, duration: 1.60, drift: 0.8)
-            CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.35)
-        }
-        KeyframeTrack(\.torso) {
-            LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(-3, duration: 0.25)
-            Hold.breathing(-3, duration: 1.60, drift: 0.9)
-            CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.35)
+        KeyframeTrack(\.shinR) {
+            Hold.moving(0, duration: 1.6, drift: 0.8)
+            CubicKeyframe(4, duration: 0.07)
+            CubicKeyframe(0, duration: 0.08)
+            Hold.moving(0, duration: 0.85, drift: 0.8)
         }
     }
 
-    // MARK: - longBreak · "Twirl" (3.4s)
+    // MARK: - breakStart · "Big yawn" (3.0s)
 
-    /// A yaw turn, twice: she narrows to an edge-on sliver and opens again, with a hop,
-    /// arms out and the tails flaring against the turn, then sparkles.
+    /// A slow rise into a huge stretching yawn on tiptoe, then she flops onto the bar
+    /// edge, folds her arms and rests her chin on them, eyes closed, and slides out.
     @KeyframesBuilder<AnimeGirlPose>
-    public static var twirl: some Keyframes<AnimeGirlPose> {
+    public static var perchWave: some Keyframes<AnimeGirlPose> {
+        perchWavePart1
+        perchWavePart2
+        perchWavePart3
+        perchWavePart4
+    }
+
+    /// perchWave: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var perchWavePart1: some Keyframes<AnimeGirlPose> {
         KeyframeTrack(\.emergence) {
-            CubicKeyframe(-16, duration: 0.35)
-            SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.4, dampingRatio: 0.60))
-            Hold.moving(0, duration: 2.35, drift: 1.4)
-            CubicKeyframe(-3, duration: 0.10)         // small rise before the drop
-            CubicKeyframe(200, duration: 0.40)
-        }
-        KeyframeTrack(\.laughOpacity) {
-            LinearKeyframe(0, duration: 0.30)
-            LinearKeyframe(1, duration: 0.12)
-            LinearKeyframe(1, duration: 2.40)
-            LinearKeyframe(0, duration: 0.12)
-            LinearKeyframe(0, duration: 0.46)
-        }
-        // Arms and head through the turn, none of which moved before — the twirl was
-        // the whole figure rotating as one flat board.
-        //
-        // Both arms come out and up into the spin and are pulled back in as it
-        // stops; the head leads the turn and settles last. That ordering is what
-        // separates a person turning from a sprite being rotated.
-        KeyframeTrack(\.armL) {
-            LinearKeyframe(0, duration: 0.35)
-            CubicKeyframe(14, duration: 0.10)
-            CubicKeyframe(-34, duration: 0.45)       // out through the turn
-            Hold.moving(-34, duration: 0.50, drift: 1.5)
-            SpringKeyframe(-12, duration: 0.35, spring: .init(response: 0.42, dampingRatio: 0.48))
-            Hold.breathing(-12, duration: 1.2, drift: 2.2)
-            CubicKeyframe(0, duration: 0.40)
-            LinearKeyframe(0, duration: 0.05)
-        }
-        KeyframeTrack(\.armL_fore) {
-            LinearKeyframe(0, duration: 0.39)
-            CubicKeyframe(20, duration: 0.10)
-            CubicKeyframe(-46, duration: 0.45)       // out through the turn
-            Hold.moving(-46, duration: 0.50, drift: 1.5)
-            SpringKeyframe(-16, duration: 0.36, spring: .init(response: 0.42, dampingRatio: 0.48))
-            Hold.breathing(-16, duration: 1.15, drift: 2.8)
-            CubicKeyframe(0, duration: 0.40)
-            LinearKeyframe(0, duration: 0.05)
-        }
-        KeyframeTrack(\.armR) {
-            LinearKeyframe(0, duration: 0.35)
-            CubicKeyframe(-14, duration: 0.10)
-            CubicKeyframe(34, duration: 0.45)       // out through the turn
-            Hold.moving(34, duration: 0.50, drift: 1.5)
-            SpringKeyframe(12, duration: 0.35, spring: .init(response: 0.42, dampingRatio: 0.48))
-            Hold.breathing(12, duration: 1.2, drift: 2.2)
-            CubicKeyframe(0, duration: 0.40)
-            LinearKeyframe(0, duration: 0.05)
-        }
-        KeyframeTrack(\.armR_fore) {
-            LinearKeyframe(0, duration: 0.39)
-            CubicKeyframe(-20, duration: 0.10)
-            CubicKeyframe(46, duration: 0.45)       // out through the turn
-            Hold.moving(46, duration: 0.50, drift: 1.5)
-            SpringKeyframe(16, duration: 0.36, spring: .init(response: 0.42, dampingRatio: 0.48))
-            Hold.breathing(16, duration: 1.15, drift: 2.8)
-            CubicKeyframe(0, duration: 0.40)
-            LinearKeyframe(0, duration: 0.05)
-        }
-        KeyframeTrack(\.head) {
-            LinearKeyframe(0, duration: 0.35)
-            CubicKeyframe(7, duration: 0.10)          // head leads into the turn
-            CubicKeyframe(-8, duration: 0.45)
-            Hold.moving(-8, duration: 0.50, drift: 1.5)
-            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.44, dampingRatio: 0.42))
-            Hold.breathing(0, duration: 1.20, drift: 2.0)
             CubicKeyframe(0, duration: 0.45)
+            CubicKeyframe(-6, duration: 0.3)
+            Hold.moving(-6, duration: 0.35, drift: 1.0)
+            CubicKeyframe(45, duration: 0.3)
+            Hold.breathing(45, duration: 1.0, drift: 1.0)
+            CubicKeyframe(42, duration: 0.08)
+            CubicKeyframe(200, duration: 0.52)
         }
-        // The turn is a yaw, not a spin: the figure thins to an edge-on sliver
-        // (0.12) and opens again, twice, so she stays upright the whole time.
-        KeyframeTrack(\.figureScaleX) {
-            LinearKeyframe(1, duration: 0.35)
-            CubicKeyframe(0.94, duration: 0.10)       // anticipation
-            CubicKeyframe(0.12, duration: 0.25)
-            CubicKeyframe(1.0, duration: 0.25)
-            CubicKeyframe(0.12, duration: 0.22)
-            SpringKeyframe(1.0, duration: 0.33, spring: .init(response: 0.35, dampingRatio: 0.50))
-            Hold.moving(1.0, duration: 1.90, drift: 0.014)
-        }
-        KeyframeTrack(\.sparkleOpacity) {
-            LinearKeyframe(0, duration: 1.35)
-            CubicKeyframe(1, duration: 0.30)
-            LinearKeyframe(1, duration: 0.80)
-            CubicKeyframe(0, duration: 0.50)
-            LinearKeyframe(0, duration: 0.45)
-        }
-        KeyframeTrack(\.sparkleScale) {
-            Hold.moving(0.4, duration: 1.35, drift: 0.014)
-            CubicKeyframe(1.1, duration: 0.30)
-            Hold.moving(1.1, duration: 1.75, drift: 0.014)
-        }
-        KeyframeTrack(\.sparkleRotation) {
-            Hold.moving(0, duration: 1.35, drift: 1.8)
-            LinearKeyframe(90, duration: 0.60)
-            Hold.moving(90, duration: 1.45, drift: 1.8)
-        }
-        // Everything catches up late and overshoots hard.
-        KeyframeTrack(\.tailL_base) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(-35, duration: 0.25)      // flares against the turn
-            CubicKeyframe(20, duration: 0.47)     // counter-swing on the second turn
-            SpringKeyframe(0, duration: 0.63, spring: .init(response: 0.35, dampingRatio: 0.42))
-            Hold.moving(0, duration: 1.60, drift: 1.8)
-        }
-        KeyframeTrack(\.tailR_base) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(35, duration: 0.25)      // flares against the turn
-            CubicKeyframe(-20, duration: 0.47)     // counter-swing on the second turn
-            SpringKeyframe(0, duration: 0.63, spring: .init(response: 0.35, dampingRatio: 0.42))
-            Hold.moving(0, duration: 1.60, drift: 1.8)
-        }
-        KeyframeTrack(\.tailL_tip) {
-            LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(-45, duration: 0.28)
-            CubicKeyframe(25, duration: 0.47)
-            SpringKeyframe(0, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.38))
-            Hold.moving(0, duration: 1.55, drift: 1.8)
-        }
-        KeyframeTrack(\.tailR_tip) {
-            LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(45, duration: 0.28)
-            CubicKeyframe(-25, duration: 0.47)
-            SpringKeyframe(0, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.38))
-            Hold.moving(0, duration: 1.55, drift: 1.8)
-        }
-        KeyframeTrack(\.ahoge) {
-            LinearKeyframe(0, duration: 0.50)
-            CubicKeyframe(-42, duration: 0.30)
-            SpringKeyframe(18, duration: 0.40, spring: .init(response: 0.40, dampingRatio: 0.32))
-            SpringKeyframe(0, duration: 0.60, spring: .init(response: 0.40, dampingRatio: 0.32))
-            Hold.moving(0, duration: 1.60, drift: 1.8)
-        }
-        KeyframeTrack(\.torso) {
-            LinearKeyframe(0, duration: 0.35)
-            CubicKeyframe(2.5, duration: 0.10)
-            CubicKeyframe(-3, duration: 0.45)
-            Hold.moving(-3, duration: 0.50, drift: 1.0)
-            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.40, dampingRatio: 0.50))
-            LinearKeyframe(0, duration: 1.65)
-        }
-        KeyframeTrack(\.hips) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(-3, duration: 0.30)
-            CubicKeyframe(3, duration: 0.30)
-            SpringKeyframe(0, duration: 0.35, spring: .init(response: 0.40, dampingRatio: 0.50))
-            LinearKeyframe(0, duration: 2.00)
+        KeyframeTrack(\.figureScaleY) {
+            Hold.moving(1, duration: 0.45, drift: 0.01)
+            CubicKeyframe(1.05, duration: 0.3)
+            Hold.moving(1.05, duration: 0.35, drift: 0.008)
+            SpringKeyframe(0.97, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.breathing(1.0, duration: 1.0, drift: 0.015)
+            Hold.moving(1.0, duration: 0.6, drift: 0.01)
         }
         KeyframeTrack(\.figureLift) {
+            Hold.moving(0, duration: 0.45, drift: 0.4)
+            Hold.moving(0, duration: 0.65, drift: 0.5)
+            CubicKeyframe(3, duration: 0.3)
+            Hold.breathing(3, duration: 1.0, drift: 0.6)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.torso) {
+            Hold.moving(0, duration: 0.45, drift: 0.8)
+            CubicKeyframe(-2, duration: 0.3)
+            Hold.breathing(-2, duration: 0.35, drift: 1.0)
+            CubicKeyframe(3, duration: 0.3)
+            Hold.breathing(3, duration: 1.0, drift: 0.8)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.hips) {
+            Hold.moving(0, duration: 0.45, drift: 0.6)
+            CubicKeyframe(-1.5, duration: 0.3)
+            Hold.moving(-1.5, duration: 0.35, drift: 0.6)
+            CubicKeyframe(2, duration: 0.3)
+            Hold.breathing(2, duration: 1.0, drift: 0.5)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.head) {
+            CubicKeyframe(5, duration: 0.45)
+            CubicKeyframe(-12, duration: 0.3)
+            Hold.moving(-12, duration: 0.35, drift: 1.5)
+            CubicKeyframe(4, duration: 0.3)
+            Hold.breathing(4, duration: 1.0, drift: 1.0)
+            CubicKeyframe(8, duration: 0.3)
+            Hold.moving(8, duration: 0.3, drift: 0.8)
+        }
+    }
+
+    /// perchWave: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var perchWavePart2: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.dozeOpacity) {
+            LinearKeyframe(1, duration: 0.37)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 0.65)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 1.82)
+        }
+        KeyframeTrack(\.yawnOpacity) {
+            LinearKeyframe(0, duration: 0.37)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 0.65)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 1.82)
+        }
+        KeyframeTrack(\.clawL) {
             LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(-8, duration: 0.25)          // hop into the first turn (negative is up)
-            CubicKeyframe(0, duration: 0.25)
-            CubicKeyframe(-6, duration: 0.22)
-            SpringKeyframe(0, duration: 0.23, spring: .init(response: 0.30, dampingRatio: 0.55))
-            LinearKeyframe(0, duration: 2.00)
+            CubicKeyframe(1, duration: 0.2)
+            LinearKeyframe(1, duration: 0.45)
+            CubicKeyframe(0, duration: 0.3)
+            LinearKeyframe(0, duration: 1.6)
+        }
+        KeyframeTrack(\.clawR) {
+            LinearKeyframe(0, duration: 0.45)
+            CubicKeyframe(1, duration: 0.2)
+            LinearKeyframe(1, duration: 0.45)
+            CubicKeyframe(0, duration: 0.3)
+            LinearKeyframe(0, duration: 1.6)
+        }
+        KeyframeTrack(\.armL) {
+            Hold.moving(0, duration: 0.45, drift: 1.0)
+            CubicKeyframe(-8, duration: 0.12)
+            CubicKeyframe(158, duration: 0.28)
+            Hold.moving(158, duration: 0.25, drift: -3.0)
+            CubicKeyframe(72, duration: 0.3)
+            Hold.breathing(72, duration: 1.0, drift: 1.0)
+            Hold.moving(72, duration: 0.6, drift: 1.0)
+        }
+        KeyframeTrack(\.armL_fore) {
+            Hold.moving(0, duration: 0.45, drift: 0.8)
+            CubicKeyframe(4, duration: 0.12)
+            CubicKeyframe(14, duration: 0.28)
+            Hold.moving(14, duration: 0.25, drift: 2.0)
+            CubicKeyframe(-138, duration: 0.3)
+            Hold.breathing(-138, duration: 1.0, drift: 1.5)
+            Hold.moving(-138, duration: 0.6, drift: 1.0)
+        }
+    }
+
+    /// perchWave: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var perchWavePart3: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.armR) {
+            Hold.moving(0, duration: 0.45, drift: -1.0)
+            CubicKeyframe(8, duration: 0.12)
+            CubicKeyframe(-158, duration: 0.28)
+            Hold.moving(-158, duration: 0.25, drift: 3.0)
+            CubicKeyframe(-72, duration: 0.3)
+            Hold.breathing(-72, duration: 1.0, drift: -1.0)
+            Hold.moving(-72, duration: 0.6, drift: -1.0)
+        }
+        KeyframeTrack(\.armR_fore) {
+            Hold.moving(0, duration: 0.45, drift: -0.8)
+            CubicKeyframe(-4, duration: 0.12)
+            CubicKeyframe(-14, duration: 0.28)
+            Hold.moving(-14, duration: 0.25, drift: -2.0)
+            CubicKeyframe(138, duration: 0.3)
+            Hold.breathing(138, duration: 1.0, drift: -1.5)
+            Hold.moving(138, duration: 0.6, drift: -1.0)
+        }
+        KeyframeTrack(\.tailL_base) {
+            Hold.moving(0.0, duration: 1.1, drift: 0.68)
+            SpringKeyframe(5.4, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            SpringKeyframe(-1.8, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(-1.8, duration: 0.6, drift: 0.54)
+            CubicKeyframe(0.0, duration: 0.6)
+        }
+        KeyframeTrack(\.tailR_base) {
+            Hold.moving(0.0, duration: 1.1, drift: -0.68)
+            SpringKeyframe(-5.4, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            SpringKeyframe(1.8, duration: 0.4, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(1.8, duration: 0.6, drift: -0.54)
+            CubicKeyframe(0.0, duration: 0.6)
+        }
+        KeyframeTrack(\.tailL_tip) {
+            Hold.moving(0.0, duration: 1.17, drift: 0.9)
+            SpringKeyframe(7.2, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(-2.7, duration: 0.45, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(-2.7, duration: 0.48, drift: 0.45)
+            CubicKeyframe(0.0, duration: 0.6)
+        }
+        KeyframeTrack(\.tailR_tip) {
+            Hold.moving(0.0, duration: 1.17, drift: -0.9)
+            SpringKeyframe(-7.2, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(2.7, duration: 0.45, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(2.7, duration: 0.48, drift: -0.45)
+            CubicKeyframe(0.0, duration: 0.6)
+        }
+    }
+
+    /// perchWave: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var perchWavePart4: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.ahoge) {
+            Hold.moving(0.0, duration: 0.45, drift: 0.68)
+            CubicKeyframe(2.7, duration: 0.65)
+            SpringKeyframe(-4.5, duration: 0.4, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(-4.5, duration: 0.9, drift: 0.68)
+            CubicKeyframe(0.0, duration: 0.6)
+        }
+    }
+
+    // MARK: - longBreak · "Hey hey hey!" (3.4s)
+
+    /// Crouch, jump with both fists up, land in a wide stance and hit her signature
+    /// pose: one claw high beside her face, one low, head back, laughing.
+    @KeyframesBuilder<AnimeGirlPose>
+    public static var twirl: some Keyframes<AnimeGirlPose> {
+        twirlPart1
+        twirlPart2
+        twirlPart3
+        twirlPart4
+        twirlPart5
+    }
+
+    /// twirl: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var twirlPart1: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.emergence) {
+            CubicKeyframe(-6, duration: 0.3)
+            CubicKeyframe(0, duration: 0.1)
+            CubicKeyframe(9, duration: 0.2)
+            CubicKeyframe(0, duration: 0.15)
+            Hold.moving(0, duration: 0.3, drift: 0.5)
+            CubicKeyframe(5, duration: 0.08)
+            SpringKeyframe(0, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(0, duration: 0.3, drift: 0.8)
+            Hold.breathing(0, duration: 0.85, drift: 1.0)
+            Hold.moving(0, duration: 0.4, drift: 0.8)
+            CubicKeyframe(-3, duration: 0.1)
+            CubicKeyframe(200, duration: 0.5)
+        }
+        KeyframeTrack(\.figureScaleY) {
+            Hold.moving(1, duration: 0.4, drift: 0.01)
+            CubicKeyframe(0.9, duration: 0.2)
+            CubicKeyframe(1.05, duration: 0.12)
+            Hold.moving(1.03, duration: 0.33, drift: 0.01)
+            CubicKeyframe(0.92, duration: 0.08)
+            SpringKeyframe(1.0, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(1.0, duration: 0.3, drift: 0.01)
+            Hold.breathing(1.0, duration: 0.85, drift: 0.012)
+            Hold.moving(1.0, duration: 0.4, drift: 0.01)
+            CubicKeyframe(0.97, duration: 0.1)
+            CubicKeyframe(1.0, duration: 0.5)
+        }
+        KeyframeTrack(\.figureLift) {
+            Hold.moving(0, duration: 0.4, drift: 0.4)
+            CubicKeyframe(2, duration: 0.2)
+            CubicKeyframe(-28, duration: 0.22)
+            CubicKeyframe(0, duration: 0.23)
+            CubicKeyframe(2, duration: 0.08)
+            SpringKeyframe(0, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(0, duration: 0.3, drift: 0.5)
+            CubicKeyframe(-2, duration: 0.1)
+            CubicKeyframe(1, duration: 0.1)
+            CubicKeyframe(-1, duration: 0.1)
+            CubicKeyframe(0, duration: 0.1)
+            Hold.moving(0, duration: 0.45, drift: 0.5)
+            Hold.moving(0, duration: 0.4, drift: 0.5)
+            CubicKeyframe(1, duration: 0.1)
+            CubicKeyframe(0, duration: 0.5)
+        }
+        KeyframeTrack(\.legL) {
+            Hold.moving(0, duration: 0.4, drift: 0.8)
+            CubicKeyframe(18, duration: 0.2)
+            CubicKeyframe(4, duration: 0.22)
+            CubicKeyframe(6, duration: 0.23)
+            CubicKeyframe(18, duration: 0.08)
+            SpringKeyframe(14, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(14, duration: 0.3, drift: 1.0)
+            Hold.breathing(14, duration: 0.85, drift: 1.0)
+            CubicKeyframe(2, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.legR) {
+            Hold.moving(0, duration: 0.4, drift: -0.8)
+            CubicKeyframe(-18, duration: 0.2)
+            CubicKeyframe(-4, duration: 0.22)
+            CubicKeyframe(-6, duration: 0.23)
+            CubicKeyframe(-18, duration: 0.08)
+            SpringKeyframe(-14, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(-14, duration: 0.3, drift: -1.0)
+            Hold.breathing(-14, duration: 0.85, drift: -1.0)
+            CubicKeyframe(-2, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.shinL) {
+            Hold.moving(0, duration: 0.4, drift: 0.5)
+            CubicKeyframe(-24, duration: 0.2)
+            CubicKeyframe(-8, duration: 0.22)
+            CubicKeyframe(-4, duration: 0.23)
+            CubicKeyframe(-18, duration: 0.08)
+            SpringKeyframe(-14, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(-14, duration: 0.3, drift: 1.0)
+            Hold.breathing(-14, duration: 0.85, drift: 1.0)
+            CubicKeyframe(-2, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+    }
+
+    /// twirl: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var twirlPart2: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.shinR) {
+            Hold.moving(0, duration: 0.4, drift: -0.5)
+            CubicKeyframe(24, duration: 0.2)
+            CubicKeyframe(8, duration: 0.22)
+            CubicKeyframe(4, duration: 0.23)
+            CubicKeyframe(18, duration: 0.08)
+            SpringKeyframe(14, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(14, duration: 0.3, drift: -1.0)
+            Hold.breathing(14, duration: 0.85, drift: -1.0)
+            CubicKeyframe(2, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.hips) {
+            Hold.moving(0, duration: 0.4, drift: 0.6)
+            CubicKeyframe(-2.5, duration: 0.2)
+            CubicKeyframe(2, duration: 0.22)
+            CubicKeyframe(-1, duration: 0.23)
+            CubicKeyframe(-3, duration: 0.08)
+            SpringKeyframe(0, duration: 0.12, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(0, duration: 0.3, drift: 1.0)
+            Hold.breathing(0, duration: 0.85, drift: 1.2)
+            Hold.moving(0, duration: 0.4, drift: 0.8)
+            Hold.moving(0, duration: 0.6, drift: 0.6)
+        }
+        KeyframeTrack(\.torso) {
+            Hold.moving(0, duration: 0.4, drift: 0.8)
+            CubicKeyframe(3, duration: 0.2)
+            CubicKeyframe(-4, duration: 0.2)
+            CubicKeyframe(2, duration: 0.25)
+            CubicKeyframe(6, duration: 0.2)
+            Hold.moving(6, duration: 0.3, drift: 1.0)
+            Hold.breathing(6, duration: 0.85, drift: 1.2)
+            CubicKeyframe(-2, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.head) {
+            Hold.moving(0, duration: 0.4, drift: 1.0)
+            CubicKeyframe(3, duration: 0.2)
+            CubicKeyframe(-8, duration: 0.45)
+            CubicKeyframe(-12, duration: 0.2)
+            Hold.moving(-12, duration: 0.3, drift: 1.5)
+            CubicKeyframe(-16, duration: 0.16)
+            CubicKeyframe(-11, duration: 0.16)
+            CubicKeyframe(-14, duration: 0.14)
+            CubicKeyframe(-12, duration: 0.14)
+            Hold.moving(-12, duration: 0.25, drift: 1.2)
+            CubicKeyframe(5, duration: 0.4)
+            CubicKeyframe(0, duration: 0.3)
+            Hold.moving(0, duration: 0.3, drift: 0.8)
+        }
+        KeyframeTrack(\.shoutOpacity) {
+            LinearKeyframe(0, duration: 0.55)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 0.62)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 2.07)
+        }
+        KeyframeTrack(\.laughOpacity) {
+            LinearKeyframe(0, duration: 1.25)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 1.07)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 0.92)
+        }
+    }
+
+    /// twirl: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var twirlPart3: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.smugOpacity) {
+            LinearKeyframe(0, duration: 2.4)
+            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(1, duration: 0.92)
+        }
+        KeyframeTrack(\.fistL) {
+            LinearKeyframe(0, duration: 0.4)
+            CubicKeyframe(1, duration: 0.12)
+            LinearKeyframe(1, duration: 0.53)
+            CubicKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 2.27)
+        }
+        KeyframeTrack(\.fist) {
+            LinearKeyframe(0, duration: 0.4)
+            CubicKeyframe(1, duration: 0.12)
+            LinearKeyframe(1, duration: 0.53)
+            CubicKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 2.27)
+        }
+        KeyframeTrack(\.clawL) {
+            LinearKeyframe(0, duration: 1.05)
+            CubicKeyframe(1, duration: 0.2)
+            LinearKeyframe(1, duration: 1.15)
+            CubicKeyframe(0, duration: 0.2)
+            LinearKeyframe(0, duration: 0.8)
+        }
+        KeyframeTrack(\.clawR) {
+            LinearKeyframe(0, duration: 1.05)
+            CubicKeyframe(1, duration: 0.2)
+            LinearKeyframe(1, duration: 0.3)
+            CubicKeyframe(0.6, duration: 0.15)
+            CubicKeyframe(1, duration: 0.15)
+            LinearKeyframe(1, duration: 0.55)
+            CubicKeyframe(0, duration: 0.2)
+            LinearKeyframe(0, duration: 0.8)
+        }
+        KeyframeTrack(\.armL) {
+            Hold.moving(0, duration: 0.4, drift: 1.0)
+            CubicKeyframe(10, duration: 0.2)
+            CubicKeyframe(150, duration: 0.22)
+            Hold.moving(150, duration: 0.23, drift: 3.0)
+            SpringKeyframe(48, duration: 0.2, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(48, duration: 0.3, drift: 2.0)
+            Hold.breathing(48, duration: 0.85, drift: 2.0)
+            CubicKeyframe(14, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+    }
+
+    /// twirl: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var twirlPart4: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.armL_fore) {
+            Hold.moving(0, duration: 0.4, drift: 1.0)
+            CubicKeyframe(-35, duration: 0.2)
+            CubicKeyframe(14, duration: 0.22)
+            Hold.moving(14, duration: 0.23, drift: 2.5)
+            CubicKeyframe(10, duration: 0.2)
+            Hold.moving(10, duration: 0.3, drift: 1.5)
+            Hold.breathing(10, duration: 0.85, drift: 2.0)
+            CubicKeyframe(-6, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.armR) {
+            Hold.moving(0, duration: 0.4, drift: 1.0)
+            CubicKeyframe(-8, duration: 0.2)
+            CubicKeyframe(-150, duration: 0.22)
+            Hold.moving(-150, duration: 0.23, drift: 3.0)
+            SpringKeyframe(-145, duration: 0.2, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(-145, duration: 0.3, drift: 2.0)
+            Hold.breathing(-145, duration: 0.85, drift: 2.5)
+            CubicKeyframe(-78, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.armR_fore) {
+            Hold.moving(0, duration: 0.4, drift: 1.0)
+            CubicKeyframe(35, duration: 0.2)
+            CubicKeyframe(-14, duration: 0.22)
+            Hold.moving(-14, duration: 0.23, drift: 2.5)
+            CubicKeyframe(-18, duration: 0.2)
+            Hold.moving(-18, duration: 0.3, drift: 1.5)
+            Hold.breathing(-18, duration: 0.85, drift: 2.0)
+            CubicKeyframe(-125, duration: 0.4)
+            CubicKeyframe(0, duration: 0.6)
+        }
+        KeyframeTrack(\.tailL_base) {
+            Hold.moving(0.0, duration: 0.4, drift: 0.68)
+            CubicKeyframe(-2.7, duration: 0.2)
+            CubicKeyframe(7.2, duration: 0.25)
+            Hold.moving(7.2, duration: 0.2, drift: 0.9)
+            CubicKeyframe(-5.4, duration: 0.1)
+            SpringKeyframe(1.8, duration: 0.1, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(-1.35, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.breathing(-1.35, duration: 0.85, drift: 0.9)
+            CubicKeyframe(5.4, duration: 0.2)
+            SpringKeyframe(0.0, duration: 0.2, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.6, drift: 0.68)
+        }
+        KeyframeTrack(\.tailR_base) {
+            Hold.moving(0.0, duration: 0.4, drift: -0.68)
+            CubicKeyframe(2.7, duration: 0.2)
+            CubicKeyframe(-7.2, duration: 0.25)
+            Hold.moving(-7.2, duration: 0.2, drift: -0.9)
+            CubicKeyframe(5.4, duration: 0.1)
+            SpringKeyframe(-1.8, duration: 0.1, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(1.35, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.breathing(1.35, duration: 0.85, drift: -0.9)
+            CubicKeyframe(-5.4, duration: 0.2)
+            SpringKeyframe(0.0, duration: 0.2, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.6, drift: -0.68)
+        }
+        KeyframeTrack(\.tailL_tip) {
+            Hold.moving(0.0, duration: 0.48, drift: 0.68)
+            CubicKeyframe(-3.6, duration: 0.2)
+            CubicKeyframe(11.7, duration: 0.28)
+            CubicKeyframe(9.9, duration: 0.17)
+            CubicKeyframe(-8.1, duration: 0.12)
+            SpringKeyframe(2.7, duration: 0.18, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(-1.35, duration: 0.22, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.breathing(-1.35, duration: 0.75, drift: 0.9)
+            CubicKeyframe(7.2, duration: 0.24)
+            SpringKeyframe(0.0, duration: 0.2, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.56, drift: 0.68)
+        }
+    }
+
+    /// twirl: one group of tracks, split out to keep each builder small.
+    @KeyframesBuilder<AnimeGirlPose>
+    static var twirlPart5: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.tailR_tip) {
+            Hold.moving(0.0, duration: 0.48, drift: -0.68)
+            CubicKeyframe(3.6, duration: 0.2)
+            CubicKeyframe(-11.7, duration: 0.28)
+            CubicKeyframe(-9.9, duration: 0.17)
+            CubicKeyframe(8.1, duration: 0.12)
+            SpringKeyframe(-2.7, duration: 0.18, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(1.35, duration: 0.22, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.breathing(1.35, duration: 0.75, drift: -0.9)
+            CubicKeyframe(-7.2, duration: 0.24)
+            SpringKeyframe(0.0, duration: 0.2, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.56, drift: -0.68)
+        }
+        KeyframeTrack(\.ahoge) {
+            Hold.moving(0.0, duration: 0.6, drift: 0.9)
+            CubicKeyframe(-5.4, duration: 0.25)
+            CubicKeyframe(-2.7, duration: 0.2)
+            SpringKeyframe(6.3, duration: 0.25, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(-1.8, duration: 0.3, spring: .init(response: 0.40, dampingRatio: 0.40))
+            SpringKeyframe(0.0, duration: 0.4, spring: .init(response: 0.40, dampingRatio: 0.40))
+            Hold.moving(0.0, duration: 0.4, drift: 0.9)
+            CubicKeyframe(4.5, duration: 0.4)
+            SpringKeyframe(0.0, duration: 0.6, spring: .init(response: 0.40, dampingRatio: 0.40))
         }
     }
 }
