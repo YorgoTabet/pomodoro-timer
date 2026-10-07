@@ -30,8 +30,16 @@ public enum HancockArt {
         public static let redShade = Color(hex: 0x8E1B2C)
         /// A lighter red catching the light on the bust.
         public static let redSheen = Color(hex: 0xD04256)
-        /// Inside of the skirt, seen through the slit.
-        public static let lining = Color(hex: 0x6E1424)
+        /// Inside of the skirt, seen through the slit and at the hem: blue, as
+        /// in the manga colour art.
+        public static let lining = Color(hex: 0x3D5BA6)
+        public static let liningShade = Color(hex: 0x2C4485)
+        /// The cape's inner side, which faces us beside her body.
+        public static let capeInner = Color(hex: 0x2B3470)
+        public static let capeInnerShade = Color(hex: 0x1F2758)
+        /// A small glint on the skin.
+        public static let skinLight = Color(hex: 0xFFF3EA)
+        public static let heelShade = Color(hex: 0x8E1B2C)
         public static let pink = Color(hex: 0xE58FA6)
         public static let pinkShade = Color(hex: 0xC96F88)
         public static let gold = Color(hex: 0xD9A441)
@@ -67,6 +75,9 @@ public enum HancockArt {
         /// The skirt's left front panel, hinged at the outer hip. Swinging it
         /// outward (positive) opens the slit over the left leg.
         case skirtPanel
+        /// The low sash's long loose end, hinged at the knot on her left hip.
+        /// Positive swings its bottom to the left.
+        case sashTail
         case capeL, capeR
         case armL, armL_fore, handL
         case armR, armR_fore, handR
@@ -82,7 +93,7 @@ public enum HancockArt {
             case .root: nil
             case .heart, .figure: .root
             case .hips: .figure
-            case .chest, .legL, .legR, .skirtPanel: .hips
+            case .chest, .legL, .legR, .skirtPanel, .sashTail: .hips
             case .shinL: .legL
             case .shinR: .legR
             case .bust, .capeL, .capeR, .armL, .armR, .head: .chest
@@ -118,6 +129,7 @@ public enum HancockArt {
             case .shinL: knee
             case .shinR: mirror(knee)
             case .skirtPanel: CGPoint(x: 72.6, y: 150)
+            case .sashTail: CGPoint(x: HancockParts.Top.knot.0, y: HancockParts.Top.knot.1)
             case .capeL: cape
             case .capeR: mirror(cape)
             case .armL: shoulder
@@ -140,9 +152,10 @@ public enum HancockArt {
 
     public typealias Layer = RigLayer<Part>
 
-    /// Back to front: cape, back hair, skirt lining, legs, skirt, neck, top,
-    /// bust, sash, arms, epaulettes, head and face, front hair, side locks,
-    /// earrings, heart.
+    /// Back to front: cape, back hair, skirt lining, legs, skirt and slit
+    /// panel, lower midriff, low sash with its knot and loose end, neck, upper
+    /// midriff, top, waist belt, the V, bust, frill, arms, epaulettes, head and
+    /// face, front hair, side locks, earrings, heart.
     public static let layers: [Layer] = {
         let assembled: [Layer] =
             HancockParts.Cape.layers()
@@ -151,11 +164,17 @@ public enum HancockArt {
             + HancockParts.Legs.layers()
             + HancockParts.Skirt.main()
             + HancockParts.Skirt.panel()
-            + HancockParts.Top.neck()
-            + HancockParts.Top.chest()
-            + HancockParts.Top.bust()
-            + HancockParts.Top.neckline()
+            + HancockParts.Top.lowerMidriff()
             + HancockParts.Top.sash()
+            + HancockParts.Top.sashTail()
+            + HancockParts.Top.sashKnot()
+            + HancockParts.Top.neck()
+            + HancockParts.Top.upperMidriff()
+            + HancockParts.Top.chest()
+            + HancockParts.Top.belt()
+            + HancockParts.Top.neckline()
+            + HancockParts.Top.bust()
+            + HancockParts.Top.frill()
             + HancockParts.Arms.layers()
             + HancockParts.Top.epaulettes()
             + HancockParts.Face.head()

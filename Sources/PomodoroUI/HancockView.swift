@@ -17,8 +17,10 @@ import SwiftUI
 ///   bent knee.
 /// - `hips` positive raises the left hip (weight on her left leg). `chest` is a
 ///   child of `hips`, so set it opposite for contrapposto.
-/// - `skirtPanel` positive swings the slit flap out to the left, baring the left
-///   leg from mid-thigh. 0...25.
+/// - `skirtPanel` positive swings the slit flap out to the left. The left leg is
+///   already bare from the hip at 0; 0...25 widens the opening (drawn at 0.45x,
+///   so 25 is an 11 degree swing). About -12 closes the flap over the leg.
+/// - `sashTail` swings the sash's loose end; positive swings its bottom left.
 /// - Capes: `capeL` positive flares out to the left, `capeR` negative to the right.
 /// - Hair: `hairBase`, `hairMid`, `hairTip` add up down the chain; drive the mid
 ///   and tip a few frames late for follow-through. Positive swings the hair's
@@ -34,22 +36,25 @@ public struct HancockPose: Equatable, Sendable {
 
     // Contrapposto rest: weight on her left leg, that hip high, shoulders
     // tilted the other way, head tipped back toward the high hip.
-    public var hips: Double = 2.5
-    public var chest: Double = -5
-    public var head: Double = 4
+    public var hips: Double = 4.5
+    public var chest: Double = -9
+    public var head: Double = 5
 
-    public var legL: Double = -3
-    public var shinL: Double = 0
+    public var legL: Double = -6
+    public var shinL: Double = 2
     public var legR: Double = -1
     public var shinR: Double = 2
     public var skirtPanel: Double = 0
+    /// The low sash's loose end. Positive swings its bottom to the left; drive
+    /// it a few frames after the hips for follow-through. Safe about ±20.
+    public var sashTail: Double = 0
 
-    public var armL: Double = 12
-    public var armL_fore: Double = -5
+    public var armL: Double = 17
+    public var armL_fore: Double = -6
     public var handL: Double = 0
-    public var armR: Double = -10
-    public var armR_fore: Double = 5
-    public var handR: Double = 0
+    public var armR: Double = -24
+    public var armR_fore: Double = 74
+    public var handR: Double = 24
 
     public var capeL: Double = 0
     public var capeR: Double = 0
@@ -77,7 +82,7 @@ public struct HancockPose: Equatable, Sendable {
 
     /// Hand shapes, 0...1, over the relaxed open hand.
     public var hipL: Double = 0
-    public var hipR: Double = 0
+    public var hipR: Double = 1
     public var pointL: Double = 0
     public var pointR: Double = 0
     public var mouthL: Double = 0
@@ -101,7 +106,10 @@ public struct HancockPose: Equatable, Sendable {
         case .shinL: shinL
         case .legR: legR
         case .shinR: shinR
-        case .skirtPanel: skirtPanel
+        // The slit is already open at rest, so the flap only needs a short
+        // swing: the authored 0...25 range maps onto 0...11 degrees.
+        case .skirtPanel: skirtPanel * 0.45
+        case .sashTail: sashTail
         case .armL: armL
         case .armL_fore: armL_fore
         case .handL: handL
