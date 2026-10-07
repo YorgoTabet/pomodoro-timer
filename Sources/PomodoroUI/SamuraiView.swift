@@ -50,6 +50,9 @@ public struct SamuraiPose: Equatable, Sendable {
     public var easeOpacity: Double = 0
     public var triumphOpacity: Double = 0
     public var pupilDrop: Double = 0
+    /// Eye whites and pupils, separate from the brows so the eyes can snap shut
+    /// without a half-faded brow swap.
+    public var eyeOpacity: Double = 1
 
     public init() {}
 
@@ -76,15 +79,17 @@ public struct SamuraiPose: Equatable, Sendable {
         case .kusazuriFR: kusazuriFR
         case .kusazuriR: kusazuriR
         case .scabbard: scabbard
-        case .legL: legL
-        case .legR: legR
+        // Counter-rotate by the root lean so the feet stay planted.
+        case .legL: legL - rootLean
+        case .legR: legR - rootLean
         }
     }
 
     /// Opacity override for the cross-faded expression layers.
     func opacity(of layer: SamuraiArt.Layer) -> Double {
         switch layer.name {
-        case "browsFierce", "eyeWhites", "pupilPair": fierceOpacity
+        case "eyeWhites", "pupilPair": eyeOpacity
+        case "browsFierce": fierceOpacity
         case "browsEase": easeOpacity
         case "eyesTriumph": triumphOpacity
         default: layer.restOpacity
@@ -120,7 +125,6 @@ public struct SamuraiView: View {
         )
         .scaleEffect(y: pose.rootScaleY, anchor: .bottom)
         .scaleEffect(pose.rootScale, anchor: .bottom)
-        .rotationEffect(.degrees(pose.rootLean), anchor: SamuraiArt.Part.root.anchor)
     }
 }
 
