@@ -15,6 +15,7 @@ public struct NinjaPose: Equatable, Sendable {
     /// offset (on `root`) is not dragged into the flip.
     public var figureRotation: Double = 0
     public var figureScaleY: Double = 1
+    public var figureScaleX: Double = 1
 
     public var torso: Double = 0
     public var head: Double = 0
@@ -27,6 +28,9 @@ public struct NinjaPose: Equatable, Sendable {
     public var throwForearm: Double = 0
     public var shuriken: Double = 0
     public var shurikenOpacity: Double = 1
+    /// Flight offset in world design units (left/up are negative), applied at the shuriken.
+    public var shurikenFlyX: Double = 0
+    public var shurikenFlyY: Double = 0
     public var offArmUpper: Double = 0
     public var offForearm: Double = 0
     public var ninjato: Double = 0
@@ -45,6 +49,10 @@ public struct NinjaPose: Equatable, Sendable {
     /// The smoke-bomb burst.
     public var smokeOpacity: Double = 0
     public var smokeScale: Double = 0.5
+    public var smokeOpacityB: Double = 0
+    public var smokeScaleB: Double = 0.5
+    public var smokeOpacityC: Double = 0
+    public var smokeScaleC: Double = 0.5
 
     public init() {}
 
@@ -66,7 +74,7 @@ public struct NinjaPose: Equatable, Sendable {
         case .legFrontShin: legFrontShin
         case .legBackThigh: legBackThigh
         case .legBackShin: legBackShin
-        case .root, .eyes, .smoke: 0
+        case .root, .eyes, .smoke, .smokeB, .smokeC: 0
         }
     }
 
@@ -76,7 +84,9 @@ public struct NinjaPose: Equatable, Sendable {
         case "contentEyeL", "contentEyeR": contentOpacity
         case "sparkL", "sparkR": sparkOpacity
         case "shurikenStar", "shurikenHole": shurikenOpacity
-        case "puffA", "puffB", "puffC": smokeOpacity
+        case "puffA": smokeOpacity
+        case "puffB": smokeOpacityB
+        case "puffC": smokeOpacityC
         default: layer.restOpacity
         }
     }
@@ -114,13 +124,28 @@ struct NinjaPartExtras: ViewModifier {
     func body(content: Content) -> some View {
         switch part {
         case .figure:
-            content.scaleEffect(y: pose.figureScaleY, anchor: NinjaArt.Part.figure.anchor)
+            content.scaleEffect(x: pose.figureScaleX, y: pose.figureScaleY, anchor: NinjaArt.Part.figure.anchor)
         case .eyes:
             content
                 .scaleEffect(y: pose.eyesScaleY, anchor: NinjaArt.Part.eyes.anchor)
                 .offset(x: pose.eyesOffsetX)
         case .smoke:
             content.scaleEffect(pose.smokeScale, anchor: NinjaArt.Part.smoke.anchor)
+        case .smokeB:
+            content
+                .scaleEffect(pose.smokeScaleB, anchor: NinjaArt.Part.smokeB.anchor)
+                .offset(x: -20)
+        case .smokeC:
+            content
+                .scaleEffect(pose.smokeScaleC, anchor: NinjaArt.Part.smokeC.anchor)
+                .offset(x: 20)
+        case .shuriken:
+            // The fly offset is in world space; undo the rotation the parent chain
+            // (figure, torso, arm, forearm) will apply to it.
+            let angle = (pose.figureRotation + pose.torso + pose.throwArmUpper + pose.throwForearm) * .pi / 180
+            let c = cos(angle), s = sin(angle)
+            let x = pose.shurikenFlyX, y = pose.shurikenFlyY
+            content.offset(x: x * c + y * s, y: -x * s + y * c)
         default:
             content
         }

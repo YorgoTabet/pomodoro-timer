@@ -36,24 +36,63 @@ public enum NinjaPerformance {
             // Twice the samurai's entry speed; no peek, no anticipation.
             SpringKeyframe(-14, duration: 0.24, spring: .init(response: 0.24, dampingRatio: 0.55))
             SpringKeyframe(0, duration: 0.16, spring: .init(response: 0.26, dampingRatio: 0.65))
-            Hold.moving(0, duration: 1.42, drift: 1.4)
-            CubicKeyframe(-8, duration: 0.10)
-            CubicKeyframe(200, duration: 0.28)
+            Hold.moving(0, duration: 1.44, drift: 1.4)
+            CubicKeyframe(-12, duration: 0.10)        // small hop before the drop
+            CubicKeyframe(200, duration: 0.26)
         }
+        // Three puffs, 40ms apart, fast attack, 0.35s fade. The exit burst peaks
+        // 0.1s earlier than before so it is already there when he drops.
         KeyframeTrack(\.smokeOpacity) {
-            LinearKeyframe(0.7, duration: 0.06)      // burst covers the arrival
+            LinearKeyframe(0.7, duration: 0.04)      // burst covers the arrival
             LinearKeyframe(0.55, duration: 0.16)
+            LinearKeyframe(0, duration: 0.26)
+            LinearKeyframe(0, duration: 1.24)
+            LinearKeyframe(0.7, duration: 0.06)       // and the exit
+            LinearKeyframe(0, duration: 0.35)
+            LinearKeyframe(0, duration: 0.09)
+        }
+        KeyframeTrack(\.smokeOpacityB) {
+            LinearKeyframe(0, duration: 0.04)
+            LinearKeyframe(0.7, duration: 0.04)
+            LinearKeyframe(0.5, duration: 0.14)
             LinearKeyframe(0, duration: 0.24)
-            LinearKeyframe(0, duration: 1.34)
-            LinearKeyframe(0.7, duration: 0.10)       // and the exit
-            LinearKeyframe(0, duration: 0.30)
+            LinearKeyframe(0, duration: 1.24)
+            LinearKeyframe(0, duration: 0.04)
+            LinearKeyframe(0.7, duration: 0.06)
+            LinearKeyframe(0, duration: 0.35)
+            LinearKeyframe(0, duration: 0.05)
+        }
+        KeyframeTrack(\.smokeOpacityC) {
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0.7, duration: 0.04)
+            LinearKeyframe(0.45, duration: 0.14)
+            LinearKeyframe(0, duration: 0.22)
+            LinearKeyframe(0, duration: 1.24)
+            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0.7, duration: 0.06)
+            LinearKeyframe(0, duration: 0.35)
+            LinearKeyframe(0, duration: 0.01)
         }
         KeyframeTrack(\.smokeScale) {
             LinearKeyframe(0.5, duration: 0.02)
             CubicKeyframe(0.95, duration: 0.30)
-            Hold.moving(0.95, duration: 1.48, drift: 0.014)
+            Hold.moving(0.95, duration: 1.38, drift: 0.014)
             CubicKeyframe(0.6, duration: 0.10)
+            CubicKeyframe(0.9, duration: 0.40)
+        }
+        KeyframeTrack(\.smokeScaleB) {
+            LinearKeyframe(0.5, duration: 0.06)
             CubicKeyframe(0.9, duration: 0.30)
+            Hold.moving(0.9, duration: 1.34, drift: 0.014)
+            CubicKeyframe(0.55, duration: 0.14)
+            CubicKeyframe(0.85, duration: 0.36)
+        }
+        KeyframeTrack(\.smokeScaleC) {
+            LinearKeyframe(0.5, duration: 0.10)
+            CubicKeyframe(0.9, duration: 0.30)
+            Hold.moving(0.9, duration: 1.30, drift: 0.014)
+            CubicKeyframe(0.55, duration: 0.18)
+            CubicKeyframe(0.85, duration: 0.32)
         }
         // Wind up behind the shoulder, then whip forward and stay extended.
         KeyframeTrack(\.throwArmUpper) {
@@ -61,27 +100,80 @@ public enum NinjaPerformance {
             CubicKeyframe(-58, duration: 0.14)
             SpringKeyframe(46, duration: 0.14, spring: .init(response: 0.22, dampingRatio: 0.52))
             SpringKeyframe(38, duration: 0.12, spring: .init(response: 0.24, dampingRatio: 0.62))
-            Hold.moving(38, duration: 1.18, drift: 1.8)
+            CubicKeyframe(28, duration: 0.25)         // recoil after the release
+            Hold.moving(28, duration: 0.15, drift: 1.0)
+            CubicKeyframe(-20, duration: 0.32)        // then pulls into a guard cross
+            Hold.breathing(-20, duration: 0.46, drift: 3.0)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.throwForearm) {
             LinearKeyframe(-30, duration: 0.24)
             CubicKeyframe(-44, duration: 0.14)
             SpringKeyframe(58, duration: 0.26, spring: .init(response: 0.22, dampingRatio: 0.55))
-            Hold.moving(58, duration: 1.18, drift: 1.8)
+            Hold.moving(58, duration: 0.40, drift: 2.0)
+            CubicKeyframe(70, duration: 0.34)         // forearm lags the shoulder into the guard
+            Hold.breathing(70, duration: 0.44, drift: 3.0)
             CubicKeyframe(0, duration: 0.38)
         }
         // Spins through the throw, then vanishes — it left his hand.
         KeyframeTrack(\.shuriken) {
-            LinearKeyframe(0, duration: 0.38)
-            CubicKeyframe(540, duration: 0.14)
-            Hold.moving(540, duration: 1.68, drift: 1.8)
+            LinearKeyframe(0, duration: 0.52)
+            LinearKeyframe(1080, duration: 0.35)      // spins through the flight
+            Hold.moving(1080, duration: 1.33, drift: 1.8)
+        }
+        // Leaves the hand at the release (0.52s), flies about 90 units forward-up on
+        // an arc over 0.35s, then fades out near the end of the flight.
+        KeyframeTrack(\.shurikenFlyX) {
+            LinearKeyframe(0, duration: 0.52)
+            CubicKeyframe(-78, duration: 0.35)
+            LinearKeyframe(0, duration: 0.02)
+            LinearKeyframe(0, duration: 1.31)
+        }
+        KeyframeTrack(\.shurikenFlyY) {
+            LinearKeyframe(0, duration: 0.52)
+            CubicKeyframe(-52, duration: 0.20)
+            CubicKeyframe(-46, duration: 0.15)
+            LinearKeyframe(0, duration: 0.02)
+            LinearKeyframe(0, duration: 1.31)
         }
         KeyframeTrack(\.shurikenOpacity) {
-            LinearKeyframe(1, duration: 0.46)
-            LinearKeyframe(0, duration: 0.10)         // gone the instant it releases
-            LinearKeyframe(0, duration: 1.26)
+            LinearKeyframe(1, duration: 0.77)
+            LinearKeyframe(0, duration: 0.12)
+            LinearKeyframe(0, duration: 0.93)
             LinearKeyframe(1, duration: 0.38)
+        }
+        // Body leads, the ninjato drags behind the lean by a few degrees.
+        KeyframeTrack(\.ninjato) {
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(3, duration: 0.26)
+            CubicKeyframe(-1.5, duration: 0.30)
+            Hold.moving(0, duration: 0.96, drift: 1.0)
+            CubicKeyframe(-2, duration: 0.20)
+            CubicKeyframe(0, duration: 0.18)
+        }
+        KeyframeTrack(\.eyesOffsetX) {
+            LinearKeyframe(0, duration: 0.24)
+            CubicKeyframe(-2.5, duration: 0.16)       // eyes follow the throw (screen left)
+            Hold.moving(-2.5, duration: 1.42, drift: 0.3)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        KeyframeTrack(\.legFrontThigh) {
+            LinearKeyframe(-14, duration: 0.24)
+            CubicKeyframe(-6, duration: 0.30)
+            Hold.moving(-6, duration: 1.28, drift: 1.2)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        KeyframeTrack(\.legFrontShin) {
+            LinearKeyframe(18, duration: 0.24)
+            CubicKeyframe(8, duration: 0.30)
+            Hold.moving(8, duration: 1.28, drift: 1.2)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        KeyframeTrack(\.legBackThigh) {
+            LinearKeyframe(8, duration: 0.24)
+            CubicKeyframe(4, duration: 0.34)
+            Hold.moving(4, duration: 1.24, drift: 1.0)
+            CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.torso) {
             LinearKeyframe(8, duration: 0.24)         // coiled away from the throw
@@ -124,7 +216,9 @@ public enum NinjaPerformance {
         KeyframeTrack(\.offArmUpper) {
             LinearKeyframe(-14, duration: 0.24)
             SpringKeyframe(16, duration: 0.28, spring: .init(response: 0.30, dampingRatio: 0.58))
-            Hold.moving(16, duration: 1.3, drift: 1.8)
+            Hold.moving(16, duration: 0.56, drift: 1.5)
+            CubicKeyframe(-24, duration: 0.34)        // off arm joins the guard
+            Hold.breathing(-24, duration: 0.40, drift: 3.0)
             CubicKeyframe(0, duration: 0.38)
         }
         // The off arm's elbow, which until now never bent in any performance — the
@@ -149,25 +243,62 @@ public enum NinjaPerformance {
     public static var perch: some Keyframes<NinjaPose> {
         KeyframeTrack(\.emergence) {
             // Stops well short of fully risen — perched, not standing.
-            SpringKeyframe(44, duration: 0.42, spring: .init(response: 0.48, dampingRatio: 0.82))
-            LinearKeyframe(44, duration: 0.30)
-            CubicKeyframe(52, duration: 0.60)         // settles lower as he relaxes
-            Hold.moving(52, duration: 1.1, drift: 1.4)
+            SpringKeyframe(40, duration: 0.42, spring: .init(response: 0.48, dampingRatio: 0.82))
+            Hold.moving(40, duration: 0.30, drift: 0.8)
+            CubicKeyframe(46, duration: 0.60)         // settles lower as he relaxes
+            Hold.moving(46, duration: 1.1, drift: 1.4)
             CubicKeyframe(200, duration: 0.38)
         }
         KeyframeTrack(\.torso) {
             LinearKeyframe(0, duration: 0.42)
             CubicKeyframe(9, duration: 0.42)          // slouches sideways
-            Hold.breathing(9, duration: 1.58, drift: 1.8)
+            Hold.breathing(9, duration: 0.46, drift: 1.0)
+            CubicKeyframe(9, duration: 0.14)
+            CubicKeyframe(12, duration: 0.30)         // body counters the head drop
+            CubicKeyframe(10, duration: 0.40)
+            Hold.breathing(10, duration: 0.28, drift: 1.0)
             CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.50)
             CubicKeyframe(-12, duration: 0.40)        // tips against his shoulder
-            LinearKeyframe(-12, duration: 0.40)
-            CubicKeyframe(-7, duration: 0.30)         // one slow nod
-            CubicKeyframe(-14, duration: 0.40)
-            LinearKeyframe(-14, duration: 0.42)
+            Hold.moving(-12, duration: 0.40, drift: 1.0)
+            CubicKeyframe(-4, duration: 0.14)         // jerks up as he nods off
+            SpringKeyframe(-16, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.35))
+            CubicKeyframe(-9, duration: 0.40)         // half recovers
+            Hold.moving(-9, duration: 0.28, drift: 1.0)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        // The ninjato sways 5 degrees behind the nod.
+        KeyframeTrack(\.ninjato) {
+            Hold.moving(0, duration: 1.44, drift: 0.8)
+            CubicKeyframe(-5, duration: 0.38)
+            CubicKeyframe(2, duration: 0.34)
+            Hold.moving(0, duration: 0.26, drift: 0.8)
+            Hold.moving(0, duration: 0.38, drift: 0.6)
+        }
+        KeyframeTrack(\.legFrontThigh) {
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(-70, duration: 0.40)
+            Hold.breathing(-70, duration: 1.72, drift: 1.5)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        KeyframeTrack(\.legFrontShin) {
+            LinearKeyframe(0, duration: 0.34)
+            CubicKeyframe(80, duration: 0.40)
+            Hold.breathing(80, duration: 1.68, drift: 1.5)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        KeyframeTrack(\.legBackThigh) {
+            LinearKeyframe(0, duration: 0.36)
+            CubicKeyframe(20, duration: 0.40)
+            Hold.moving(20, duration: 1.66, drift: 1.2)
+            CubicKeyframe(0, duration: 0.38)
+        }
+        KeyframeTrack(\.legBackShin) {
+            LinearKeyframe(0, duration: 0.38)
+            CubicKeyframe(10, duration: 0.40)
+            Hold.moving(10, duration: 1.64, drift: 1.0)
             CubicKeyframe(0, duration: 0.38)
         }
         // Eyes close to content crescents and stay shut.
@@ -245,8 +376,8 @@ public enum NinjaPerformance {
         KeyframeTrack(\.emergence) {
             SpringKeyframe(6, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.62))
             CubicKeyframe(22, duration: 0.16)         // crouches to load
-            CubicKeyframe(-58, duration: 0.30)        // launch
-            LinearKeyframe(-58, duration: 0.22)       // apex
+            CubicKeyframe(-72, duration: 0.30)        // launch
+            Hold.moving(-72, duration: 0.22, drift: 1.0) // apex
             CubicKeyframe(4, duration: 0.34)          // fall
             SpringKeyframe(0, duration: 0.24, spring: .init(response: 0.26, dampingRatio: 0.55))
             Hold.moving(0, duration: 1.06, drift: 1.4)
@@ -255,10 +386,29 @@ public enum NinjaPerformance {
         // One clean revolution, timed to complete just before he lands.
         KeyframeTrack(\.figureRotation) {
             LinearKeyframe(0, duration: 0.46)
-            CubicKeyframe(-120, duration: 0.30)
-            LinearKeyframe(-240, duration: 0.22)
-            CubicKeyframe(-360, duration: 0.34)
-            Hold.moving(-360, duration: 1.68, drift: 1.8)
+            CubicKeyframe(-360, duration: 0.84)       // one ease-in-out turn
+            Hold.moving(-360, duration: 1.70, drift: 1.8)
+        }
+        // Squash keeps volume: wider as he flattens.
+        KeyframeTrack(\.figureScaleX) {
+            LinearKeyframe(1, duration: 1.12)
+            CubicKeyframe(1.08, duration: 0.18)
+            SpringKeyframe(1.0, duration: 0.30, spring: .init(response: 0.28, dampingRatio: 0.50))
+            Hold.moving(1.0, duration: 1.4, drift: 0.01)
+        }
+        KeyframeTrack(\.torso) {
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(-14, duration: 0.16)        // arches at launch
+            CubicKeyframe(-6, duration: 0.50)
+            CubicKeyframe(8, duration: 0.34)          // folds into the landing
+            SpringKeyframe(0, duration: 0.32, spring: .init(response: 0.30, dampingRatio: 0.50))
+            Hold.breathing(0, duration: 1.38, drift: 1.2)
+        }
+        KeyframeTrack(\.eyesOffsetX) {
+            LinearKeyframe(0, duration: 1.30)
+            CubicKeyframe(1.5, duration: 0.12)
+            Hold.moving(1.5, duration: 1.20, drift: 0.3)
+            CubicKeyframe(0, duration: 0.38)
         }
         KeyframeTrack(\.figureScaleY) {
             LinearKeyframe(1, duration: 0.30)
@@ -274,25 +424,28 @@ public enum NinjaPerformance {
             LinearKeyframe(0, duration: 0.46)
             CubicKeyframe(-62, duration: 0.24)
             LinearKeyframe(-62, duration: 0.40)
-            CubicKeyframe(-16, duration: 0.22)
-            SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.34, dampingRatio: 0.55))
-            Hold.moving(0, duration: 1.4, drift: 1.8)
+            CubicKeyframe(-16, duration: 0.20)
+            CubicKeyframe(-28, duration: 0.16)        // landing crouch
+            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.34, dampingRatio: 0.55))
+            Hold.moving(0, duration: 1.24, drift: 1.8)
         }
         KeyframeTrack(\.legFrontShin) {
             LinearKeyframe(0, duration: 0.46)
             CubicKeyframe(74, duration: 0.24)
             LinearKeyframe(74, duration: 0.40)
-            CubicKeyframe(20, duration: 0.22)
-            SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.34, dampingRatio: 0.55))
-            Hold.moving(0, duration: 1.4, drift: 1.8)
+            CubicKeyframe(20, duration: 0.20)
+            CubicKeyframe(30, duration: 0.16)
+            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.34, dampingRatio: 0.55))
+            Hold.moving(0, duration: 1.24, drift: 1.8)
         }
         KeyframeTrack(\.legBackThigh) {
             LinearKeyframe(0, duration: 0.52)
             CubicKeyframe(-48, duration: 0.24)
             LinearKeyframe(-48, duration: 0.34)
             CubicKeyframe(-12, duration: 0.22)
-            SpringKeyframe(0, duration: 0.28, spring: .init(response: 0.36, dampingRatio: 0.55))
-            Hold.moving(0, duration: 1.4, drift: 1.8)
+            CubicKeyframe(18, duration: 0.16)         // landing crouch
+            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.36, dampingRatio: 0.55))
+            Hold.moving(0, duration: 1.22, drift: 1.8)
         }
         KeyframeTrack(\.legBackShin) {
             LinearKeyframe(0, duration: 0.52)
