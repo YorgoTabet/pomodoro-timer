@@ -37,6 +37,13 @@ public enum RabbitPerformance {
     /// drops and he sinks.
     @KeyframesBuilder<RabbitPose>
     public static var reluctantSalute: some Keyframes<RabbitPose> {
+        reluctantSaluteBody
+        reluctantSaluteArms
+        reluctantSaluteCostume
+    }
+
+    @KeyframesBuilder<RabbitPose>
+    static var reluctantSaluteBody: some Keyframes<RabbitPose> {
         // Rise 0 to 0.45, hold to 2.40, sink 2.40 to 2.80.
         KeyframeTrack(\.emergence) {
             SpringKeyframe(-8, duration: 0.45, spring: .init(response: 0.45, dampingRatio: 0.65))
@@ -88,6 +95,28 @@ public enum RabbitPerformance {
             CubicKeyframe(0, duration: 0.30)
             Hold.moving(0, duration: 0.40, drift: 0.4)
         }
+        // Weight shift. The legs counter-lean against the slump (same pairing as the
+        // hop: figure one way, legs the other), a touch more as the salute lands,
+        // then ease back. The soles squash 1.5 percent for the settle.
+        KeyframeTrack(\.legs) {
+            Hold.moving(0, duration: 0.45, drift: 0.2)
+            CubicKeyframe(-2, duration: 0.55)
+            CubicKeyframe(-3, duration: 0.42)
+            CubicKeyframe(-2, duration: 0.20)
+            Hold.moving(-2, duration: 0.48, drift: 0.3)
+            CubicKeyframe(0, duration: 0.30)
+            Hold.moving(0, duration: 0.40, drift: 0.2)
+        }
+        KeyframeTrack(\.legsScaleY) {
+            Hold.moving(1, duration: 1.20, drift: 0.005)
+            CubicKeyframe(0.985, duration: 0.22)
+            CubicKeyframe(1.0, duration: 0.20)
+            Hold.moving(1.0, duration: 1.18, drift: 0.005)
+        }
+    }
+
+    @KeyframesBuilder<RabbitPose>
+    static var reluctantSaluteArms: some Keyframes<RabbitPose> {
         // The salute arm. Shoulder: hangs and drops with the sigh, the elbow lifts out
         // to the side (-110), then up to -135. Elbow: 0 to -86 folds the forearm to the
         // brow, a slow limp flop that settles at -74.
@@ -123,6 +152,10 @@ public enum RabbitPerformance {
             Hold.breathing(5, duration: 1.40, drift: 1.0)
             Hold.moving(3, duration: 0.40, drift: 0.5)
         }
+    }
+
+    @KeyframesBuilder<RabbitPose>
+    static var reluctantSaluteCostume: some Keyframes<RabbitPose> {
         // Left ear: pops up, then droops. Tips start 0.08s after their bases and swing further.
         KeyframeTrack(\.earL_base) {
             Hold.moving(0, duration: 0.15, drift: 0.5)
