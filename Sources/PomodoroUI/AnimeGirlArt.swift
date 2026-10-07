@@ -40,8 +40,11 @@ public enum AnimeGirlArt {
         public static let shirt = Color(hex: 0xEFE9D6)
         public static let shirtShade = Color(hex: 0xD8CFB4)
         public static let tie = Color(hex: 0x1E1E22)
-        public static let slacks = Color(hex: 0x25262B)
-        public static let slacksRoll = Color(hex: 0x34353C)
+        /// Dark slate rather than black, so the legs still read on a dark pill.
+        public static let slacks = Color(hex: 0x3A3F55)
+        public static let slacksRoll = Color(hex: 0x4D5470)
+        public static let slacksShade = Color(hex: 0x2A2E40)
+        public static let slacksRim = Color(hex: 0x7A84A6)
         public static let belt = Color(hex: 0x141418)
         public static let skin = Color(hex: 0xFFE3D0)
         public static let skinShade = Color(hex: 0xF0C5AE)

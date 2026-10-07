@@ -1008,6 +1008,38 @@ enum AnimeGirlParts {
         /// Black slacks to a rolled cuff at mid-calf, bare shins, white high-tops
         /// with red soles and laces. Thigh and shin are separate joints, each
         /// topped with a round cap centred on its pivot.
+        /// A hard shadow strip down the inner edge of each leg and a thin light rim
+        /// down the outer edge, so the slacks hold their shape on a dark background.
+        /// Thigh and shin each get their own strips so a bent knee never tears them.
+        static func legShading(_ s: String, _ thighPart: AnimeGirlArt.Part,
+                               _ shinPart: AnimeGirlArt.Part, _ mirror: Double?,
+                               lx: Double, _ p: P) -> [Layer] {
+            let tw = p.thighWidth / 2, cw = p.calfWidth / 2
+            let outerSign = -1.0   // the left leg's outer edge is its left; mirrored for the right
+            func strip(_ top: Double, _ bottom: Double, _ topHalf: Double, _ bottomHalf: Double,
+                       outer: Bool, width: Double) -> [Sketch] {
+                let sign = outer ? outerSign : -outerSign
+                let inset = 1.3
+                let x0 = lx + sign * (topHalf - inset), x1 = lx + sign * (bottomHalf - inset)
+                let w = sign * -width
+                return [
+                    .move(x0, top), .line(x0 + w, top),
+                    .line(x1 + w, bottom), .line(x1, bottom), .close,
+                ]
+            }
+            let top = p.hip + 6, knee = p.knee + 1, cuff = p.cuff - 6
+            return [
+                Layer(0, "thighShade\(s)", thighPart, Ink.slacksShade, stroke: nil,
+                      path: strip(top, knee, tw, cw, outer: false, width: 3.2).path(mirrorAbout: mirror)),
+                Layer(0, "shinShade\(s)", shinPart, Ink.slacksShade, stroke: nil,
+                      path: strip(p.knee, cuff, cw, cw - 0.4, outer: false, width: 2.8).path(mirrorAbout: mirror)),
+                Layer(0, "thighRim\(s)", thighPart, Ink.slacksRim, stroke: nil,
+                      path: strip(top, knee, tw, cw, outer: true, width: 1.3).path(mirrorAbout: mirror)),
+                Layer(0, "shinRim\(s)", shinPart, Ink.slacksRim, stroke: nil,
+                      path: strip(p.knee, cuff, cw, cw - 0.4, outer: true, width: 1.3).path(mirrorAbout: mirror)),
+            ]
+        }
+
         static func legs(_ p: P) -> [Layer] {
             let lx = legCentre(p)
             let cw = p.calfWidth
@@ -1083,6 +1115,7 @@ enum AnimeGirlParts {
                     // Fill-only knee cap: hides the thigh/shin seam at any bend.
                     Layer(0, "kneeCap\(s)", shinPart, Ink.slacks, stroke: nil,
                           path: circle(lx, p.knee, cw / 2 - 1.3).path(mirrorAbout: mirror)),
+                ] + legShading(s, thighPart, shinPart, mirror, lx: lx, p) + [
                     Layer(0, "cuff\(s)", shinPart, Ink.slacksRoll, stroke: 2.2,
                           path: cuffBand.path(mirrorAbout: mirror)),
                     Layer(0, "cuffFolds\(s)", shinPart, Ink.clear, stroke: 0.8,

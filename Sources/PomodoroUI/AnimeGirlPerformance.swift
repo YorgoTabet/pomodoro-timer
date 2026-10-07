@@ -55,8 +55,8 @@ public enum AnimeGirlPerformance {
         KeyframeTrack(\.figureScale) {
             Hold.moving(1, duration: 0.3, drift: 0.01)
             CubicKeyframe(0.97, duration: 0.15)
-            SpringKeyframe(1.1, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
-            Hold.moving(1.1, duration: 0.35, drift: 0.012)
+            SpringKeyframe(1.17, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(1.17, duration: 0.35, drift: 0.012)
             CubicKeyframe(1.0, duration: 0.3)
             Hold.breathing(1.0, duration: 0.65, drift: 0.012)
             Hold.moving(1.0, duration: 0.25, drift: 0.01)
@@ -79,8 +79,8 @@ public enum AnimeGirlPerformance {
         KeyframeTrack(\.torso) {
             Hold.moving(0, duration: 0.3, drift: 0.8)
             CubicKeyframe(-4, duration: 0.15)
-            CubicKeyframe(6, duration: 0.3)
-            Hold.breathing(6, duration: 0.35, drift: 0.8)
+            CubicKeyframe(3, duration: 0.3)
+            Hold.breathing(3, duration: 0.35, drift: 0.8)
             CubicKeyframe(-2, duration: 0.15)
             SpringKeyframe(0, duration: 0.15, spring: .init(response: 0.32, dampingRatio: 0.55))
             Hold.breathing(0, duration: 0.65, drift: 1.0)
@@ -112,29 +112,33 @@ public enum AnimeGirlPerformance {
     /// fistPump: one group of tracks, split out to keep each builder small.
     @KeyframesBuilder<AnimeGirlPose>
     static var fistPumpPart2: some Keyframes<AnimeGirlPose> {
+        // Face drops toward you on the point, the lean the front view cannot rotate.
         KeyframeTrack(\.eyesLift) {
-            LinearKeyframe(0, duration: 1.1)
+            LinearKeyframe(0, duration: 0.3)
+            CubicKeyframe(3, duration: 0.3)
+            Hold.moving(3, duration: 0.5, drift: 0.3)
             CubicKeyframe(-1.5, duration: 0.3)
             LinearKeyframe(-1.5, duration: 0.95)
             CubicKeyframe(0, duration: 0.25)
         }
+        // Face and hand swaps are steps (one 0.01s switch), never a blend.
         KeyframeTrack(\.shoutOpacity) {
-            LinearKeyframe(0, duration: 0.38)
-            LinearKeyframe(1, duration: 0.08)
+            LinearKeyframe(0, duration: 0.45)
+            LinearKeyframe(1, duration: 0.01)
             LinearKeyframe(1, duration: 0.64)
-            LinearKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 1.42)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 1.49)
         }
         KeyframeTrack(\.smugOpacity) {
             LinearKeyframe(0, duration: 1.1)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 1.42)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 1.49)
         }
         KeyframeTrack(\.armR) {
             Hold.moving(0, duration: 0.3, drift: 1.0)
             CubicKeyframe(10, duration: 0.15)
-            CubicKeyframe(-52, duration: 0.3)
-            Hold.moving(-52, duration: 0.35, drift: 2.0)
+            CubicKeyframe(-26, duration: 0.3)
+            Hold.moving(-26, duration: 0.35, drift: 1.5)
             CubicKeyframe(-22, duration: 0.3)
             Hold.breathing(-22, duration: 0.65, drift: 1.5)
             CubicKeyframe(-78, duration: 0.25)
@@ -142,8 +146,8 @@ public enum AnimeGirlPerformance {
         }
         KeyframeTrack(\.armR_fore) {
             Hold.moving(0, duration: 0.45, drift: 0.8)
-            CubicKeyframe(6, duration: 0.3)
-            Hold.moving(6, duration: 0.35, drift: 2.0)
+            CubicKeyframe(84, duration: 0.3)
+            Hold.moving(84, duration: 0.35, drift: 2.0)
             CubicKeyframe(108, duration: 0.3)
             Hold.breathing(108, duration: 0.65, drift: 1.5)
             CubicKeyframe(-125, duration: 0.25)
@@ -152,8 +156,8 @@ public enum AnimeGirlPerformance {
         KeyframeTrack(\.armL) {
             Hold.moving(0, duration: 0.3, drift: 0.8)
             CubicKeyframe(12, duration: 0.15)
-            CubicKeyframe(26, duration: 0.3)
-            Hold.breathing(26, duration: 0.35, drift: 1.2)
+            CubicKeyframe(36, duration: 0.3)
+            Hold.breathing(36, duration: 0.35, drift: 1.2)
             CubicKeyframe(22, duration: 0.3)
             Hold.breathing(22, duration: 0.65, drift: 1.2)
             Hold.moving(22, duration: 0.25, drift: 1.0)
@@ -166,19 +170,19 @@ public enum AnimeGirlPerformance {
     static var fistPumpPart3: some Keyframes<AnimeGirlPose> {
         KeyframeTrack(\.armL_fore) {
             Hold.moving(0, duration: 0.45, drift: 0.8)
-            CubicKeyframe(-80, duration: 0.3)
-            Hold.moving(-80, duration: 0.35, drift: 2.0)
+            CubicKeyframe(-58, duration: 0.3)
+            Hold.moving(-58, duration: 0.35, drift: 2.0)
             CubicKeyframe(-108, duration: 0.3)
             Hold.breathing(-108, duration: 0.65, drift: 1.5)
             Hold.moving(-108, duration: 0.25, drift: 1.5)
             CubicKeyframe(0, duration: 0.3)
         }
         KeyframeTrack(\.clawR) {
-            LinearKeyframe(0, duration: 0.3)
-            CubicKeyframe(1, duration: 0.15)
-            LinearKeyframe(1, duration: 0.65)
-            CubicKeyframe(0, duration: 0.1)
-            LinearKeyframe(0, duration: 1.4)
+            LinearKeyframe(0, duration: 0.45)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.64)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 1.49)
         }
         KeyframeTrack(\.tailL_base) {
             CubicKeyframe(4.5, duration: 0.3)
@@ -270,32 +274,33 @@ public enum AnimeGirlPerformance {
             CubicKeyframe(0, duration: 0.45)
             CubicKeyframe(-6, duration: 0.3)
             Hold.moving(-6, duration: 0.35, drift: 1.0)
-            CubicKeyframe(45, duration: 0.3)
-            Hold.breathing(45, duration: 1.0, drift: 1.0)
-            CubicKeyframe(42, duration: 0.08)
+            SpringKeyframe(20, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.6))
+            Hold.breathing(20, duration: 1.0, drift: 1.2)
+            CubicKeyframe(16, duration: 0.08)
             CubicKeyframe(200, duration: 0.52)
         }
         KeyframeTrack(\.figureScaleY) {
             Hold.moving(1, duration: 0.45, drift: 0.01)
             CubicKeyframe(1.05, duration: 0.3)
             Hold.moving(1.05, duration: 0.35, drift: 0.008)
-            SpringKeyframe(0.97, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
-            Hold.breathing(1.0, duration: 1.0, drift: 0.015)
-            Hold.moving(1.0, duration: 0.6, drift: 0.01)
+            SpringKeyframe(0.9, duration: 0.3, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.breathing(0.9, duration: 1.0, drift: 0.015)
+            Hold.moving(0.9, duration: 0.6, drift: 0.01)
         }
         KeyframeTrack(\.figureLift) {
             Hold.moving(0, duration: 0.45, drift: 0.4)
-            Hold.moving(0, duration: 0.65, drift: 0.5)
-            CubicKeyframe(3, duration: 0.3)
-            Hold.breathing(3, duration: 1.0, drift: 0.6)
+            CubicKeyframe(-5, duration: 0.3)
+            Hold.moving(-5, duration: 0.35, drift: 0.5)
+            CubicKeyframe(2, duration: 0.3)
+            Hold.breathing(2, duration: 1.0, drift: 0.6)
             CubicKeyframe(0, duration: 0.6)
         }
         KeyframeTrack(\.torso) {
             Hold.moving(0, duration: 0.45, drift: 0.8)
             CubicKeyframe(-2, duration: 0.3)
             Hold.breathing(-2, duration: 0.35, drift: 1.0)
-            CubicKeyframe(3, duration: 0.3)
-            Hold.breathing(3, duration: 1.0, drift: 0.8)
+            CubicKeyframe(0, duration: 0.3)
+            Hold.breathing(0, duration: 1.0, drift: 0.8)
             CubicKeyframe(0, duration: 0.6)
         }
         KeyframeTrack(\.hips) {
@@ -310,8 +315,8 @@ public enum AnimeGirlPerformance {
             CubicKeyframe(5, duration: 0.45)
             CubicKeyframe(-12, duration: 0.3)
             Hold.moving(-12, duration: 0.35, drift: 1.5)
-            CubicKeyframe(4, duration: 0.3)
-            Hold.breathing(4, duration: 1.0, drift: 1.0)
+            CubicKeyframe(10, duration: 0.3)
+            Hold.breathing(10, duration: 1.0, drift: 1.0)
             CubicKeyframe(8, duration: 0.3)
             Hold.moving(8, duration: 0.3, drift: 0.8)
         }
@@ -320,51 +325,52 @@ public enum AnimeGirlPerformance {
     /// perchWave: one group of tracks, split out to keep each builder small.
     @KeyframesBuilder<AnimeGirlPose>
     static var perchWavePart2: some Keyframes<AnimeGirlPose> {
+        // Steps again: the yawn face on when the arms go up, doze when they come down.
         KeyframeTrack(\.dozeOpacity) {
-            LinearKeyframe(1, duration: 0.37)
-            LinearKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 0.65)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 1.82)
+            LinearKeyframe(1, duration: 0.45)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 0.64)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 1.89)
         }
         KeyframeTrack(\.yawnOpacity) {
-            LinearKeyframe(0, duration: 0.37)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 0.65)
-            LinearKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 1.82)
+            LinearKeyframe(0, duration: 0.45)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.64)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 1.89)
         }
         KeyframeTrack(\.clawL) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(1, duration: 0.2)
-            LinearKeyframe(1, duration: 0.45)
-            CubicKeyframe(0, duration: 0.3)
-            LinearKeyframe(0, duration: 1.6)
+            LinearKeyframe(0, duration: 0.57)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.55)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 1.86)
         }
         KeyframeTrack(\.clawR) {
-            LinearKeyframe(0, duration: 0.45)
-            CubicKeyframe(1, duration: 0.2)
-            LinearKeyframe(1, duration: 0.45)
-            CubicKeyframe(0, duration: 0.3)
-            LinearKeyframe(0, duration: 1.6)
+            LinearKeyframe(0, duration: 0.57)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.55)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 1.86)
         }
         KeyframeTrack(\.armL) {
             Hold.moving(0, duration: 0.45, drift: 1.0)
             CubicKeyframe(-8, duration: 0.12)
             CubicKeyframe(158, duration: 0.28)
             Hold.moving(158, duration: 0.25, drift: -3.0)
-            CubicKeyframe(72, duration: 0.3)
-            Hold.breathing(72, duration: 1.0, drift: 1.0)
-            Hold.moving(72, duration: 0.6, drift: 1.0)
+            CubicKeyframe(52, duration: 0.3)
+            Hold.breathing(52, duration: 1.0, drift: 1.0)
+            Hold.moving(52, duration: 0.6, drift: 1.0)
         }
         KeyframeTrack(\.armL_fore) {
             Hold.moving(0, duration: 0.45, drift: 0.8)
             CubicKeyframe(4, duration: 0.12)
             CubicKeyframe(14, duration: 0.28)
             Hold.moving(14, duration: 0.25, drift: 2.0)
-            CubicKeyframe(-138, duration: 0.3)
-            Hold.breathing(-138, duration: 1.0, drift: 1.5)
-            Hold.moving(-138, duration: 0.6, drift: 1.0)
+            CubicKeyframe(-142, duration: 0.3)
+            Hold.breathing(-142, duration: 1.0, drift: 1.5)
+            Hold.moving(-142, duration: 0.6, drift: 1.0)
         }
     }
 
@@ -376,18 +382,18 @@ public enum AnimeGirlPerformance {
             CubicKeyframe(8, duration: 0.12)
             CubicKeyframe(-158, duration: 0.28)
             Hold.moving(-158, duration: 0.25, drift: 3.0)
-            CubicKeyframe(-72, duration: 0.3)
-            Hold.breathing(-72, duration: 1.0, drift: -1.0)
-            Hold.moving(-72, duration: 0.6, drift: -1.0)
+            CubicKeyframe(-52, duration: 0.3)
+            Hold.breathing(-52, duration: 1.0, drift: -1.0)
+            Hold.moving(-52, duration: 0.6, drift: -1.0)
         }
         KeyframeTrack(\.armR_fore) {
             Hold.moving(0, duration: 0.45, drift: -0.8)
             CubicKeyframe(-4, duration: 0.12)
             CubicKeyframe(-14, duration: 0.28)
             Hold.moving(-14, duration: 0.25, drift: -2.0)
-            CubicKeyframe(138, duration: 0.3)
-            Hold.breathing(138, duration: 1.0, drift: -1.5)
-            Hold.moving(138, duration: 0.6, drift: -1.0)
+            CubicKeyframe(142, duration: 0.3)
+            Hold.breathing(142, duration: 1.0, drift: -1.5)
+            Hold.moving(142, duration: 0.6, drift: -1.0)
         }
         KeyframeTrack(\.tailL_base) {
             Hold.moving(0.0, duration: 1.1, drift: 0.68)
@@ -422,6 +428,20 @@ public enum AnimeGirlPerformance {
     /// perchWave: one group of tracks, split out to keep each builder small.
     @KeyframesBuilder<AnimeGirlPose>
     static var perchWavePart4: some Keyframes<AnimeGirlPose> {
+        KeyframeTrack(\.legL) {
+            Hold.moving(0, duration: 0.45, drift: 0.5)
+            CubicKeyframe(3, duration: 0.3)
+            Hold.moving(3, duration: 0.35, drift: 0.5)
+            CubicKeyframe(0, duration: 0.3)
+            Hold.moving(0, duration: 1.6, drift: 0.5)
+        }
+        KeyframeTrack(\.legR) {
+            Hold.moving(0, duration: 0.45, drift: -0.5)
+            CubicKeyframe(-3, duration: 0.3)
+            Hold.moving(-3, duration: 0.35, drift: -0.5)
+            CubicKeyframe(0, duration: 0.3)
+            Hold.moving(0, duration: 1.6, drift: -0.5)
+        }
         KeyframeTrack(\.ahoge) {
             Hold.moving(0.0, duration: 0.45, drift: 0.68)
             CubicKeyframe(2.7, duration: 0.65)
@@ -583,18 +603,18 @@ public enum AnimeGirlPerformance {
             Hold.moving(0, duration: 0.3, drift: 0.8)
         }
         KeyframeTrack(\.shoutOpacity) {
-            LinearKeyframe(0, duration: 0.55)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 0.62)
-            LinearKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 2.07)
+            LinearKeyframe(0, duration: 0.6)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.64)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 2.14)
         }
         KeyframeTrack(\.laughOpacity) {
             LinearKeyframe(0, duration: 1.25)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 1.07)
-            LinearKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 0.92)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 1.14)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 0.99)
         }
     }
 
@@ -603,39 +623,42 @@ public enum AnimeGirlPerformance {
     static var twirlPart3: some Keyframes<AnimeGirlPose> {
         KeyframeTrack(\.smugOpacity) {
             LinearKeyframe(0, duration: 2.4)
-            LinearKeyframe(1, duration: 0.08)
-            LinearKeyframe(1, duration: 0.92)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.99)
         }
+        // Fists on the crouch pull (0.40) and off as the jump peaks (1.05).
         KeyframeTrack(\.fistL) {
             LinearKeyframe(0, duration: 0.4)
-            CubicKeyframe(1, duration: 0.12)
-            LinearKeyframe(1, duration: 0.53)
-            CubicKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 2.27)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.64)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 2.34)
         }
         KeyframeTrack(\.fist) {
             LinearKeyframe(0, duration: 0.4)
-            CubicKeyframe(1, duration: 0.12)
-            LinearKeyframe(1, duration: 0.53)
-            CubicKeyframe(0, duration: 0.08)
-            LinearKeyframe(0, duration: 2.27)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.64)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 2.34)
         }
+        // Claws on as the arms release into the pose (1.05); right claw flexes once.
         KeyframeTrack(\.clawL) {
             LinearKeyframe(0, duration: 1.05)
-            CubicKeyframe(1, duration: 0.2)
-            LinearKeyframe(1, duration: 1.15)
-            CubicKeyframe(0, duration: 0.2)
-            LinearKeyframe(0, duration: 0.8)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 1.39)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 0.94)
         }
         KeyframeTrack(\.clawR) {
             LinearKeyframe(0, duration: 1.05)
-            CubicKeyframe(1, duration: 0.2)
-            LinearKeyframe(1, duration: 0.3)
-            CubicKeyframe(0.6, duration: 0.15)
-            CubicKeyframe(1, duration: 0.15)
-            LinearKeyframe(1, duration: 0.55)
-            CubicKeyframe(0, duration: 0.2)
-            LinearKeyframe(0, duration: 0.8)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.54)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 0.12)
+            LinearKeyframe(1, duration: 0.01)
+            LinearKeyframe(1, duration: 0.71)
+            LinearKeyframe(0, duration: 0.01)
+            LinearKeyframe(0, duration: 0.94)
         }
         KeyframeTrack(\.armL) {
             Hold.moving(0, duration: 0.4, drift: 1.0)
