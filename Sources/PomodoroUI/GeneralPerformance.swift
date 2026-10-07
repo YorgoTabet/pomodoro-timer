@@ -31,11 +31,11 @@ public enum GeneralPerformance {
     public static var backToTheFront: some Keyframes<GeneralPose> {
         KeyframeTrack(\.emergence) {
             SpringKeyframe(6, duration: 0.30, spring: .init(response: 0.42, dampingRatio: 0.65))
-            LinearKeyframe(6, duration: 0.25)
-            CubicKeyframe(-12, duration: 0.40)        // advances in front of the pill
-            Hold.moving(-12, duration: 1.5, drift: 1.4)
-            CubicKeyframe(20, duration: 0.20)
-            CubicKeyframe(200, duration: 0.35)
+            // No flat hold after the pop: the spring runs straight into the advance.
+            SpringKeyframe(-12, duration: 0.65, spring: .init(response: 0.50, dampingRatio: 0.80))
+            Hold.moving(-12, duration: 1.65, drift: 0.9)
+            CubicKeyframe(-18, duration: 0.08)        // small rise before the drop
+            CubicKeyframe(200, duration: 0.32, startVelocity: 0)
         }
         KeyframeTrack(\.figureScale) {
             LinearKeyframe(1, duration: 0.55)
@@ -60,9 +60,14 @@ public enum GeneralPerformance {
         KeyframeTrack(\.head) {
             LinearKeyframe(0, duration: 0.35)
             CubicKeyframe(-4, duration: 0.25)         // chin rises
-            Hold.breathing(-4, duration: 1.8, drift: 1.8)
+            Hold.moving(-4, duration: 0.30, drift: 0.5)
+            CubicKeyframe(-9, duration: 0.20)         // head goes back on the shout
+            Hold.moving(-9, duration: 0.50, drift: 0.6)
+            CubicKeyframe(3, duration: 0.15)          // second beat: snaps forward
+            SpringKeyframe(-2, duration: 0.30, spring: .init(response: 0.35, dampingRatio: 0.60))
+            Hold.moving(-2, duration: 0.45, drift: 0.5)
             CubicKeyframe(0, duration: 0.25)
-            LinearKeyframe(0, duration: 0.35)
+            LinearKeyframe(0, duration: 0.25)
         }
         // The bracing arm and the lean behind the point, neither of which existed.
         //
@@ -73,7 +78,7 @@ public enum GeneralPerformance {
             LinearKeyframe(0, duration: 0.80)
             CubicKeyframe(-12, duration: 0.15)        // counter-swing on the wind-up
             SpringKeyframe(22, duration: 0.30, spring: .init(response: 0.36, dampingRatio: 0.58))
-            Hold.moving(22, duration: 0.80, drift: 1.6)
+            Hold.moving(22, duration: 0.80, drift: 0.8)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.60)
         }
@@ -81,14 +86,14 @@ public enum GeneralPerformance {
             LinearKeyframe(0, duration: 0.86)
             CubicKeyframe(-6, duration: 0.14)
             SpringKeyframe(31, duration: 0.30, spring: .init(response: 0.38, dampingRatio: 0.54))
-            Hold.moving(31, duration: 0.75, drift: 2.0)
+            Hold.moving(31, duration: 0.75, drift: 0.8)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.60)
         }
         KeyframeTrack(\.torso) {
             LinearKeyframe(0, duration: 0.80)
             CubicKeyframe(-5, duration: 0.20)         // leans in behind the stick
-            Hold.breathing(-5, duration: 1.05, drift: 2.2)
+            Hold.breathing(-5, duration: 1.05, drift: 0.8)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.60)
         }
@@ -96,22 +101,22 @@ public enum GeneralPerformance {
         KeyframeTrack(\.armNear) {
             LinearKeyframe(0, duration: 0.80)
             CubicKeyframe(20, duration: 0.15)
-            SpringKeyframe(-100, duration: 0.30, spring: .init(response: 0.35, dampingRatio: 0.60))
-            LinearKeyframe(-100, duration: 0.80)
+            SpringKeyframe(-78, duration: 0.30, spring: .init(response: 0.35, dampingRatio: 0.60))
+            Hold.moving(-78, duration: 0.80, drift: 0.7)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.60)
         }
         KeyframeTrack(\.foreNear) {
-            Hold.moving(0, duration: 1.05, drift: 1.8)
-            SpringKeyframe(-45, duration: 0.30, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(-45, duration: 0.70)
+            Hold.moving(0, duration: 1.05, drift: 0.6)
+            SpringKeyframe(-18, duration: 0.30, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(-18, duration: 0.70, drift: 0.6)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.60)
         }
         KeyframeTrack(\.stick) {
-            Hold.moving(0, duration: 1.1, drift: 1.8)
-            SpringKeyframe(65, duration: 0.35, spring: .init(response: 0.35, dampingRatio: 0.50))
-            LinearKeyframe(65, duration: 0.60)
+            Hold.moving(0, duration: 1.1, drift: 0.6)
+            SpringKeyframe(180, duration: 0.35, spring: .init(response: 0.35, dampingRatio: 0.50))
+            Hold.moving(180, duration: 0.60, drift: 0.6)
             CubicKeyframe(0, duration: 0.35)
             LinearKeyframe(0, duration: 0.60)
         }
@@ -151,10 +156,10 @@ public enum GeneralPerformance {
         }
         // Pure secondary: they jiggle on every torso beat and settle late.
         KeyframeTrack(\.medalsLift) {
-            LinearKeyframe(0, duration: 0.08)
+            LinearKeyframe(0, duration: 0.38)         // two frames after the chest puff key
             SpringKeyframe(2.5, duration: 0.20, spring: .init(response: 0.40, dampingRatio: 0.35))
             SpringKeyframe(0, duration: 0.22, spring: .init(response: 0.40, dampingRatio: 0.35))
-            LinearKeyframe(0, duration: 0.65)
+            LinearKeyframe(0, duration: 0.35)
             SpringKeyframe(2, duration: 0.22, spring: .init(response: 0.40, dampingRatio: 0.30))
             SpringKeyframe(0, duration: 0.23, spring: .init(response: 0.40, dampingRatio: 0.30))
             Hold.moving(0, duration: 1.4, drift: 0.5)
@@ -170,13 +175,14 @@ public enum GeneralPerformance {
     public static var atEase: some Keyframes<GeneralPose> {
         KeyframeTrack(\.emergence) {
             SpringKeyframe(0, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.72))
-            Hold.moving(0, duration: 1.6, drift: 1.4)
-            CubicKeyframe(200, duration: 0.40)
+            Hold.moving(0, duration: 1.6, drift: 0.9)
+            CubicKeyframe(-6, duration: 0.08)         // small rise before the drop
+            CubicKeyframe(200, duration: 0.32, startVelocity: 0)
         }
         KeyframeTrack(\.shadesSlide) {
             LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(5, duration: 0.30)          // aviators creep down the nose
-            Hold.moving(5, duration: 0.9, drift: 0.5)
+            CubicKeyframe(8, duration: 0.30)          // aviators creep down the nose
+            Hold.moving(8, duration: 0.9, drift: 0.5)
             SpringKeyframe(0, duration: 0.25, spring: .init(response: 0.30, dampingRatio: 0.50))
             LinearKeyframe(0, duration: 0.55)
         }
@@ -204,27 +210,41 @@ public enum GeneralPerformance {
         // Heel-toe rock, with the legs counter-rotating so his feet stay planted.
         KeyframeTrack(\.figureRotation) {
             LinearKeyframe(0, duration: 0.70)
-            CubicKeyframe(3, duration: 0.40)
-            CubicKeyframe(-3, duration: 0.40)
+            CubicKeyframe(5, duration: 0.40)
+            CubicKeyframe(-5, duration: 0.40)
             CubicKeyframe(0, duration: 0.30)
             LinearKeyframe(0, duration: 0.60)
         }
+        // The head tilts with the grin and the sigh lets the chest down and up.
+        KeyframeTrack(\.head) {
+            LinearKeyframe(0, duration: 0.50)
+            CubicKeyframe(5, duration: 0.30)
+            Hold.moving(5, duration: 0.95, drift: 0.6)
+            CubicKeyframe(0, duration: 0.25)
+            LinearKeyframe(0, duration: 0.40)
+        }
+        KeyframeTrack(\.torsoScaleY) {
+            LinearKeyframe(1, duration: 1.00)
+            CubicKeyframe(0.96, duration: 0.25)
+            CubicKeyframe(1.0, duration: 0.25)
+            LinearKeyframe(1.0, duration: 0.90)
+        }
         KeyframeTrack(\.legNear) {
             LinearKeyframe(0, duration: 0.70)
-            CubicKeyframe(-3, duration: 0.40)
-            CubicKeyframe(3, duration: 0.40)
+            CubicKeyframe(-5, duration: 0.40)
+            CubicKeyframe(5, duration: 0.40)
             CubicKeyframe(0, duration: 0.30)
             LinearKeyframe(0, duration: 0.60)
         }
         KeyframeTrack(\.legFar) {
             LinearKeyframe(0, duration: 0.70)
-            CubicKeyframe(-3, duration: 0.40)
-            CubicKeyframe(3, duration: 0.40)
+            CubicKeyframe(-5, duration: 0.40)
+            CubicKeyframe(5, duration: 0.40)
             CubicKeyframe(0, duration: 0.30)
             LinearKeyframe(0, duration: 0.60)
         }
         KeyframeTrack(\.medals) {
-            Hold.moving(0, duration: 1.15, drift: 1.8)
+            Hold.moving(0, duration: 1.15, drift: 0.8)
             SpringKeyframe(-4, duration: 0.22, spring: .init(response: 0.45, dampingRatio: 0.35))
             SpringKeyframe(4, duration: 0.23, spring: .init(response: 0.45, dampingRatio: 0.35))
             SpringKeyframe(0, duration: 0.25, spring: .init(response: 0.45, dampingRatio: 0.35))
@@ -239,8 +259,9 @@ public enum GeneralPerformance {
         }
         KeyframeTrack(\.figureScaleY) {
             Hold.moving(1, duration: 2.0, drift: 0.014)
-            CubicKeyframe(0.92, duration: 0.15)
-            LinearKeyframe(0.92, duration: 0.25)
+            CubicKeyframe(1.03, duration: 0.08)
+            CubicKeyframe(0.92, duration: 0.12)
+            LinearKeyframe(0.92, duration: 0.20)
         }
         // "At ease" is a posture, and this performance had none: every arm track was
         // absent, so the whole upper body was a statue with a moving moustache.
@@ -251,37 +272,37 @@ public enum GeneralPerformance {
         KeyframeTrack(\.armNear) {
             LinearKeyframe(0, duration: 0.40)
             SpringKeyframe(-13, duration: 0.40, spring: .init(response: 0.55, dampingRatio: 0.74))
-            Hold.moving(-13, duration: 1.20, drift: 1.6)
+            Hold.moving(-13, duration: 1.20, drift: 0.8)
             CubicKeyframe(0, duration: 0.40)
         }
         KeyframeTrack(\.foreNear) {
             LinearKeyframe(0, duration: 0.45)
             SpringKeyframe(-24, duration: 0.40, spring: .init(response: 0.58, dampingRatio: 0.70))
-            Hold.moving(-24, duration: 1.15, drift: 2.1)
+            Hold.moving(-24, duration: 1.15, drift: 0.8)
             CubicKeyframe(0, duration: 0.40)
         }
         KeyframeTrack(\.stick) {
             LinearKeyframe(0, duration: 0.45)
             SpringKeyframe(22, duration: 0.40, spring: .init(response: 0.50, dampingRatio: 0.52))
-            Hold.moving(22, duration: 1.15, drift: 2.4)
+            Hold.moving(22, duration: 1.15, drift: 0.8)
             CubicKeyframe(0, duration: 0.40)
         }
         KeyframeTrack(\.armFar) {
             LinearKeyframe(0, duration: 0.40)
             SpringKeyframe(17, duration: 0.44, spring: .init(response: 0.56, dampingRatio: 0.74))
-            Hold.moving(17, duration: 1.16, drift: 1.6)
+            Hold.moving(17, duration: 1.16, drift: 0.8)
             CubicKeyframe(0, duration: 0.40)
         }
         KeyframeTrack(\.foreFar) {
             LinearKeyframe(0, duration: 0.45)
             SpringKeyframe(36, duration: 0.44, spring: .init(response: 0.60, dampingRatio: 0.70))
-            Hold.moving(36, duration: 1.11, drift: 2.1)
+            Hold.moving(36, duration: 1.11, drift: 0.8)
             CubicKeyframe(0, duration: 0.40)
         }
         KeyframeTrack(\.torso) {
             LinearKeyframe(0, duration: 0.40)
             CubicKeyframe(3, duration: 0.45)
-            Hold.breathing(3, duration: 1.15, drift: 2.6)
+            Hold.breathing(3, duration: 1.15, drift: 0.8)
             CubicKeyframe(0, duration: 0.40)
         }
     }
@@ -292,11 +313,23 @@ public enum GeneralPerformance {
     /// his idiom, and it keeps him distinct from the other two celebrations.
     @KeyframesBuilder<GeneralPose>
     public static var paradeOfOne: some Keyframes<GeneralPose> {
+        // Footfalls land at 0.50, 0.80, 1.10 and 1.40s, one every 0.30s. The 1.40s one
+        // is the halt: he stamps, holds it 0.15s, and only then raises the stick.
         KeyframeTrack(\.emergence) {
             SpringKeyframe(-12, duration: 0.22, spring: .init(response: 0.40, dampingRatio: 0.55))
             SpringKeyframe(0, duration: 0.10, spring: .init(response: 0.40, dampingRatio: 0.55))
-            Hold.moving(0, duration: 2.68, drift: 1.4)
-            CubicKeyframe(200, duration: 0.40)
+            // His weight: down 3 on each footfall, up 1.5 mid-step.
+            CubicKeyframe(3, duration: 0.18)          // 0.50
+            CubicKeyframe(-1.5, duration: 0.15)
+            CubicKeyframe(3, duration: 0.15)          // 0.80
+            CubicKeyframe(-1.5, duration: 0.15)
+            CubicKeyframe(3, duration: 0.15)          // 1.10
+            CubicKeyframe(-1.5, duration: 0.15)
+            CubicKeyframe(3, duration: 0.15)          // 1.40, the halt
+            CubicKeyframe(0, duration: 0.15)
+            Hold.moving(0, duration: 1.45, drift: 0.9)
+            CubicKeyframe(-6, duration: 0.08)         // small rise before the drop
+            CubicKeyframe(200, duration: 0.32, startVelocity: 0)
         }
         KeyframeTrack(\.grinOpacity) {
             LinearKeyframe(0, duration: 0.20)
@@ -305,66 +338,115 @@ public enum GeneralPerformance {
             LinearKeyframe(0, duration: 0.15)
             LinearKeyframe(0, duration: 0.40)
         }
-        // Four alternating steps.
+        // Four alternating steps. The thigh lifts one way and the boot folds the other,
+        // so the knee bends on the lift; the boot is flat again as the foot lands.
         KeyframeTrack(\.legNear) {
-            LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(-28, duration: 0.30)
-            CubicKeyframe(0, duration: 0.30)
-            CubicKeyframe(-28, duration: 0.30)
-            CubicKeyframe(0, duration: 0.30)
-            Hold.moving(0, duration: 1.8, drift: 1.8)
+            LinearKeyframe(0, duration: 0.20)
+            CubicKeyframe(-26, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(-26, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            Hold.moving(0, duration: 2.30, drift: 0.8)
         }
         KeyframeTrack(\.legFar) {
-            LinearKeyframe(0, duration: 0.70)
-            CubicKeyframe(-28, duration: 0.30)
-            CubicKeyframe(0, duration: 0.30)
-            CubicKeyframe(-28, duration: 0.30)
-            CubicKeyframe(0, duration: 0.25)
-            Hold.moving(0, duration: 1.55, drift: 1.8)
+            LinearKeyframe(0, duration: 0.50)
+            CubicKeyframe(-26, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(-26, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            Hold.moving(0, duration: 2.00, drift: 0.8)
         }
         KeyframeTrack(\.bootNear) {
-            LinearKeyframe(0, duration: 0.48)
-            SpringKeyframe(-14, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.50))
-            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.50))
-            Hold.moving(0, duration: 2.32, drift: 1.8)
+            LinearKeyframe(0, duration: 0.20)
+            CubicKeyframe(30, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(30, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            Hold.moving(0, duration: 2.30, drift: 0.8)
         }
         KeyframeTrack(\.bootFar) {
-            LinearKeyframe(0, duration: 0.78)
-            SpringKeyframe(-14, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.50))
-            SpringKeyframe(0, duration: 0.30, spring: .init(response: 0.30, dampingRatio: 0.50))
-            Hold.moving(0, duration: 2.02, drift: 1.8)
+            LinearKeyframe(0, duration: 0.50)
+            CubicKeyframe(30, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            LinearKeyframe(0, duration: 0.30)
+            CubicKeyframe(30, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            Hold.moving(0, duration: 2.00, drift: 0.8)
         }
-        // Contralateral arm swing — the far arm goes forward as the near leg goes
-        // back, on the same 0.30s cadence as the steps.
-        //
-        // This is the thing that makes a walk read as a walk. Without it a marching
-        // figure looks like it is being dragged along, and this arm was static
-        // through all three of his performances.
+        // Contralateral arm swing: the far arm goes forward as the near leg lifts, the
+        // near arm as the far leg lifts. The forearm trails its shoulder by 0.06s.
         KeyframeTrack(\.armFar) {
-            LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(24, duration: 0.30)
+            LinearKeyframe(0, duration: 0.20)
+            CubicKeyframe(24, duration: 0.15)
             CubicKeyframe(-10, duration: 0.30)
             CubicKeyframe(24, duration: 0.30)
+            CubicKeyframe(-10, duration: 0.30)
             CubicKeyframe(0, duration: 0.30)
-            Hold.moving(0, duration: 1.8, drift: 1.8)
+            Hold.moving(0, duration: 1.85, drift: 0.7)
         }
         KeyframeTrack(\.foreFar) {
-            // Trails the shoulder by a beat's fraction, so the elbow leads on the
-            // way back rather than the whole arm moving as one plank.
-            LinearKeyframe(0, duration: 0.46)
-            CubicKeyframe(30, duration: 0.30)
+            LinearKeyframe(0, duration: 0.26)
+            CubicKeyframe(30, duration: 0.15)
             CubicKeyframe(-6, duration: 0.30)
             CubicKeyframe(30, duration: 0.30)
+            CubicKeyframe(-6, duration: 0.30)
             CubicKeyframe(0, duration: 0.30)
-            Hold.moving(0, duration: 1.74, drift: 1.8)
+            Hold.moving(0, duration: 1.79, drift: 0.7)
         }
         KeyframeTrack(\.torso) {
-            LinearKeyframe(0, duration: 0.40)
-            CubicKeyframe(3, duration: 0.30)
+            LinearKeyframe(0, duration: 0.20)
+            CubicKeyframe(3, duration: 0.15)
             CubicKeyframe(-3, duration: 0.30)
             CubicKeyframe(3, duration: 0.30)
-            CubicKeyframe(0, duration: 0.55)
-            Hold.breathing(0, duration: 1.55, drift: 1.8)
+            CubicKeyframe(-3, duration: 0.30)
+            CubicKeyframe(0, duration: 0.30)
+            Hold.breathing(0, duration: 1.85, drift: 0.8)
+        }
+        // The head nods against the torso, then looks up at the raised stick.
+        KeyframeTrack(\.head) {
+            LinearKeyframe(0, duration: 0.20)
+            CubicKeyframe(-2, duration: 0.15)
+            CubicKeyframe(2, duration: 0.30)
+            CubicKeyframe(-2, duration: 0.30)
+            CubicKeyframe(2, duration: 0.30)
+            CubicKeyframe(0, duration: 0.30)
+            SpringKeyframe(-3, duration: 0.35, spring: .init(response: 0.40, dampingRatio: 0.65))
+            Hold.moving(-3, duration: 0.75, drift: 0.5)
+            CubicKeyframe(0, duration: 0.30)
+            LinearKeyframe(0, duration: 0.45)
+        }
+        // The moustache trails the head by 0.06s.
+        KeyframeTrack(\.stache) {
+            LinearKeyframe(0, duration: 0.26)
+            CubicKeyframe(2, duration: 0.15)
+            CubicKeyframe(-2, duration: 0.30)
+            CubicKeyframe(2, duration: 0.30)
+            CubicKeyframe(-2, duration: 0.30)
+            CubicKeyframe(0, duration: 0.30)
+            Hold.moving(0, duration: 1.79, drift: 0.4)
+        }
+        // The cap lags every footfall by a hair and drops 4 (5 on the halt), then settles.
+        KeyframeTrack(\.capLift) {
+            LinearKeyframe(0, duration: 0.39)
+            CubicKeyframe(4, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            CubicKeyframe(4, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            CubicKeyframe(4, duration: 0.15)
+            CubicKeyframe(0, duration: 0.15)
+            CubicKeyframe(5, duration: 0.15)
+            SpringKeyframe(0, duration: 0.15, spring: .init(response: 0.35, dampingRatio: 0.50))
+            LinearKeyframe(0, duration: 0.16)
+            SpringKeyframe(-8, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.40))
+            SpringKeyframe(-3, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.40))
+            LinearKeyframe(-3, duration: 0.60)
+            SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.40, dampingRatio: 0.50))
+            LinearKeyframe(0, duration: 0.15)
+            CubicKeyframe(2, duration: 0.08)          // lags down while he rises
+            CubicKeyframe(-6, duration: 0.32)         // floats up as he drops
         }
         // Cap and medals bounce on every step and never quite settle.
         KeyframeTrack(\.cap) {
@@ -373,60 +455,74 @@ public enum GeneralPerformance {
             SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.35, dampingRatio: 0.45))
             SpringKeyframe(-3, duration: 0.20, spring: .init(response: 0.35, dampingRatio: 0.45))
             SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.35, dampingRatio: 0.45))
-            Hold.moving(0, duration: 2.15, drift: 1.8)
+            Hold.moving(0, duration: 2.15, drift: 0.8)
         }
+        // Medals peak two frames after the torso beat that moves them.
         KeyframeTrack(\.medalsLift) {
-            LinearKeyframe(0, duration: 0.45)
-            SpringKeyframe(2.5, duration: 0.18, spring: .init(response: 0.40, dampingRatio: 0.30))
+            LinearKeyframe(0, duration: 0.40)
+            SpringKeyframe(2.5, duration: 0.13, spring: .init(response: 0.40, dampingRatio: 0.30))
             SpringKeyframe(-1.5, duration: 0.17, spring: .init(response: 0.40, dampingRatio: 0.30))
-            SpringKeyframe(2.5, duration: 0.18, spring: .init(response: 0.40, dampingRatio: 0.30))
+            SpringKeyframe(2.5, duration: 0.13, spring: .init(response: 0.40, dampingRatio: 0.30))
+            SpringKeyframe(-1.5, duration: 0.17, spring: .init(response: 0.40, dampingRatio: 0.30))
+            SpringKeyframe(2.5, duration: 0.13, spring: .init(response: 0.40, dampingRatio: 0.30))
+            SpringKeyframe(-1.5, duration: 0.17, spring: .init(response: 0.40, dampingRatio: 0.30))
+            SpringKeyframe(3, duration: 0.13, spring: .init(response: 0.40, dampingRatio: 0.30))
             SpringKeyframe(0, duration: 0.22, spring: .init(response: 0.40, dampingRatio: 0.30))
-            Hold.moving(0, duration: 0.9, drift: 0.5)
+            LinearKeyframe(0, duration: 0.23)
             SpringKeyframe(2.5, duration: 0.20, spring: .init(response: 0.40, dampingRatio: 0.30))
             SpringKeyframe(0, duration: 0.25, spring: .init(response: 0.40, dampingRatio: 0.30))
-            LinearKeyframe(0, duration: 0.85)
+            LinearKeyframe(0, duration: 1.07)
         }
-        // Stick raised high for the finish.
+        // Stick raised high for the finish, starting 0.15s after the halt stomp.
         KeyframeTrack(\.armNear) {
-            Hold.moving(0, duration: 1.85, drift: 1.8)
-            SpringKeyframe(-112, duration: 0.35, spring: .init(response: 0.38, dampingRatio: 0.60))
-            LinearKeyframe(-112, duration: 0.40)
+            LinearKeyframe(0, duration: 0.20)
+            CubicKeyframe(8, duration: 0.15)
+            CubicKeyframe(-10, duration: 0.30)
+            CubicKeyframe(8, duration: 0.30)
+            CubicKeyframe(-10, duration: 0.30)
+            CubicKeyframe(6, duration: 0.15)          // winds back on the stomp
+            LinearKeyframe(6, duration: 0.15)
+            SpringKeyframe(125, duration: 0.35, spring: .init(response: 0.38, dampingRatio: 0.60))
+            Hold.moving(125, duration: 0.75, drift: 0.7)
             CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.50)
+            LinearKeyframe(0, duration: 0.45)
         }
         KeyframeTrack(\.foreNear) {
-            Hold.moving(0, duration: 1.95, drift: 1.8)
-            SpringKeyframe(-50, duration: 0.35, spring: .init(response: 0.32, dampingRatio: 0.55))
-            LinearKeyframe(-50, duration: 0.30)
+            LinearKeyframe(0, duration: 0.26)
+            CubicKeyframe(5, duration: 0.15)
+            CubicKeyframe(-8, duration: 0.30)
+            CubicKeyframe(5, duration: 0.30)
+            CubicKeyframe(-8, duration: 0.30)
+            CubicKeyframe(3, duration: 0.15)
+            LinearKeyframe(3, duration: 0.15)
+            SpringKeyframe(25, duration: 0.35, spring: .init(response: 0.32, dampingRatio: 0.55))
+            Hold.moving(25, duration: 0.75, drift: 0.6)
             CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.50)
+            LinearKeyframe(0, duration: 0.39)
         }
         KeyframeTrack(\.stick) {
-            Hold.moving(0, duration: 2.0, drift: 1.8)
-            SpringKeyframe(40, duration: 0.35, spring: .init(response: 0.35, dampingRatio: 0.50))
-            LinearKeyframe(40, duration: 0.25)
+            Hold.moving(0, duration: 1.6, drift: 0.6)
+            SpringKeyframe(-116, duration: 0.35, spring: .init(response: 0.35, dampingRatio: 0.50))
+            Hold.moving(-116, duration: 0.75, drift: 0.6)
             CubicKeyframe(0, duration: 0.30)
-            LinearKeyframe(0, duration: 0.50)
+            LinearKeyframe(0, duration: 0.40)
         }
         KeyframeTrack(\.torsoScaleY) {
-            Hold.moving(1, duration: 2.0, drift: 0.014)
+            Hold.moving(1, duration: 1.55, drift: 0.014)
             CubicKeyframe(1.08, duration: 0.30)       // triumphant puff
-            LinearKeyframe(1.08, duration: 0.40)
+            LinearKeyframe(1.08, duration: 0.70)
             CubicKeyframe(1.0, duration: 0.20)
-            LinearKeyframe(1.0, duration: 0.50)
+            LinearKeyframe(1.0, duration: 0.65)
         }
-        KeyframeTrack(\.capLift) {
-            Hold.moving(0, duration: 2.05, drift: 0.5)
-            SpringKeyframe(-8, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.40))
-            SpringKeyframe(-3, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.40))
-            LinearKeyframe(-3, duration: 0.65)
-            SpringKeyframe(0, duration: 0.20, spring: .init(response: 0.40, dampingRatio: 0.50))
-            CubicKeyframe(-6, duration: 0.20)         // lags as he sinks
-        }
+        // The halt stomp squashes him; the exit starts with a small stretch.
         KeyframeTrack(\.figureScaleY) {
-            Hold.moving(1, duration: 3.0, drift: 0.014)
-            CubicKeyframe(0.92, duration: 0.15)
-            LinearKeyframe(0.92, duration: 0.25)
+            LinearKeyframe(1, duration: 1.35)
+            CubicKeyframe(0.97, duration: 0.05)
+            SpringKeyframe(1.0, duration: 0.15, spring: .init(response: 0.30, dampingRatio: 0.55))
+            Hold.moving(1, duration: 1.45, drift: 0.014)
+            CubicKeyframe(1.03, duration: 0.08)
+            CubicKeyframe(0.92, duration: 0.12)
+            LinearKeyframe(0.92, duration: 0.20)
         }
     }
 }
