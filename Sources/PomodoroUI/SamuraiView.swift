@@ -21,6 +21,9 @@ public struct SamuraiPose: Equatable, Sendable {
     public var torsoScaleY: Double = 1
     public var head: Double = 0
     public var headScale: Double = 1
+    /// Vertical squash and downward shift of the head, for a nod that is not a tilt.
+    public var headScaleY: Double = 1
+    public var headDrop: Double = 0
     public var kabuto: Double = 0
     public var kabutoLift: Double = 0
     public var maedate: Double = 0
@@ -151,7 +154,10 @@ private struct PartExtras: ViewModifier {
         case .torso:
             content.scaleEffect(y: pose.torsoScaleY, anchor: UnitPoint(x: 0.5, y: 168.0 / 260.0))
         case .head:
-            content.scaleEffect(pose.headScale, anchor: SamuraiArt.Part.head.anchor)
+            content
+                .scaleEffect(x: pose.headScale, y: pose.headScale * pose.headScaleY,
+                             anchor: SamuraiArt.Part.head.anchor)
+                .offset(y: pose.headDrop)
         case .kabuto:
             // "Cap pops" — the helmet lifts a beat off the head on hard accents.
             content.offset(y: pose.kabutoLift)
