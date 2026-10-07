@@ -46,6 +46,16 @@ public struct GeneralPose: Equatable, Sendable {
     /// How far each leg lifts into the coat skirt on a march step (design units, up is negative).
     public var legNearLift: Double = 0
     public var legFarLift: Double = 0
+    /// A raised knee is shown as a shortened thigh (the leg points at you), not a
+    /// sideways swing. 1 = full length.
+    public var legNearScaleY: Double = 1
+    public var legFarScaleY: Double = 1
+    /// How far each boot rises on its own, on top of the leg (design units, up is negative).
+    public var bootNearLift: Double = 0
+    public var bootFarLift: Double = 0
+
+    /// The stick shortened along its length, for pointing it straight at the viewer.
+    public var stickLength: Double = 1
 
     /// 0 = forearm and hand drawn in front of the body, 1 = tucked behind his back.
     public var nearBehind: Double = 0
@@ -131,6 +141,11 @@ struct GeneralPartExtras: ViewModifier {
     let part: GeneralArt.Part
     let pose: GeneralPose
 
+    private static let hip = UnitPoint(x: 0.5, y: 174.0 / 260.0)
+    private static let ankle = UnitPoint(x: 0.5, y: 209.0 / 260.0)
+    /// The rod runs from the hand toward (-24, -36): 36.4 degrees left of straight up.
+    private static let rodTilt = 36.4
+
     func body(content: Content) -> some View {
         switch part {
         case .torso:
@@ -147,9 +162,32 @@ struct GeneralPartExtras: ViewModifier {
         case .medals:
             content.offset(y: pose.medalsLift)
         case .legNear:
-            content.offset(y: pose.legNearLift)
+            content
+                .scaleEffect(y: pose.legNearScaleY, anchor: Self.hip)
+                .offset(y: pose.legNearLift)
         case .legFar:
-            content.offset(y: pose.legFarLift)
+            content
+                .scaleEffect(y: pose.legFarScaleY, anchor: Self.hip)
+                .offset(y: pose.legFarLift)
+        case .bootNear:
+            // Undo the thigh's squash so the boot keeps its shape, then lift it.
+            content
+                .scaleEffect(y: 1 / pose.legNearScaleY, anchor: Self.ankle)
+                .offset(y: pose.bootNearLift)
+        case .bootFar:
+            content
+                .scaleEffect(y: 1 / pose.legFarScaleY, anchor: Self.ankle)
+                .offset(y: pose.bootFarLift)
+        case .stick:
+            // Shorten along the rod, not along the screen: turn it upright, squash,
+            // turn it back. The rod is drawn up and to the left of the hand.
+            let anchor = GeneralArt.Part.stick.anchor
+            content
+                .rotationEffect(.degrees(-pose.stick), anchor: anchor)
+                .rotationEffect(.degrees(Self.rodTilt), anchor: anchor)
+                .scaleEffect(x: 1 + (1 - pose.stickLength) * 0.8, y: pose.stickLength, anchor: anchor)
+                .rotationEffect(.degrees(-Self.rodTilt), anchor: anchor)
+                .rotationEffect(.degrees(pose.stick), anchor: anchor)
         default:
             content
         }
