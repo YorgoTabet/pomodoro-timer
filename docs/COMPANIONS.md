@@ -1,7 +1,7 @@
 # Hanging companion kits
 
-All six existing characters have hanging kits: Samurai, Ninja, Rabbit Suit Guy,
-Power, The General, and Boa Hancock. Each has its own bottom hang, top peek,
+All seven characters have hanging kits: Samurai, Ninja, Rabbit Suit Guy,
+Power, The General, Boa Hancock, and Nel. Each has its own bottom hang, top peek,
 side climb, and matching resting-expression frames. Right climbs are mirrored.
 Off remains the default, and the original phase-change rigs and timelines are
 unchanged. Persisted `calm` / `stroll` values still display as Idle / Lively.
@@ -63,7 +63,7 @@ Idle keeps the preferred edge and position with breathing, blinking, and tiny
 sway around the grip. The position slider follows the long flat rim: top/bottom
 in horizontal orientation, left/right in vertical orientation. Short ends center
 the character on the curved cap. The Settings preview follows the selected bar
-orientation, and all six kits stay upright. Bounds correction first slides that
+orientation, and all seven kits stay upright. Bounds correction first slides that
 contact, then tries the opposite edge, then the remaining edges. It never clamps the body independently of its
 grip. Negative display coordinates and compact widths are supported.
 
@@ -99,12 +99,15 @@ Boa's atlas as the pose/style reference. Their complete production prompts are
 saved in [`companion-prompts`](companion-prompts). Atlas files and per-character
 crop/grip/scale manifests are bundled in `Sources/PomodoroUI/Resources/Companions`.
 
+Nel's kit follows her original Codex dot design; her full-size performances reuse
+the original sprite sheet. See [Nel](NEL.md) for provenance, sequencing and theme.
+
 ## Verification
 
-`swift test --filter HangingCompanion` checks all six kits, optical balance,
+`swift test --filter HangingCompanion` checks all seven kits, optical balance,
 edge fallback/contact, immediate Lively relocation, cancellation, character
 replacement during a tuck, Reduce Motion, and native click passthrough. Mounted
-native drag routing is also checked for all six. Existing suites cover compact geometry,
+native drag routing is also checked for all seven. Existing suites cover compact geometry,
 performance yielding, and appearance propagation. `swift test` runs them all.
 
 For a temporary native art review, run:

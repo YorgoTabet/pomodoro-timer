@@ -58,7 +58,7 @@ struct IdleCompanionTests {
         }
     }
 
-    @Test("All six mini characters render in still, blinking and walking poses",
+    @Test("Every mini character renders in still, blinking and walking poses",
           arguments: PomodoroCharacter.allCases.filter { $0 != .none })
     @MainActor
     func rendersEveryCharacter(character: PomodoroCharacter) throws {

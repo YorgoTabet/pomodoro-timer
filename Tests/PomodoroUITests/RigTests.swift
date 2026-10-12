@@ -16,10 +16,11 @@ struct RigTests {
     /// Every implemented character must appear here. The structural checks below
     /// iterate this rather than naming characters inline, so adding a fifth rig
     /// without adding it to this list fails `allImplementedRigsAreCovered`.
-    @Test("Every implemented character has its rig checked here")
+    @Test("Every implemented vector character has its rig checked here")
     func allImplementedRigsAreCovered() {
+        // Nel preserves an original raster atlas; NelSpriteTests cover that seam.
         let implemented = PomodoroCharacter.allCases
-            .filter { $0.isImplemented && $0 != .none }
+            .filter { $0.isImplemented && $0 != .none && $0 != .nel }
             .map(\.rawValue)
             .sorted()
         let covered = ["animeGirl", "general", "hancock", "ninja", "rabbit", "samurai"]

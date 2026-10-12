@@ -116,7 +116,7 @@ public struct ThemePalette: Codable, Equatable, Sendable {
 }
 
 public enum ThemePreset: String, Codable, CaseIterable, Identifiable, Sendable {
-    case classic, samurai, ninja, rabbit, power, general, hancock, custom
+    case classic, samurai, ninja, rabbit, power, general, hancock, nel, custom
     public var id: String { rawValue }
     public var name: String {
         switch self {
@@ -127,6 +127,7 @@ public enum ThemePreset: String, Codable, CaseIterable, Identifiable, Sendable {
         case .power: "Power"
         case .general: "The General"
         case .hancock: "Boa Hancock"
+        case .nel: "Nel"
         case .custom: "Custom"
         }
     }
@@ -139,6 +140,7 @@ public enum ThemePreset: String, Codable, CaseIterable, Identifiable, Sendable {
         case .power: "Scarlet · amber · navy"
         case .general: "Olive · brass · slate"
         case .hancock: "Crimson · gold · royal blue"
+        case .nel: "Mint · sage · warm ivory"
         case .custom: "Your saved colors"
         }
     }
@@ -150,6 +152,7 @@ public enum ThemePreset: String, Codable, CaseIterable, Identifiable, Sendable {
         case .power: .animeGirl
         case .general: .general
         case .hancock: .hancock
+        case .nel: .nel
         default: nil
         }
     }
@@ -171,6 +174,7 @@ public enum ThemePreset: String, Codable, CaseIterable, Identifiable, Sendable {
         case .power: colors = (0xD9473A, 0xF7B731, 0x2F4A7A)
         case .general: colors = (0x6E7345, 0xC29B3C, 0x5C7086)
         case .hancock: colors = (0xB8263A, 0xD9A441, 0x3D5BA6)
+        case .nel: colors = (0x52B8A8, 0x799D6E, 0xDFCDA4)
         default: colors = (0, 0, 0) // classic and custom returned above
         }
         return ThemePalette(focus: PhaseColors(tint: ThemeColor(colors.0)),

@@ -161,19 +161,20 @@ struct HangingCompanionTests {
 
 private struct HangingReview: View {
     @State private var mode = CharacterIdleMode.calm
-    @State private var character = PomodoroCharacter.samurai
+    @State private var character = PomodoroCharacter(rawValue: ProcessInfo.processInfo.environment["POMODORO_REVIEW_CHARACTER"] ?? "samurai") ?? .samurai
     @State private var appearance = ThemeAppearance.dark
     private var reviewTheme: ThemeConfiguration {
         var theme = ThemeConfiguration()
         theme.appearance = appearance
+        theme.preset = ThemePreset.matching(character) ?? .classic
         return theme
     }
     var body: some View {
         VStack(spacing: 8) {
             let roster = PomodoroCharacter.allCases.filter { $0 != .none }
-            ForEach(0..<2, id: \.self) { row in
+            ForEach(0..<((roster.count + 2) / 3), id: \.self) { row in
                 HStack(spacing: 8) {
-                    ForEach(Array(roster[(row * 3)..<(row * 3 + 3)])) { choice in
+                    ForEach(Array(roster[(row * 3)..<min(row * 3 + 3, roster.count)])) { choice in
                         Button(choice.displayName) { character = choice }
                             .buttonStyle(.bordered)
                             .tint(character == choice ? .red : .gray)

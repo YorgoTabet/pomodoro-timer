@@ -17,7 +17,7 @@ installs. No assets, services, packages, or network requests are needed.
 | Small and medium widgets | Dial, phase label, bloom, cycle pips, Start/Pause glyph and background wash | Countdown, secondary controls, labels and native glass |
 | Menu bar item and native menu | System appearance | Template symbol, countdown and menu rows remain system-managed for wallpaper contrast |
 | Notifications and Control Center | System appearance | OS owns presentation; phase labels and commands are unchanged |
-| Mini companions and full performances | Matching presets borrow their art palettes | Vector artwork, proportions, poses and timing retain the character's original colors |
+| Mini companions and full performances | Matching presets borrow their art palettes | Artwork, proportions, poses and timing retain the character's original colors |
 | App icon and RigStudio | Existing artwork | Static icon; RigStudio remains an independent animation workbench |
 
 “Adaptive” text, tracks, dividers and wells use native semantic primary/secondary
@@ -35,6 +35,7 @@ chrome and widget tint modes remain subject to system rendering.
 | Power | Scarlet horns, amber eyes, navy jacket |
 | The General | Olive coat, brass medals, slate lens |
 | Boa Hancock | Crimson dress, gold jewelry, royal blue lining |
+| Nel | `#52B8A8` | `#799D6E` | `#DFCDA4` | Mint hair, sage tunic, ivory skull and trim |
 
 Character selection and theme selection are independent. **Match character** is an
 explicit shortcut; choosing a palette never changes the character. Hover a palette

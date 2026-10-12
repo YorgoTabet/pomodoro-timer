@@ -112,6 +112,9 @@ public enum PerformanceAudit {
             entries.append(.init(character: .animeGirl, cue: cue,
                                  declared: AnimeGirlPerformance.duration(for: cue),
                                  authored: AnimeGirlPerformance.timeline(for: cue).duration))
+            entries.append(.init(character: .nel, cue: cue,
+                                 declared: NelPerformance.duration(for: cue),
+                                 authored: NelPerformance.timeline(for: cue).duration))
             entries.append(.init(character: .hancock, cue: cue,
                                  declared: HancockPerformance.duration(for: cue),
                                  authored: HancockPerformance.timeline(for: cue).duration))

@@ -17,6 +17,7 @@ public enum CharacterPlan {
         case .rabbit: RabbitPerformance.preferredEdge(for: cue)
         case .animeGirl: AnimeGirlPerformance.preferredEdge(for: cue)
         case .hancock: HancockPerformance.preferredEdge(for: cue)
+        case .nel: NelPerformance.preferredEdge(for: cue)
         default: SamuraiPerformance.preferredEdge(for: cue)
         }
     }
@@ -30,6 +31,7 @@ public enum CharacterPlan {
         case .rabbit: RabbitPerformance.comesForward(for: cue)
         case .animeGirl: AnimeGirlPerformance.comesForward(for: cue)
         case .hancock: HancockPerformance.comesForward(for: cue)
+        case .nel: NelPerformance.comesForward(for: cue)
         default: SamuraiPerformance.comesForward(for: cue)
         }
     }
@@ -41,6 +43,7 @@ public enum CharacterPlan {
         case .rabbit: RabbitPerformance.duration(for: cue)
         case .animeGirl: AnimeGirlPerformance.duration(for: cue)
         case .hancock: HancockPerformance.duration(for: cue)
+        case .nel: NelPerformance.duration(for: cue)
         default: SamuraiPerformance.duration(for: cue)
         }
     }

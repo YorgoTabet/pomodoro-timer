@@ -14,6 +14,7 @@ struct PerformanceAuditTests {
 
     @Test("Every performance's declared duration matches its longest authored track")
     func declaredMatchesAuthored() {
+        #expect(PerformanceAudit.all.count == (PomodoroCharacter.allCases.count - 1) * CharacterCue.allCases.count)
         for entry in PerformanceAudit.all {
             #expect(
                 abs(entry.drift) < 0.02,

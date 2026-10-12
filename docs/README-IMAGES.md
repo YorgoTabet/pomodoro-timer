@@ -1,5 +1,12 @@
 # README feature images
 
+Nel's `nel-companion-dark.png` and `nel-companion-light.png` show a native review
+board using the production timer preview, hanging renderer and original sprite
+performance stage. `nel-lively.gif` captures one relocation; `nel-longBreak.gif`
+captures the original-art hop and wave. The board is a documentation fixture,
+not an additional app screen. It uses scratch state and contains no session data.
+Capture it with `POMODORO_README_SCENE=nel` and the existing capture host below.
+
 The original hero and phase-change GIFs remain in `docs/images`. The `qol-*`
 images show the new features using native app views, with scratch preferences
 and timer storage. They do not contain the user's desktop, timer session or widget

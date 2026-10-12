@@ -17,7 +17,7 @@ struct AppearanceTests {
         #expect(PomodoroSettings(defaults: defaults).theme == theme)
     }
 
-    @Test("Each of the six characters has exactly one matching palette")
+    @Test("Each character has exactly one matching palette")
     func roster() {
         for character in PomodoroCharacter.allCases where character != .none {
             let matches = ThemePreset.allCases.filter { $0.character == character }
@@ -25,7 +25,7 @@ struct AppearanceTests {
             #expect(matches.first == ThemePreset.matching(character))
         }
         #expect(ThemePreset.matching(.none) == nil)
-        #expect(ThemePreset.allCases.map(\.palette).filter { $0 != ThemePreset.classic.palette }.count == 6)
+        #expect(ThemePreset.allCases.map(\.palette).filter { $0 != ThemePreset.classic.palette }.count == PomodoroCharacter.allCases.filter { $0 != .none }.count)
     }
 
     @Test("Custom colors survive trying presets and persist independently of the character")

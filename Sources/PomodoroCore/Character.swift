@@ -29,6 +29,7 @@ public enum PomodoroCharacter: String, Codable, Sendable, CaseIterable, Identifi
     case animeGirl
     case general
     case hancock
+    case nel
 
     public var id: String { rawValue }
 
@@ -41,6 +42,7 @@ public enum PomodoroCharacter: String, Codable, Sendable, CaseIterable, Identifi
         case .animeGirl: "Power"
         case .general: "The General"
         case .hancock: "Boa Hancock"
+        case .nel: "Nel"
         }
     }
 
@@ -48,7 +50,7 @@ public enum PomodoroCharacter: String, Codable, Sendable, CaseIterable, Identifi
     /// the settings UI can show what's coming, but only some are implemented.
     public var isImplemented: Bool {
         switch self {
-        case .none, .samurai, .ninja, .general, .rabbit, .animeGirl, .hancock: true
+        case .none, .samurai, .ninja, .general, .rabbit, .animeGirl, .hancock, .nel: true
         }
     }
 }

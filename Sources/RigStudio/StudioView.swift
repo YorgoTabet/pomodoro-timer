@@ -175,6 +175,7 @@ struct StudioView: View {
                 case .rabbit: rig(RabbitSubject.self)
                 case .animeGirl: rig(AnimeGirlSubject.self)
                 case .hancock: rig(HancockSubject.self)
+                case .nel: NelSprite(frame: NelPerformance.frame(for: cue, at: time))
                 case .none: EmptyView()
                 }
             }
@@ -324,6 +325,7 @@ enum Facade {
         case .rabbit: RabbitSubject.duration(for: cue)
         case .animeGirl: AnimeGirlSubject.duration(for: cue)
         case .hancock: HancockSubject.duration(for: cue)
+        case .nel: NelPerformance.duration(for: cue)
         case .none: 0
         }
     }
@@ -336,7 +338,7 @@ enum Facade {
         case .rabbit: names(RabbitSubject.self)
         case .animeGirl: names(AnimeGirlSubject.self)
         case .hancock: names(HancockSubject.self)
-        case .none: []
+        case .nel, .none: []
         }
     }
 
@@ -348,7 +350,7 @@ enum Facade {
         case .rabbit: angles(RabbitSubject.self, cue, time)
         case .animeGirl: angles(AnimeGirlSubject.self, cue, time)
         case .hancock: angles(HancockSubject.self, cue, time)
-        case .none: []
+        case .nel, .none: []
         }
     }
 

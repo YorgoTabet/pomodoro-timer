@@ -14,10 +14,10 @@ struct PillOrientationTests {
         let app = NSApplication.shared
         app.setActivationPolicy(.regular)
         let (bar, settings, controller) = makeBar()
-        settings.character = .hancock
+        settings.character = PomodoroCharacter(rawValue: ProcessInfo.processInfo.environment["POMODORO_REVIEW_CHARACTER"] ?? "hancock") ?? .hancock
         settings.characterIdleMode = .calm
         var theme = settings.theme
-        theme.preset = .hancock; theme.appearance = .dark
+        theme.preset = ThemePreset.matching(settings.character) ?? .classic; theme.appearance = .dark
         settings.theme = theme
         func syncCompanion() {
             bar.stage.character = settings.character

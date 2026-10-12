@@ -96,10 +96,26 @@ public struct CharacterStage: View {
             animeGirl(cue)
         case .hancock:
             hancock(cue)
+        case .nel:
+            nel(cue)
         default:
             // Declared in the roster but not drawn yet.
             EmptyView()
         }
+    }
+
+    private func nel(_ cue: CharacterCue) -> some View {
+        KeyframeAnimator(initialValue: NelPose(), trigger: generation) { pose in
+            NelSprite(frame: reduceMotion ? 0 : NelPerformance.frame(for: cue, at: pose.seconds))
+                .opacity(reduceMotion ? max(0, 1 - pose.emergence / 200) : (pose.emergence >= 185 ? 0 : 1))
+                .scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                .frame(width: CharacterStage.displaySize.width, height: CharacterStage.displaySize.height,
+                       alignment: .topLeading)
+                .offset(x: reduceMotion ? 0 : -hidden(pose.emergence) * edge.inwardNormal.x,
+                        y: reduceMotion ? 0 : -hidden(pose.emergence) * edge.inwardNormal.y)
+                .modifier(StagePlacement(edge: edge, pillFrame: pillFrame,
+                                         box: CharacterStage.displaySize, masked: !foreground))
+        } keyframes: { _ in NelPerformance.tracks }
     }
 
     // MARK: - Anime girl

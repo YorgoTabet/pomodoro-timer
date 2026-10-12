@@ -17,10 +17,10 @@ struct DocumentationPreviewTests {
         let app = NSApplication.shared
         app.setActivationPolicy(.regular)
         let settings = PomodoroSettings(defaults: makeAppTestDefaults())
-        settings.character = .hancock
+        settings.character = scene == "nel" ? .nel : .hancock
         settings.characterIdleMode = .calm
         var theme = settings.theme
-        theme.preset = .hancock; theme.appearance = .dark
+        theme.preset = ThemePreset.matching(settings.character) ?? .classic; theme.appearance = .dark
         settings.theme = theme
         let delegate = DocumentationWindowDelegate()
         let window: NSWindow
@@ -50,14 +50,16 @@ struct DocumentationPreviewTests {
                     .padding(20).frame(width: 440)
                     .background(Color(white: 0.09))
                     .pomodoroAppearance(settings.theme, inWindow: true)
+                } else if scene == "nel" {
+                    NelDocumentationBoard()
                 } else {
                     DocumentationCompanions()
                 }
             })
             window = NSWindow(contentViewController: host)
-            window.title = scene == "appearance" ? "Pomodoro · Appearance" : "Pomodoro · Companions"
+            window.title = scene == "nel" ? "Pomodoro · Nel" : (scene == "appearance" ? "Pomodoro · Appearance" : "Pomodoro · Companions")
             window.styleMask = [.titled, .closable]
-            window.setContentSize(scene == "appearance" ? CGSize(width: 440, height: 640) : CGSize(width: 1080, height: 430))
+            window.setContentSize(scene == "nel" ? CGSize(width: 990, height: 650) : (scene == "appearance" ? CGSize(width: 440, height: 640) : CGSize(width: 1080, height: 620)))
         }
         window.isReleasedWhenClosed = false
         window.delegate = delegate
@@ -80,6 +82,88 @@ struct DocumentationPreviewTests {
     }
 }
 
+private struct NelDocumentationBoard: View {
+    @State private var mode = CharacterIdleMode.calm
+    @State private var appearance = ThemeAppearance.dark
+    @State private var cue = CharacterCue.longBreak
+    @State private var generation = 0
+    private var theme: ThemeConfiguration {
+        var value = ThemeConfiguration()
+        value.preset = .nel; value.appearance = appearance
+        return value
+    }
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Nel").font(.system(size: 26, weight: .semibold))
+                    Text("Mint hair · sage green · warm ivory").foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker("Mode", selection: $mode) {
+                    Text("Idle").tag(CharacterIdleMode.calm)
+                    Text("Lively").tag(CharacterIdleMode.stroll)
+                }.pickerStyle(.segmented).labelsHidden().frame(width: 180)
+                Picker("Appearance", selection: $appearance) {
+                    Text("Light").tag(ThemeAppearance.light)
+                    Text("Dark").tag(ThemeAppearance.dark)
+                }.pickerStyle(.segmented).labelsHidden().frame(width: 180)
+            }.padding(.horizontal, 24).padding(.top, 12)
+            HStack(spacing: 0) {
+                cell("Top peek", edge: .top)
+                cell("Bottom hang", edge: .bottom)
+                cell("Side climb", edge: .leading)
+            }
+            Divider().padding(.horizontal, 24)
+            HStack(alignment: .top, spacing: 0) {
+                cell("Vertical · left", edge: .leading, orientation: .vertical)
+                cell("Vertical · right", edge: .trailing, orientation: .vertical)
+                VStack(spacing: 12) {
+                    Text("Original Codex artwork").font(.system(size: 12, weight: .semibold))
+                    let pill = CGRect(x: 42, y: 115, width: 236, height: 46)
+                    ZStack(alignment: .topLeading) {
+                        ThemeTimerPreview().position(x: pill.midX, y: pill.midY)
+                        if generation == 0 {
+                            NelSprite().scaleEffect(CharacterStage.scale, anchor: .topLeading)
+                                .frame(width: CharacterStage.displaySize.width, height: CharacterStage.displaySize.height,
+                                       alignment: .topLeading)
+                                .position(x: pill.midX, y: pill.minY - CharacterStage.groundInset + CharacterStage.displaySize.height / 2)
+                        }
+                        CharacterStage(character: .nel, cue: cue, generation: generation,
+                            foreground: false, edge: .top, pillFrame: pill)
+                    }.frame(width: 320, height: 180)
+                    Picker("Performance", selection: $cue) {
+                        ForEach(CharacterCue.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                    }.frame(width: 270)
+                    Button("Play cycle animation") { generation += 1 }.buttonStyle(.bordered)
+                    HStack(spacing: 10) {
+                        ForEach(Phase.allCases, id: \.self) { phase in
+                            Circle().fill(Theme.tint(for: phase, in: theme)).frame(width: 12, height: 12)
+                        }
+                    }
+                }.frame(width: 330)
+            }
+        }
+        .font(.system(size: 12))
+        .frame(width: 990, height: 650, alignment: .top)
+        .background(appearance == .dark ? Color(white: 0.09) : Color(white: 0.96))
+        .pomodoroAppearance(theme, inWindow: true)
+    }
+    private func cell(_ title: String, edge: StageEdge, orientation: PillOrientation = .horizontal) -> some View {
+        let height = orientation == .vertical ? 340.0 : 180.0
+        let size = PillLayout(orientation: orientation).size
+        let pill = CGRect(x: (330 - size.width) / 2, y: 50, width: size.width, height: size.height)
+        return VStack(spacing: 0) {
+            Text(title).font(.system(size: 12, weight: .semibold))
+            ZStack(alignment: .topLeading) {
+                ThemeTimerPreview(orientation: orientation).position(x: pill.midX, y: pill.midY)
+                HangingCompanion(character: .nel, mode: mode, edge: edge, position: 0.5,
+                    pill: pill, screen: CGRect(x: 0, y: 0, width: 330, height: height))
+            }.frame(width: 330, height: height)
+        }
+    }
+}
+
 private struct DocumentationCompanions: View {
     @State private var mode = CharacterIdleMode.calm
     private let roster = PomodoroCharacter.allCases.filter { $0 != .none }
@@ -89,15 +173,15 @@ private struct DocumentationCompanions: View {
                 Text("Idle").tag(CharacterIdleMode.calm)
                 Text("Lively").tag(CharacterIdleMode.stroll)
             }.pickerStyle(.segmented).frame(width: 240).padding(.top, 16)
-            ForEach(0..<2, id: \.self) { row in
+            ForEach(0..<((roster.count + 2) / 3), id: \.self) { row in
                 HStack(spacing: 0) {
-                    ForEach(Array(roster[(row * 3)..<(row * 3 + 3)])) { character in
+                    ForEach(Array(roster[(row * 3)..<min(row * 3 + 3, roster.count)])) { character in
                         cell(character)
                     }
                 }
             }
         }
-        .frame(width: 1080, height: 430)
+        .frame(width: 1080, height: 620)
         .background(Color(white: 0.09))
         .preferredColorScheme(.dark)
     }

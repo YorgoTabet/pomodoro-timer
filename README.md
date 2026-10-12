@@ -50,8 +50,8 @@ Show it again from the menu bar's **Show Floating Bar** item.
 <tr>
 <td valign="top">
 
-### 🎭&nbsp; Six characters
-A samurai, a ninja, a man in a rabbit suit, a general, Power and Boa Hancock. Each has its own move for focus start, break start and long break. They are decoration; the notification and the chime do the real work.
+### 🎭&nbsp; Seven characters
+A samurai, a ninja, a man in a rabbit suit, a general, Power, Boa Hancock and Nel. Each has its own move for focus start, break start and long break. They are decoration; the notification and the chime do the real work.
 
 
 </td>
@@ -80,7 +80,7 @@ A desktop widget in small and medium sizes, with start, pause and skip buttons t
 <td valign="top">
 
 ### 🧸&nbsp; Always-on companions
-Keep your character around between performances. **Idle** stays in your chosen spot with gentle breathing and blinking; **Lively** changes sides occasionally, with a quiet rest between moves. All six can peek over the top, hang below, or climb either side.
+Keep your character around between performances. **Idle** stays in your chosen spot with gentle breathing and blinking; **Lively** changes sides occasionally, with a quiet rest between moves. All seven can peek over the top, hang below, or climb either side.
 
 Choose the mode and position in **Settings → Character**. **Off** is the default. Companions follow the compact pill, adjust at screen edges, and make way for the original performances. Reduce Motion keeps them still. [Companion kit guide](docs/COMPANIONS.md).
 
@@ -160,8 +160,36 @@ Each character has three moves. Here is one move from each, recorded from the re
 | **The General** | Taps his stick, points, salutes | At ease, peeks over his shades | Two-step parade and a raised stick |
 | **Power** | "Grovel, human!" | A huge yawn, then a nap on the bar | Her signature laughing pose |
 | **Boa Hancock** | Looks down on you, points, winks | Love-struck, with a heart | Sweeps her cape and laughs "hohoho" |
+| **Nel** | Thinks, then gives a little nod | A friendly wave | Two happy hops and a wave |
 
 Pick one, or none, in Settings.
+
+### Nel, a little closer
+
+Her mint hair, ram skull and sage outfit follow the original Codex companion.
+The cycle animations use her original sprite artwork; the hanging poses are new
+adaptations of the same design. Her matching palette is mint, sage and warm ivory.
+
+<p align="center">
+<img src="docs/images/nel-companion-dark.png" width="760" alt="Nel's top peek, bottom hang and side climb, with matching horizontal and vertical timers">
+<br><sub>Native review board using the app's real views</sub>
+</p>
+
+<details>
+<summary>See Nel in motion and in light mode</summary>
+<p align="center">
+<img src="docs/images/nel-lively.gif" width="760" alt="Nel tucks behind the timer and reappears on another edge in Lively mode">
+<br><sub>The first Lively move; the app then rests for 26 seconds</sub>
+</p>
+<p align="center">
+<img src="docs/images/nel-longBreak.gif" width="760" alt="Nel's original sprite frames perform two happy hops and a wave on a long break">
+</p>
+<p align="center">
+<img src="docs/images/nel-companion-light.png" width="760" alt="Nel and her mint theme in light mode">
+</p>
+</details>
+
+Artwork, sequencing and authoring details are in the [Nel guide](docs/NEL.md).
 
 ## Install
 
@@ -259,7 +287,7 @@ Hanging companions use bundled sprite atlases alongside those rigs; see the [com
 
 ## Credits
 
-Power is a character from *Chainsaw Man* by Tatsuki Fujimoto. Boa Hancock is a character from *One Piece* by Eiichiro Oda. Both versions here are fan art, are not affiliated with or endorsed by the rights holders, and are not covered by this project's license. The other characters are original.
+Power is a character from *Chainsaw Man* by Tatsuki Fujimoto. Boa Hancock is a character from *One Piece* by Eiichiro Oda. Both versions here are fan art, are not affiliated with or endorsed by the rights holders, and are not covered by this project's license. Nel is a character from *Bleach* by Tite Kubo; her version is also fan art with the same exclusions. The other characters are original.
 
 ## License
 

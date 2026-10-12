@@ -196,6 +196,9 @@ public struct IdleCharacterDrawing: View {
         case .animeGirl: AnimeGirlView(pose: IdlePoses.power(motion))
         case .general: GeneralView(pose: IdlePoses.general(motion))
         case .hancock: HancockView(pose: IdlePoses.hancock(motion))
+        case .nel:
+            NelSprite(frame: motion.blink > 0.5 ? 3 : (abs(motion.step) > 0.1 ? 9 : 0))
+                .offset(y: -motion.breath)
         case .none: EmptyView()
         }
     }

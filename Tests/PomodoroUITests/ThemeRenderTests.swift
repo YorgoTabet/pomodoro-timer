@@ -42,7 +42,7 @@ struct ThemeRenderTests {
                     #expect(bitmap.pixelsWide > 150 && bitmap.pixelsHigh > 150)
                     images.insert(data)
                 }
-                #expect(images.count == 7, "A theme was lost before reaching the timer's environment")
+                #expect(images.count == ThemePreset.allCases.count - 1, "A theme was lost before reaching the timer's environment")
             }
         }
     }
